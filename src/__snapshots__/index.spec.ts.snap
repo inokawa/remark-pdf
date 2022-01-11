@@ -1,0 +1,1562 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`e2e article.md 1`] = `
+Document {
+  "docDefinition": Object {
+    "content": Array [
+      Object {
+        "style": "head1",
+        "text": Array [
+          Object {
+            "text": "heading 1",
+          },
+        ],
+      },
+      Object {
+        "style": "head2",
+        "text": Array [
+          Object {
+            "text": "heading 2",
+          },
+        ],
+      },
+      Object {
+        "style": "head3",
+        "text": Array [
+          Object {
+            "text": "heading 3",
+          },
+        ],
+      },
+      Object {
+        "style": "head4",
+        "text": Array [
+          Object {
+            "text": "heading 4",
+          },
+        ],
+      },
+      Object {
+        "style": "head5",
+        "text": Array [
+          Object {
+            "text": "heading 5",
+          },
+        ],
+      },
+      Object {
+        "style": "head6",
+        "text": Array [
+          Object {
+            "text": "heading 6",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": "aaaaaaaa",
+          },
+          Object {
+            "style": Object {
+              "bold": true,
+            },
+            "text": "bold",
+          },
+          Object {
+            "style": Object {
+              "italics": true,
+            },
+            "text": "emphasis",
+          },
+          Object {
+            "decoration": "lineThrough",
+            "text": "delete",
+          },
+          Object {
+            "text": "inline code",
+          },
+        ],
+      },
+      Object {
+        "ul": Array [
+          Array [
+            Object {
+              "text": Array [
+                Object {
+                  "text": "list",
+                },
+              ],
+            },
+            Object {
+              "ul": Array [
+                Array [
+                  Object {
+                    "text": Array [
+                      Object {
+                        "text": "list",
+                      },
+                    ],
+                  },
+                  Object {
+                    "ul": Array [
+                      Array [
+                        Object {
+                          "text": Array [
+                            Object {
+                              "text": "list",
+                            },
+                          ],
+                        },
+                      ],
+                    ],
+                  },
+                ],
+                Array [
+                  Object {
+                    "text": Array [
+                      Object {
+                        "text": "list",
+                      },
+                    ],
+                  },
+                ],
+                Array [
+                  Object {
+                    "text": Array [
+                      Object {
+                        "text": "list",
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+          Array [
+            Object {
+              "text": Array [
+                Object {
+                  "text": "not checked",
+                },
+              ],
+            },
+          ],
+          Array [
+            Object {
+              "text": Array [
+                Object {
+                  "text": "checked",
+                },
+              ],
+            },
+          ],
+        ],
+      },
+      Object {
+        "ol": Array [
+          Array [
+            Object {
+              "text": Array [
+                Object {
+                  "text": "ordered list",
+                },
+              ],
+            },
+          ],
+          Array [
+            Object {
+              "text": Array [
+                Object {
+                  "text": "ordered list",
+                },
+              ],
+            },
+          ],
+          Array [
+            Object {
+              "text": Array [
+                Object {
+                  "text": "ordered list",
+                },
+              ],
+            },
+            Object {
+              "ol": Array [
+                Array [
+                  Object {
+                    "text": Array [
+                      Object {
+                        "text": "aaa",
+                      },
+                    ],
+                  },
+                ],
+                Array [
+                  Object {
+                    "text": Array [
+                      Object {
+                        "text": "aaa",
+                      },
+                    ],
+                  },
+                  Object {
+                    "ol": Array [
+                      Array [
+                        Object {
+                          "text": Array [
+                            Object {
+                              "text": "eeeee",
+                            },
+                          ],
+                        },
+                      ],
+                      Array [
+                        Object {
+                          "text": Array [
+                            Object {
+                              "text": "eeeee",
+                            },
+                          ],
+                        },
+                      ],
+                    ],
+                  },
+                ],
+                Array [
+                  Object {
+                    "text": Array [
+                      Object {
+                        "text": "aaa",
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+          Array [
+            Object {
+              "text": Array [
+                Object {
+                  "text": "ordered list",
+                },
+              ],
+            },
+          ],
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": "This is ",
+          },
+          Object {
+            "link": "https://github.com/",
+            "text": "link to GitHub.com",
+          },
+          Object {
+            "text": ".",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": "This is ",
+          },
+          Object {
+            "image": "https://github.githubassets.com/images/modules/logos_page/Octocat.png",
+          },
+          Object {
+            "text": ".",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": Array [
+              Object {
+                "text": "quote
+quote
+quote
+quote",
+              },
+            ],
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": Array [
+              Object {
+                "text": "quote",
+              },
+            ],
+          },
+          Object {
+            "text": Array [
+              Object {
+                "text": Array [
+                  Object {
+                    "text": "quoted quote",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      Object {
+        "table": Object {
+          "body": Array [
+            Array [
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "left",
+                  },
+                  "text": "Left align",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "right",
+                  },
+                  "text": "Right align",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "center",
+                  },
+                  "text": "Center align",
+                },
+              ],
+            ],
+            Array [
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "left",
+                  },
+                  "text": "This",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "right",
+                  },
+                  "text": "This",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "center",
+                  },
+                  "text": "This",
+                },
+              ],
+            ],
+            Array [
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "left",
+                  },
+                  "text": "column",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "right",
+                  },
+                  "text": "column",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "center",
+                  },
+                  "text": "column",
+                },
+              ],
+            ],
+            Array [
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "left",
+                  },
+                  "text": "will",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "right",
+                  },
+                  "text": "will",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "center",
+                  },
+                  "text": "will",
+                },
+              ],
+            ],
+            Array [
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "left",
+                  },
+                  "text": "be",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "right",
+                  },
+                  "text": "be",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "center",
+                  },
+                  "text": "be",
+                },
+              ],
+            ],
+            Array [
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "left",
+                  },
+                  "text": "left",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "right",
+                  },
+                  "text": "right",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "center",
+                  },
+                  "text": "center",
+                },
+              ],
+            ],
+            Array [
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "left",
+                  },
+                  "text": "aligned",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "right",
+                  },
+                  "text": "aligned",
+                },
+              ],
+              Array [
+                Object {
+                  "style": Object {
+                    "alignment": "center",
+                  },
+                  "text": "aligned",
+                },
+              ],
+            ],
+          ],
+        },
+      },
+      Object {
+        "text": Object {
+          "text": "<div style=\\"color:red;\\">
+This is <u>HTML</u>
+</div>",
+        },
+      },
+      Object {
+        "canvas": Array [
+          Object {
+            "type": "line",
+            "x1": 0,
+            "x2": 514,
+            "y1": 0,
+            "y2": 0,
+          },
+        ],
+        "margin": Array [
+          0,
+          12,
+          0,
+          0,
+        ],
+      },
+      Object {
+        "canvas": Array [
+          Object {
+            "type": "line",
+            "x1": 0,
+            "x2": 514,
+            "y1": 0,
+            "y2": 0,
+          },
+        ],
+        "margin": Array [
+          0,
+          12,
+          0,
+          0,
+        ],
+      },
+      Object {
+        "text": Object {
+          "text": "function $initHighlight(block, cls) {
+  try {
+    if (cls.search(/\\\\bno\\\\-highlight\\\\b/) != -1)
+      return process(block, true, 0x0F) +
+             \` class=\\"\${cls}\\"\`;
+  } catch (e) {
+    /* handle exception */
+  }
+  for (var i = 0 / 2; i < classes.length; i++) {
+    if (checkCondition(classes[i]) === undefined)
+      console.log('undefined');
+  }
+
+  return (
+    <div>
+      <web-component>{block}</web-component>
+    </div>
+  )
+}
+
+export  $initHighlight;",
+        },
+      },
+    ],
+    "images": Object {
+      "https://github.githubassets.com/images/modules/logos_page/Octocat.png": "https://github.githubassets.com/images/modules/logos_page/Octocat.png",
+    },
+    "styles": Object {
+      "head1": Object {
+        "fontSize": 24,
+      },
+      "head2": Object {
+        "fontSize": 22,
+      },
+      "head3": Object {
+        "fontSize": 20,
+      },
+      "head4": Object {
+        "fontSize": 18,
+      },
+      "head5": Object {
+        "fontSize": 16,
+      },
+      "head6": Object {
+        "fontSize": 14,
+      },
+    },
+  },
+  "fonts": Object {
+    "Roboto": Object {
+      "bold": "Roboto-Medium.ttf",
+      "bolditalics": "Roboto-MediumItalic.ttf",
+      "italics": "Roboto-Italic.ttf",
+      "normal": "Roboto-Regular.ttf",
+    },
+  },
+  "tableLayouts": null,
+  "vfs": undefined,
+}
+`;
+
+exports[`e2e node-break.md 1`] = `
+Document {
+  "docDefinition": Object {
+    "content": Array [
+      Object {
+        "canvas": Array [
+          Object {
+            "type": "line",
+            "x1": 0,
+            "x2": 514,
+            "y1": 0,
+            "y2": 0,
+          },
+        ],
+        "margin": Array [
+          0,
+          12,
+          0,
+          0,
+        ],
+      },
+      Object {
+        "canvas": Array [
+          Object {
+            "type": "line",
+            "x1": 0,
+            "x2": 514,
+            "y1": 0,
+            "y2": 0,
+          },
+        ],
+        "margin": Array [
+          0,
+          12,
+          0,
+          0,
+        ],
+      },
+    ],
+    "images": Object {},
+    "styles": Object {
+      "head1": Object {
+        "fontSize": 24,
+      },
+      "head2": Object {
+        "fontSize": 22,
+      },
+      "head3": Object {
+        "fontSize": 20,
+      },
+      "head4": Object {
+        "fontSize": 18,
+      },
+      "head5": Object {
+        "fontSize": 16,
+      },
+      "head6": Object {
+        "fontSize": 14,
+      },
+    },
+  },
+  "fonts": Object {
+    "Roboto": Object {
+      "bold": "Roboto-Medium.ttf",
+      "bolditalics": "Roboto-MediumItalic.ttf",
+      "italics": "Roboto-Italic.ttf",
+      "normal": "Roboto-Regular.ttf",
+    },
+  },
+  "tableLayouts": null,
+  "vfs": undefined,
+}
+`;
+
+exports[`e2e node-code.md 1`] = `
+Document {
+  "docDefinition": Object {
+    "content": Array [
+      Object {
+        "text": Object {
+          "text": "@font-face {
+  font-family: Chunkfive;
+  src: url(\\"Chunkfive.otf\\");
+}
+
+body,
+.usertext {
+  color: #f0f0f0;
+  background: #600;
+  font-family: Chunkfive, sans;
+  --heading-1: 30px/32px Helvetica, sans-serif;
+}
+
+@import url(print.css);
+@media print {
+  a[href^=\\"http\\"]::after {
+    content: attr(href);
+  }
+}",
+        },
+      },
+      Object {
+        "text": Object {
+          "text": "function $initHighlight(block, cls) {
+  try {
+    if (cls.search(/\\\\bno\\\\-highlight\\\\b/) != -1)
+      return process(block, true, 0x0F) +
+             \` class=\\"\${cls}\\"\`;
+  } catch (e) {
+    /* handle exception */
+  }
+  for (var i = 0 / 2; i < classes.length; i++) {
+    if (checkCondition(classes[i]) === undefined)
+      console.log('undefined');
+  }
+
+  return (
+    <div>
+      <web-component>{block}</web-component>
+    </div>
+  )
+}
+
+export  $initHighlight;",
+        },
+      },
+      Object {
+        "text": Object {
+          "text": "class MyClass {
+  public static myValue: string;
+  constructor(init: string) {
+    this.myValue = init;
+  }
+}
+import fs = require(\\"fs\\");
+module MyModule {
+  export interface MyInterface extends Other {
+    myProperty: any;
+  }
+}
+declare magicNumber number;
+myArray.forEach(() => { }); // fat arrow syntax",
+        },
+      },
+    ],
+    "images": Object {},
+    "styles": Object {
+      "head1": Object {
+        "fontSize": 24,
+      },
+      "head2": Object {
+        "fontSize": 22,
+      },
+      "head3": Object {
+        "fontSize": 20,
+      },
+      "head4": Object {
+        "fontSize": 18,
+      },
+      "head5": Object {
+        "fontSize": 16,
+      },
+      "head6": Object {
+        "fontSize": 14,
+      },
+    },
+  },
+  "fonts": Object {
+    "Roboto": Object {
+      "bold": "Roboto-Medium.ttf",
+      "bolditalics": "Roboto-MediumItalic.ttf",
+      "italics": "Roboto-Italic.ttf",
+      "normal": "Roboto-Regular.ttf",
+    },
+  },
+  "tableLayouts": null,
+  "vfs": undefined,
+}
+`;
+
+exports[`e2e node-footnotes.md 1`] = `
+Document {
+  "docDefinition": Object {
+    "content": Array [
+      Object {
+        "text": Array [
+          Object {
+            "text": "This is footnote",
+          },
+          Object {
+            "text": ". And this is also ",
+          },
+          Object {
+            "text": "inline footnote",
+          },
+          Object {
+            "text": ".",
+          },
+        ],
+      },
+    ],
+    "images": Object {},
+    "styles": Object {
+      "head1": Object {
+        "fontSize": 24,
+      },
+      "head2": Object {
+        "fontSize": 22,
+      },
+      "head3": Object {
+        "fontSize": 20,
+      },
+      "head4": Object {
+        "fontSize": 18,
+      },
+      "head5": Object {
+        "fontSize": 16,
+      },
+      "head6": Object {
+        "fontSize": 14,
+      },
+    },
+  },
+  "fonts": Object {
+    "Roboto": Object {
+      "bold": "Roboto-Medium.ttf",
+      "bolditalics": "Roboto-MediumItalic.ttf",
+      "italics": "Roboto-Italic.ttf",
+      "normal": "Roboto-Regular.ttf",
+    },
+  },
+  "tableLayouts": null,
+  "vfs": undefined,
+}
+`;
+
+exports[`e2e node-frontmatter-toml.md 1`] = `
+Document {
+  "docDefinition": Object {
+    "content": Array [
+      Object {
+        "style": "head1",
+        "text": Array [
+          Object {
+            "text": "Other markdown",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": "blablabla",
+          },
+        ],
+      },
+    ],
+    "images": Object {},
+    "styles": Object {
+      "head1": Object {
+        "fontSize": 24,
+      },
+      "head2": Object {
+        "fontSize": 22,
+      },
+      "head3": Object {
+        "fontSize": 20,
+      },
+      "head4": Object {
+        "fontSize": 18,
+      },
+      "head5": Object {
+        "fontSize": 16,
+      },
+      "head6": Object {
+        "fontSize": 14,
+      },
+    },
+  },
+  "fonts": Object {
+    "Roboto": Object {
+      "bold": "Roboto-Medium.ttf",
+      "bolditalics": "Roboto-MediumItalic.ttf",
+      "italics": "Roboto-Italic.ttf",
+      "normal": "Roboto-Regular.ttf",
+    },
+  },
+  "tableLayouts": null,
+  "vfs": undefined,
+}
+`;
+
+exports[`e2e node-frontmatter-yaml.md 1`] = `
+Document {
+  "docDefinition": Object {
+    "content": Array [
+      Object {
+        "style": "head1",
+        "text": Array [
+          Object {
+            "text": "Other markdown",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": "blablabla",
+          },
+        ],
+      },
+    ],
+    "images": Object {},
+    "styles": Object {
+      "head1": Object {
+        "fontSize": 24,
+      },
+      "head2": Object {
+        "fontSize": 22,
+      },
+      "head3": Object {
+        "fontSize": 20,
+      },
+      "head4": Object {
+        "fontSize": 18,
+      },
+      "head5": Object {
+        "fontSize": 16,
+      },
+      "head6": Object {
+        "fontSize": 14,
+      },
+    },
+  },
+  "fonts": Object {
+    "Roboto": Object {
+      "bold": "Roboto-Medium.ttf",
+      "bolditalics": "Roboto-MediumItalic.ttf",
+      "italics": "Roboto-Italic.ttf",
+      "normal": "Roboto-Regular.ttf",
+    },
+  },
+  "tableLayouts": null,
+  "vfs": undefined,
+}
+`;
+
+exports[`e2e node-heading.md 1`] = `
+Document {
+  "docDefinition": Object {
+    "content": Array [
+      Object {
+        "style": "head1",
+        "text": Array [
+          Object {
+            "text": "Alpha",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": "aaaa",
+          },
+        ],
+      },
+      Object {
+        "style": "head2",
+        "text": Array [
+          Object {
+            "text": "Bravo",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": "bbbb",
+          },
+        ],
+      },
+      Object {
+        "style": "head3",
+        "text": Array [
+          Object {
+            "text": "Charlie",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": "cccc",
+          },
+        ],
+      },
+      Object {
+        "style": "head2",
+        "text": Array [
+          Object {
+            "text": "Delta",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": "dddd",
+          },
+        ],
+      },
+      Object {
+        "style": "head3",
+        "text": Array [
+          Object {
+            "text": "E",
+          },
+        ],
+      },
+      Object {
+        "style": "head4",
+        "text": Array [
+          Object {
+            "text": "F",
+          },
+        ],
+      },
+      Object {
+        "style": "head5",
+        "text": Array [
+          Object {
+            "text": "G",
+          },
+        ],
+      },
+      Object {
+        "style": "head6",
+        "text": Array [
+          Object {
+            "text": "H",
+          },
+        ],
+      },
+    ],
+    "images": Object {},
+    "styles": Object {
+      "head1": Object {
+        "fontSize": 24,
+      },
+      "head2": Object {
+        "fontSize": 22,
+      },
+      "head3": Object {
+        "fontSize": 20,
+      },
+      "head4": Object {
+        "fontSize": 18,
+      },
+      "head5": Object {
+        "fontSize": 16,
+      },
+      "head6": Object {
+        "fontSize": 14,
+      },
+    },
+  },
+  "fonts": Object {
+    "Roboto": Object {
+      "bold": "Roboto-Medium.ttf",
+      "bolditalics": "Roboto-MediumItalic.ttf",
+      "italics": "Roboto-Italic.ttf",
+      "normal": "Roboto-Regular.ttf",
+    },
+  },
+  "tableLayouts": null,
+  "vfs": undefined,
+}
+`;
+
+exports[`e2e node-math.md 1`] = `
+Document {
+  "docDefinition": Object {
+    "content": Array [
+      Object {
+        "text": Array [
+          Object {
+            "text": "Lift(",
+          },
+          Object {
+            "text": "L",
+          },
+          Object {
+            "text": ") can be determined by Lift Coefficient (",
+          },
+          Object {
+            "text": "C_L",
+          },
+          Object {
+            "text": ") like the following
+equation.",
+          },
+        ],
+      },
+      Object {
+        "text": Object {
+          "text": "L = \\\\frac{1}{2} \\\\rho v^2 S C_L",
+        },
+      },
+    ],
+    "images": Object {},
+    "styles": Object {
+      "head1": Object {
+        "fontSize": 24,
+      },
+      "head2": Object {
+        "fontSize": 22,
+      },
+      "head3": Object {
+        "fontSize": 20,
+      },
+      "head4": Object {
+        "fontSize": 18,
+      },
+      "head5": Object {
+        "fontSize": 16,
+      },
+      "head6": Object {
+        "fontSize": 14,
+      },
+    },
+  },
+  "fonts": Object {
+    "Roboto": Object {
+      "bold": "Roboto-Medium.ttf",
+      "bolditalics": "Roboto-MediumItalic.ttf",
+      "italics": "Roboto-Italic.ttf",
+      "normal": "Roboto-Regular.ttf",
+    },
+  },
+  "tableLayouts": null,
+  "vfs": undefined,
+}
+`;
+
+exports[`e2e node-ml.md 1`] = `
+Document {
+  "docDefinition": Object {
+    "content": Array [
+      Object {
+        "text": Object {
+          "text": "<div>
+<span>This is <b>html</b></span>
+</div>",
+        },
+      },
+      Object {
+        "text": Object {
+          "text": "<!--comment-->",
+        },
+      },
+      Object {
+        "text": Array [
+          Object {
+            "link": "mailto:foobarbaz",
+            "text": "mailto:foobarbaz",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": "aaaaaa",
+          },
+        ],
+      },
+    ],
+    "images": Object {},
+    "styles": Object {
+      "head1": Object {
+        "fontSize": 24,
+      },
+      "head2": Object {
+        "fontSize": 22,
+      },
+      "head3": Object {
+        "fontSize": 20,
+      },
+      "head4": Object {
+        "fontSize": 18,
+      },
+      "head5": Object {
+        "fontSize": 16,
+      },
+      "head6": Object {
+        "fontSize": 14,
+      },
+    },
+  },
+  "fonts": Object {
+    "Roboto": Object {
+      "bold": "Roboto-Medium.ttf",
+      "bolditalics": "Roboto-MediumItalic.ttf",
+      "italics": "Roboto-Italic.ttf",
+      "normal": "Roboto-Regular.ttf",
+    },
+  },
+  "tableLayouts": null,
+  "vfs": undefined,
+}
+`;
+
+exports[`e2e node-paragraph.md 1`] = `
+Document {
+  "docDefinition": Object {
+    "content": Array [
+      Object {
+        "text": Array [
+          Object {
+            "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+          },
+        ],
+      },
+    ],
+    "images": Object {},
+    "styles": Object {
+      "head1": Object {
+        "fontSize": 24,
+      },
+      "head2": Object {
+        "fontSize": 22,
+      },
+      "head3": Object {
+        "fontSize": 20,
+      },
+      "head4": Object {
+        "fontSize": 18,
+      },
+      "head5": Object {
+        "fontSize": 16,
+      },
+      "head6": Object {
+        "fontSize": 14,
+      },
+    },
+  },
+  "fonts": Object {
+    "Roboto": Object {
+      "bold": "Roboto-Medium.ttf",
+      "bolditalics": "Roboto-MediumItalic.ttf",
+      "italics": "Roboto-Italic.ttf",
+      "normal": "Roboto-Regular.ttf",
+    },
+  },
+  "tableLayouts": null,
+  "vfs": undefined,
+}
+`;
+
+exports[`e2e node-phrasing-1.md 1`] = `
+Document {
+  "docDefinition": Object {
+    "content": Array [
+      Object {
+        "text": Array [
+          Object {
+            "text": "aaa ",
+          },
+          Object {
+            "style": Object {
+              "bold": true,
+            },
+            "text": "aaaaaaa",
+          },
+          Object {
+            "text": " aaaaaa ",
+          },
+          Object {
+            "style": Object {
+              "italics": true,
+            },
+            "text": "aaaaaaaa",
+          },
+          Object {
+            "text": " aaaaaaaa ",
+          },
+          Object {
+            "decoration": "lineThrough",
+            "text": "aaaaaaa",
+          },
+          Object {
+            "text": " aaaa ",
+          },
+          Object {
+            "text": "aaaaaaaa",
+          },
+          Object {
+            "text": " aaa
+aaa",
+          },
+          Object {
+            "style": Object {
+              "bold": true,
+              "italics": true,
+            },
+            "text": "aa",
+          },
+          Object {
+            "decoration": "lineThrough",
+            "style": Object {
+              "bold": true,
+            },
+            "text": "aa",
+          },
+          Object {
+            "text": "aaa ",
+          },
+          Object {
+            "style": Object {
+              "italics": true,
+            },
+            "text": "aa ",
+          },
+          Object {
+            "style": Object {
+              "bold": true,
+              "italics": true,
+            },
+            "text": "a ",
+          },
+          Object {
+            "decoration": "lineThrough",
+            "style": Object {
+              "bold": true,
+              "italics": true,
+            },
+            "text": "aa",
+          },
+          Object {
+            "style": Object {
+              "bold": true,
+              "italics": true,
+            },
+            "text": " aa ",
+          },
+          Object {
+            "style": Object {
+              "bold": true,
+              "italics": true,
+            },
+            "text": "aaa",
+          },
+          Object {
+            "style": Object {
+              "bold": true,
+              "italics": true,
+            },
+            "text": " aaaaa",
+          },
+          Object {
+            "style": Object {
+              "italics": true,
+            },
+            "text": " aaaa",
+          },
+          Object {
+            "text": " aa",
+          },
+          Object {
+            "text": "a*aa*aa_aa_a~~aa~~a",
+          },
+        ],
+      },
+      Object {
+        "style": "head1",
+        "text": Array [
+          Object {
+            "style": Object {
+              "bold": true,
+            },
+            "text": "heading",
+          },
+        ],
+      },
+      Object {
+        "ul": Array [
+          Array [
+            Object {
+              "text": Array [
+                Object {
+                  "style": Object {
+                    "bold": true,
+                  },
+                  "text": "list",
+                },
+              ],
+            },
+          ],
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "text": Array [
+              Object {
+                "style": Object {
+                  "bold": true,
+                },
+                "text": "quote",
+              },
+            ],
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "link": "https://github.com/",
+            "style": Object {
+              "bold": true,
+            },
+            "text": "link to GitHub.com",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "link": "https://github.com/",
+            "style": Object {
+              "bold": true,
+            },
+            "text": "link to GitHub.com",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "image": "https://github.githubassets.com/images/modules/logos_page/Octocat.png",
+          },
+        ],
+      },
+    ],
+    "images": Object {
+      "https://github.githubassets.com/images/modules/logos_page/Octocat.png": "https://github.githubassets.com/images/modules/logos_page/Octocat.png",
+    },
+    "styles": Object {
+      "head1": Object {
+        "fontSize": 24,
+      },
+      "head2": Object {
+        "fontSize": 22,
+      },
+      "head3": Object {
+        "fontSize": 20,
+      },
+      "head4": Object {
+        "fontSize": 18,
+      },
+      "head5": Object {
+        "fontSize": 16,
+      },
+      "head6": Object {
+        "fontSize": 14,
+      },
+    },
+  },
+  "fonts": Object {
+    "Roboto": Object {
+      "bold": "Roboto-Medium.ttf",
+      "bolditalics": "Roboto-MediumItalic.ttf",
+      "italics": "Roboto-Italic.ttf",
+      "normal": "Roboto-Regular.ttf",
+    },
+  },
+  "tableLayouts": null,
+  "vfs": undefined,
+}
+`;
+
+exports[`e2e node-phrasing-2.md 1`] = `
+Document {
+  "docDefinition": Object {
+    "content": Array [
+      Object {
+        "text": Array [
+          Object {
+            "link": "https://github.com/",
+            "style": Object {
+              "bold": true,
+            },
+            "text": "link to GitHub.com",
+          },
+        ],
+      },
+      Object {
+        "text": Array [
+          Object {
+            "image": "https://github.githubassets.com/images/modules/logos_page/Octocat.png",
+          },
+        ],
+      },
+      Object {
+        "text": Array [],
+      },
+      Object {
+        "text": Array [],
+      },
+    ],
+    "images": Object {
+      "https://github.githubassets.com/images/modules/logos_page/Octocat.png": "https://github.githubassets.com/images/modules/logos_page/Octocat.png",
+    },
+    "styles": Object {
+      "head1": Object {
+        "fontSize": 24,
+      },
+      "head2": Object {
+        "fontSize": 22,
+      },
+      "head3": Object {
+        "fontSize": 20,
+      },
+      "head4": Object {
+        "fontSize": 18,
+      },
+      "head5": Object {
+        "fontSize": 16,
+      },
+      "head6": Object {
+        "fontSize": 14,
+      },
+    },
+  },
+  "fonts": Object {
+    "Roboto": Object {
+      "bold": "Roboto-Medium.ttf",
+      "bolditalics": "Roboto-MediumItalic.ttf",
+      "italics": "Roboto-Italic.ttf",
+      "normal": "Roboto-Regular.ttf",
+    },
+  },
+  "tableLayouts": null,
+  "vfs": undefined,
+}
+`;
