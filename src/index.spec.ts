@@ -18,7 +18,7 @@ describe("e2e", () => {
     .use(footnotes, { inlineNotes: true })
     .use(frontmatter, ["yaml", "toml"])
     .use(math)
-    .use(pdf);
+    .use(pdf, { output: "raw" });
 
   const fixturesDir = path.join(__dirname, FIXTURE_PATH);
   const filenames = fs.readdirSync(fixturesDir);

@@ -47,6 +47,7 @@ type Context = {
 };
 
 export type Opts = {
+  output?: "buffer" | "blob" | "raw";
   imageResolver?: ImageResolver;
 };
 
@@ -58,8 +59,20 @@ export function mdastToPdf(
   node: mdast.Root,
   opts: Opts,
   images: ImageDataMap
-): pdfMake.TCreatedPdf {
-  return buildPdfRoot(node, opts, images);
+): Promise<any> | pdfMake.TCreatedPdf {
+  const doc = buildPdfRoot(node, opts, images);
+  switch (opts.output ?? "buffer") {
+    case "buffer":
+      return new Promise((resolve) => {
+        doc.getBuffer(resolve);
+      });
+    case "blob":
+      return new Promise((resolve) => {
+        doc.getBlob(resolve);
+      });
+    case "raw":
+      return doc;
+  }
 }
 
 function buildPdfRoot(

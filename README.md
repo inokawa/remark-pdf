@@ -28,13 +28,21 @@ npm install remark-pdf
 import { unified } from "unified";
 import markdown from "remark-parse";
 import pdf from "remark-pdf";
+import { saveAs } from "file-saver";
 
-const processor = unified().use(markdown).use(pdf);
+const processor = unified().use(markdown).use(pdf, { output: "blob" });
 
 const text = "# hello world";
 
 (async () => {
   const doc = await processor.process(text);
-  doc.result.download();
+  const blob = await doc.result;
+  saveAs(blob, "example.docx");
 })();
 ```
+
+## Options
+
+| Key    | Default  | Type                        | Description                                                                                                                           |
+| ------ | -------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| output | "buffer" | `"buffer"` `"blob"` `"raw"` | Set output type of `VFile.result`. `buffer` is `Promise<ArrayBuffer>`. `blob` is `Promise<Blob>`. `raw` is internal data for testing. |

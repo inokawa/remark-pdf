@@ -32,11 +32,11 @@ const toPdfProcessor = unified()
   .use(markdown)
   .use(gfm)
   .use(frontmatter)
-  .use(pdf);
+  .use(pdf, { output: "blob" });
 
 const toPdf = async (s: string) => {
   const doc = await toPdfProcessor.process(s);
-  return doc.result.download();
+  return doc.result;
 };
 
 export default {
@@ -70,7 +70,7 @@ export const MarkdownToPdf = () => {
           onClick={async () => {
             if (!ref.current) return;
             const blob = await toPdf(ref.current.value);
-            // saveAs(blob, "example.pdf");
+            saveAs(blob, "example.pdf");
           }}
         >
           {"convert to pdf"}
