@@ -12,6 +12,8 @@ import type {
   ContentUnorderedList,
   Style,
   TableCell,
+  TDocumentDefinitions,
+  TDocumentInformation,
 } from "pdfmake/interfaces";
 
 (<any>pdfMake).vfs = pdfFonts.pdfMake.vfs;
@@ -49,7 +51,18 @@ type Context = {
 export type Opts = {
   output?: "buffer" | "blob" | "raw";
   imageResolver?: ImageResolver;
-};
+  info?: TDocumentInformation;
+} & Pick<
+  TDocumentDefinitions,
+  | "pageMargins"
+  | "pageOrientation"
+  | "pageSize"
+  | "userPassword"
+  | "ownerPassword"
+  | "permissions"
+  | "version"
+  | "watermark"
+>;
 
 const error = (message: string) => {
   throw new Error(message);
@@ -57,11 +70,31 @@ const error = (message: string) => {
 
 export function mdastToPdf(
   node: mdast.Root,
-  { output }: Opts,
+  {
+    output,
+    info,
+    pageMargins,
+    pageOrientation,
+    pageSize,
+    userPassword,
+    ownerPassword,
+    permissions,
+    version,
+    watermark,
+  }: Opts,
   images: ImageDataMap
 ): Promise<any> | pdfMake.TCreatedPdf {
   const content = convertNodes(node.children, { deco: {}, images });
   const doc = pdfMake.createPdf({
+    info,
+    pageMargins,
+    pageOrientation,
+    pageSize,
+    userPassword,
+    ownerPassword,
+    permissions,
+    version,
+    watermark,
     content,
     images,
     styles: {
