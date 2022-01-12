@@ -37,7 +37,7 @@ const text = "# hello world";
 (async () => {
   const doc = await processor.process(text);
   const blob = await doc.result;
-  saveAs(blob, "example.docx");
+  saveAs(blob, "example.pdf");
 })();
 ```
 
