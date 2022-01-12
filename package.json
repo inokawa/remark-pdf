@@ -18,6 +18,7 @@
     "prepublishOnly": "rimraf lib && npm run build && npm run tsc:d"
   },
   "dependencies": {
+    "@types/pdfmake": "^0.1.20",
     "pdfmake": "^0.2.4",
     "unist-util-visit": "^4.1.0"
   },
@@ -31,7 +32,6 @@
     "@storybook/react": "6.4.9",
     "@types/jest": "^27.4.0",
     "@types/mdast": "^3.0.10",
-    "@types/pdfmake": "^0.1.20",
     "@types/unist": "2.0.6",
     "babel-jest": "27.4.6",
     "file-saver": "^2.0.5",
