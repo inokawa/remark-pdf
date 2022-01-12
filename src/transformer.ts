@@ -57,32 +57,11 @@ const error = (message: string) => {
 
 export function mdastToPdf(
   node: mdast.Root,
-  opts: Opts,
+  { output }: Opts,
   images: ImageDataMap
 ): Promise<any> | pdfMake.TCreatedPdf {
-  const doc = buildPdfRoot(node, opts, images);
-  switch (opts.output ?? "buffer") {
-    case "buffer":
-      return new Promise((resolve) => {
-        doc.getBuffer(resolve);
-      });
-    case "blob":
-      return new Promise((resolve) => {
-        doc.getBlob(resolve);
-      });
-    case "raw":
-      return doc;
-  }
-}
-
-function buildPdfRoot(
-  root: mdast.Root,
-  opts: Opts,
-  images: ImageDataMap
-): pdfMake.TCreatedPdf {
-  const ctx: Context = { deco: {}, images };
-  const content = convertNodes(root.children, ctx, opts);
-  const pdf = pdfMake.createPdf({
+  const content = convertNodes(node.children, { deco: {}, images });
+  const doc = pdfMake.createPdf({
     content,
     images,
     styles: {
@@ -106,33 +85,45 @@ function buildPdfRoot(
       },
     },
   });
-  return pdf;
+
+  switch (output ?? "buffer") {
+    case "buffer":
+      return new Promise((resolve) => {
+        doc.getBuffer(resolve);
+      });
+    case "blob":
+      return new Promise((resolve) => {
+        doc.getBlob(resolve);
+      });
+    case "raw":
+      return doc;
+  }
 }
 
-function convertNodes(nodes: mdast.Content[], ctx: Context, opts: Opts) {
+function convertNodes(nodes: mdast.Content[], ctx: Context) {
   const results: Content[] = [];
   for (const node of nodes) {
     switch (node.type) {
       case "paragraph":
-        results.push(buildParagraph(node, ctx, opts));
+        results.push(buildParagraph(node, ctx));
         break;
       case "heading":
-        results.push(buildHeading(node, ctx, opts));
+        results.push(buildHeading(node, ctx));
         break;
       case "thematicBreak":
         results.push(buildThematicBreak(node, ctx));
         break;
       case "blockquote":
-        results.push(buildBlockquote(node, ctx, opts));
+        results.push(buildBlockquote(node, ctx));
         break;
       case "list":
-        results.push(buildList(node, ctx, opts));
+        results.push(buildList(node, ctx));
         break;
       case "listItem":
         error("unreachable");
         break;
       case "table":
-        results.push(buildTable(node, ctx, opts));
+        results.push(buildTable(node, ctx));
         break;
       case "tableRow":
         error("unreachable");
@@ -166,11 +157,10 @@ function convertNodes(nodes: mdast.Content[], ctx: Context, opts: Opts) {
       case "delete": {
         const { type, children } = node;
         results.push(
-          ...convertNodes(
-            children,
-            { ...ctx, deco: { ...ctx.deco, [type]: true } },
-            opts
-          )
+          ...convertNodes(children, {
+            ...ctx,
+            deco: { ...ctx.deco, [type]: true },
+          })
         );
         break;
       }
@@ -182,7 +172,7 @@ function convertNodes(nodes: mdast.Content[], ctx: Context, opts: Opts) {
         results.push(buildBreak(node, ctx));
         break;
       case "link":
-        results.push(...buildLink(node, ctx, opts));
+        results.push(...buildLink(node, ctx));
         break;
       case "image":
         results.push(buildImage(node, ctx.images));
@@ -194,7 +184,7 @@ function convertNodes(nodes: mdast.Content[], ctx: Context, opts: Opts) {
         // FIXME: unimplemented
         break;
       case "footnote":
-        results.push(...buildFootnote(node, ctx, opts));
+        results.push(...buildFootnote(node, ctx));
         break;
       case "footnoteReference":
         // FIXME: unimplemented
@@ -213,19 +203,11 @@ function convertNodes(nodes: mdast.Content[], ctx: Context, opts: Opts) {
   return results;
 }
 
-function buildParagraph(
-  { type, children }: mdast.Paragraph,
-  ctx: Context,
-  opts: Opts
-) {
-  return <ContentText>{ text: convertNodes(children, ctx, opts) };
+function buildParagraph({ type, children }: mdast.Paragraph, ctx: Context) {
+  return <ContentText>{ text: convertNodes(children, ctx) };
 }
 
-function buildHeading(
-  { type, children, depth }: mdast.Heading,
-  ctx: Context,
-  opts: Opts
-) {
+function buildHeading({ type, children, depth }: mdast.Heading, ctx: Context) {
   let heading: string;
   switch (depth) {
     case 1:
@@ -248,7 +230,7 @@ function buildHeading(
       break;
   }
   return <ContentText>{
-    text: convertNodes(children, ctx, opts),
+    text: convertNodes(children, ctx),
     style: heading,
   };
 }
@@ -268,42 +250,32 @@ function buildThematicBreak({ type }: mdast.ThematicBreak, ctx: Context) {
   };
 }
 
-function buildBlockquote(
-  { type, children }: mdast.Blockquote,
-  ctx: Context,
-  opts: Opts
-) {
+function buildBlockquote({ type, children }: mdast.Blockquote, ctx: Context) {
   // FIXME: do nothing for now
-  return <ContentText>{ text: convertNodes(children, ctx, opts) };
+  return <ContentText>{ text: convertNodes(children, ctx) };
 }
 
 function buildList(
   { type, children, ordered, start, spread }: mdast.List,
-  ctx: Context,
-  opts: Opts
+  ctx: Context
 ) {
   return ordered
     ? <ContentOrderedList>{
-        ol: children.map((l) => buildListItem(l, ctx, opts)),
+        ol: children.map((l) => buildListItem(l, ctx)),
       }
     : <ContentUnorderedList>{
-        ul: children.map((l) => buildListItem(l, ctx, opts)),
+        ul: children.map((l) => buildListItem(l, ctx)),
       };
 }
 
 function buildListItem(
   { type, children, checked, spread }: mdast.ListItem,
-  ctx: Context,
-  opts: Opts
+  ctx: Context
 ) {
-  return convertNodes(children, ctx, opts);
+  return convertNodes(children, ctx);
 }
 
-function buildTable(
-  { type, children, align }: mdast.Table,
-  ctx: Context,
-  opts: Opts
-) {
+function buildTable({ type, children, align }: mdast.Table, ctx: Context) {
   const cellAligns: Alignment[] | undefined = align?.map((a) => {
     switch (a) {
       case "left":
@@ -320,7 +292,7 @@ function buildTable(
   return <ContentTable>{
     table: {
       body: children.map((r) => {
-        return buildTableRow(r, ctx, opts, cellAligns);
+        return buildTableRow(r, ctx, cellAligns);
       }),
     },
   };
@@ -329,22 +301,20 @@ function buildTable(
 function buildTableRow(
   { type, children }: mdast.TableRow,
   ctx: Context,
-  opts: Opts,
   cellAligns: Alignment[] | undefined
 ) {
   return children.map((c, i) => {
-    return buildTableCell(c, ctx, opts, cellAligns?.[i]);
+    return buildTableCell(c, ctx, cellAligns?.[i]);
   });
 }
 
 function buildTableCell(
   { type, children }: mdast.TableCell,
   ctx: Context,
-  opts: Opts,
   align: Alignment | undefined
 ) {
   return <TableCell>(
-    convertNodes(children, { ...ctx, deco: { ...ctx.deco, align } }, opts)
+    convertNodes(children, { ...ctx, deco: { ...ctx.deco, align } })
   );
 }
 
@@ -396,16 +366,8 @@ function buildBreak({ type }: mdast.Break, ctx: Context) {
   return buildText("", ctx);
 }
 
-function buildLink(
-  { type, children, url, title }: mdast.Link,
-  ctx: Context,
-  opts: Opts
-) {
-  return convertNodes(
-    children,
-    { ...ctx, deco: { ...ctx.deco, link: url } },
-    opts
-  );
+function buildLink({ type, children, url, title }: mdast.Link, ctx: Context) {
+  return convertNodes(children, { ...ctx, deco: { ...ctx.deco, link: url } });
 }
 
 function buildImage(
@@ -415,11 +377,7 @@ function buildImage(
   return <ContentImage>{ image: url /* width, height*/ };
 }
 
-function buildFootnote(
-  { type, children }: mdast.Footnote,
-  ctx: Context,
-  opts: Opts
-) {
+function buildFootnote({ type, children }: mdast.Footnote, ctx: Context) {
   // FIXME: unimplemented
-  return convertNodes(children, ctx, opts);
+  return convertNodes(children, ctx);
 }
