@@ -1,0 +1,65 @@
+import type { Plugin } from "unified";
+import * as mdast from "mdast";
+import { visit } from "unist-util-visit";
+import { mdastToPdf, Opts, ImageDataMap } from "./transformer";
+
+import Printer from "pdfmake";
+import { error } from "./utils";
+
+const printer = new Printer({
+  Courier: {
+    normal: "Courier",
+    bold: "Courier-Bold",
+    italics: "Courier-Oblique",
+    bolditalics: "Courier-BoldOblique",
+  },
+  Helvetica: {
+    normal: "Helvetica",
+    bold: "Helvetica-Bold",
+    italics: "Helvetica-Oblique",
+    bolditalics: "Helvetica-BoldOblique",
+  },
+  Times: {
+    normal: "Times-Roman",
+    bold: "Times-Bold",
+    italics: "Times-Italic",
+    bolditalics: "Times-BoldItalic",
+  },
+  Symbol: {
+    normal: "Symbol",
+  },
+  ZapfDingbats: {
+    normal: "ZapfDingbats",
+  },
+});
+
+export type Options = Opts;
+
+const plugin: Plugin<[Options?]> = function (opts = {}) {
+  let images: ImageDataMap = {};
+
+  this.Compiler = (node) => {
+    return mdastToPdf(node as any, opts, images, (def) => {
+      const pdf = printer.createPdfKitDocument(def);
+
+      return new Promise((resolve, reject) => {
+        const chunks: any[] = [];
+        pdf.on("data", (chunk) => chunks.push(chunk));
+        pdf.on("end", () => {
+          const buf = Buffer.concat(chunks);
+          switch (opts.output ?? "buffer") {
+            case "buffer":
+              return resolve(buf);
+            case "blob":
+              return error("unimplemented");
+          }
+        });
+        pdf.on("error", (e) => {
+          reject(e);
+        });
+        pdf.end();
+      });
+    });
+  };
+};
+export default plugin;

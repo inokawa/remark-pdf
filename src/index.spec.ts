@@ -6,8 +6,10 @@ import gfm from "remark-gfm";
 import footnotes from "remark-footnotes";
 import frontmatter from "remark-frontmatter";
 import math from "remark-math";
-import { TCreatedPdf } from "pdfmake/build/pdfmake";
-import pdf from ".";
+import pdf from "./node";
+
+import { advanceTo } from "jest-date-mock";
+advanceTo(new Date(2018, 5, 27, 11, 30, 0));
 
 const FIXTURE_PATH = "../fixtures";
 
@@ -18,7 +20,7 @@ describe("e2e", () => {
     .use(footnotes, { inlineNotes: true })
     .use(frontmatter, ["yaml", "toml"])
     .use(math)
-    .use(pdf, { output: "raw" });
+    .use(pdf, { output: "buffer" });
 
   const fixturesDir = path.join(__dirname, FIXTURE_PATH);
   const filenames = fs.readdirSync(fixturesDir);
@@ -27,7 +29,7 @@ describe("e2e", () => {
       const doc = await toPdfProcessor.process(
         fs.readFileSync(path.join(fixturesDir, filename))
       );
-      expect(doc.result as TCreatedPdf).toMatchSnapshot();
+      expect((await doc.result) as any).toMatchSnapshot();
     });
   });
 });

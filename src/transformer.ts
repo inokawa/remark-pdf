@@ -1,6 +1,4 @@
 import * as mdast from "./models/mdast";
-import * as pdfMake from "pdfmake/build/pdfmake";
-import * as pdfFonts from "pdfmake/build/vfs_fonts";
 import type {
   Alignment,
   Content as AllContent,
@@ -15,8 +13,7 @@ import type {
   TDocumentDefinitions,
   TDocumentInformation,
 } from "pdfmake/interfaces";
-
-(<any>pdfMake).vfs = pdfFonts.pdfMake.vfs;
+import { error, isBrowser } from "./utils";
 
 type Content = Exclude<AllContent, any[]>;
 
@@ -49,7 +46,7 @@ type Context = {
 };
 
 export type Opts = {
-  output?: "buffer" | "blob" | "raw";
+  output?: "buffer" | "blob";
   imageResolver?: ImageResolver;
   info?: TDocumentInformation;
 } & Pick<
@@ -63,10 +60,6 @@ export type Opts = {
   | "version"
   | "watermark"
 >;
-
-const error = (message: string) => {
-  throw new Error(message);
-};
 
 export function mdastToPdf(
   node: mdast.Root,
@@ -82,10 +75,11 @@ export function mdastToPdf(
     version,
     watermark,
   }: Opts,
-  images: ImageDataMap
-): Promise<any> | pdfMake.TCreatedPdf {
+  images: ImageDataMap,
+  build: (def: TDocumentDefinitions) => Promise<any>
+): Promise<any> {
   const content = convertNodes(node.children, { deco: {}, images });
-  const doc = pdfMake.createPdf({
+  const doc = build({
     info,
     pageMargins,
     pageOrientation,
@@ -97,6 +91,9 @@ export function mdastToPdf(
     watermark,
     content,
     images,
+    defaultStyle: {
+      font: isBrowser() ? "Roboto" : "Helvetica",
+    },
     styles: {
       [HEADING_1]: {
         fontSize: 24,
@@ -118,19 +115,7 @@ export function mdastToPdf(
       },
     },
   });
-
-  switch (output ?? "buffer") {
-    case "buffer":
-      return new Promise((resolve) => {
-        doc.getBuffer(resolve);
-      });
-    case "blob":
-      return new Promise((resolve) => {
-        doc.getBlob(resolve);
-      });
-    case "raw":
-      return doc;
-  }
+  return doc;
 }
 
 function convertNodes(nodes: mdast.Content[], ctx: Context) {

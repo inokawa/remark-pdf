@@ -43,19 +43,34 @@ const text = "# hello world";
 
 ### Node.js
 
-WIP
+```javascript
+import { unified } from "unified";
+import markdown from "remark-parse";
+import pdf from "remark-pdf/node";
+import * as fs from "fs";
+
+const processor = unified().use(markdown).use(pdf, { output: "buffer" });
+
+const text = "# hello world";
+
+(async () => {
+  const doc = await processor.process(text);
+  const buffer = await doc.result;
+  fs.writeFileSync("example.pdf", buffer);
+})();
+```
 
 ## Options
 
-| Key             | Default   | Type                        | Description                                                                                                                      |
-| --------------- | --------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| output          | "buffer"  | `"buffer"` `"blob"` `"raw"` | Set output type of `VFile.result`. `buffer` is `Promise<Buffer>`. `blob` is `Promise<Blob>`. `raw` is internal data for testing. |
-| info            | undefined | TDocumentInformation?       |                                                                                                                                  |
-| pageMargins     | undefined | Margins?                    |                                                                                                                                  |
-| pageOrientation | undefined | PageOrientation?            |                                                                                                                                  |
-| pageSize        | undefined | PageSize?                   |                                                                                                                                  |
-| userPassword    | undefined | string?                     |                                                                                                                                  |
-| ownerPassword   | undefined | string?                     |                                                                                                                                  |
-| permissions     | undefined | DocumentPermissions?        |                                                                                                                                  |
-| version         | undefined | PDFVersion?                 |                                                                                                                                  |
-| watermark       | undefined | Watermark?                  |                                                                                                                                  |
+| Key             | Default   | Type                  | Description                                                                                  |
+| --------------- | --------- | --------------------- | -------------------------------------------------------------------------------------------- |
+| output          | "buffer"  | `"buffer"` `"blob"`   | Set output type of `VFile.result`. `buffer` is `Promise<Buffer>`. `blob` is `Promise<Blob>`. |
+| info            | undefined | TDocumentInformation? |                                                                                              |
+| pageMargins     | undefined | Margins?              |                                                                                              |
+| pageOrientation | undefined | PageOrientation?      |                                                                                              |
+| pageSize        | undefined | PageSize?             |                                                                                              |
+| userPassword    | undefined | string?               |                                                                                              |
+| ownerPassword   | undefined | string?               |                                                                                              |
+| permissions     | undefined | DocumentPermissions?  |                                                                                              |
+| version         | undefined | PDFVersion?           |                                                                                              |
+| watermark       | undefined | Watermark?            |                                                                                              |
