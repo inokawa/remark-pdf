@@ -4,7 +4,7 @@ export const error = (message: string) => {
 
 export const isBrowser = () => {
   try {
-    return this === window;
+    return typeof window !== "undefined";
   } catch (e) {
     return false;
   }
