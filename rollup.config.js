@@ -1,6 +1,15 @@
 import typescript from "@rollup/plugin-typescript";
 import pkg from "./package.json";
 
+const plugins = [
+  typescript({
+    tsconfig: "./tsconfig.json",
+    outDir: ".",
+    declaration: true,
+    exclude: ["src/**/*.spec.*"],
+  }),
+];
+
 export default [
   {
     input: "src/index.ts",
@@ -15,7 +24,7 @@ export default [
       },
     ],
     external: Object.keys(pkg.dependencies),
-    plugins: [typescript()],
+    plugins: plugins,
   },
   {
     input: "src/node.ts",
@@ -30,6 +39,6 @@ export default [
       },
     ],
     external: Object.keys(pkg.dependencies),
-    plugins: [typescript()],
+    plugins: plugins,
   },
 ];
