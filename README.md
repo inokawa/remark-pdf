@@ -104,3 +104,8 @@ const text = "# hello world";
 | permissions     | undefined | DocumentPermissions?  |                                                                                              |
 | version         | undefined | PDFVersion?           |                                                                                              |
 | watermark       | undefined | Watermark?            |                                                                                              |
+
+## Related projects
+
+- [remark-slate-transformer](https://github.com/inokawa/remark-slate-transformer)
+- [remark-docx](https://github.com/inokawa/remark-docx)
