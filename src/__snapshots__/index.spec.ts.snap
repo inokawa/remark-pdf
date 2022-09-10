@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`e2e article.md 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     37,
     80,
     68,
@@ -5820,8 +5820,8 @@ Object {
 `;
 
 exports[`e2e node-break.md 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     37,
     80,
     68,
@@ -7024,8 +7024,8 @@ Object {
 `;
 
 exports[`e2e node-code.md 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     37,
     80,
     68,
@@ -10348,8 +10348,8 @@ Object {
 `;
 
 exports[`e2e node-footnotes.md 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     37,
     80,
     68,
@@ -11833,8 +11833,8 @@ Object {
 `;
 
 exports[`e2e node-frontmatter-toml.md 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     37,
     80,
     68,
@@ -13260,8 +13260,8 @@ Object {
 `;
 
 exports[`e2e node-frontmatter-yaml.md 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     37,
     80,
     68,
@@ -14687,8 +14687,8 @@ Object {
 `;
 
 exports[`e2e node-heading.md 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     37,
     80,
     68,
@@ -16213,8 +16213,8 @@ Object {
 `;
 
 exports[`e2e node-math.md 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     37,
     80,
     68,
@@ -17880,8 +17880,8 @@ Object {
 `;
 
 exports[`e2e node-ml.md 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     37,
     80,
     68,
@@ -19645,8 +19645,8 @@ Object {
 `;
 
 exports[`e2e node-paragraph.md 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     37,
     80,
     68,
@@ -22578,8 +22578,8 @@ Object {
 `;
 
 exports[`e2e node-phrasing-1.md 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     37,
     80,
     68,
@@ -26287,8 +26287,8 @@ Object {
 `;
 
 exports[`e2e node-phrasing-2.md 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     37,
     80,
     68,
