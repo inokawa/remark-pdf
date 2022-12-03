@@ -90,20 +90,9 @@ const text = "# hello world";
 })();
 ```
 
-## Options
+## Documentation
 
-| Key             | Default   | Type                  | Description                                                                                  |
-| --------------- | --------- | --------------------- | -------------------------------------------------------------------------------------------- |
-| output          | "buffer"  | `"buffer"` `"blob"`   | Set output type of `VFile.result`. `buffer` is `Promise<Buffer>`. `blob` is `Promise<Blob>`. |
-| info            | undefined | TDocumentInformation? |                                                                                              |
-| pageMargins     | undefined | Margins?              |                                                                                              |
-| pageOrientation | undefined | PageOrientation?      |                                                                                              |
-| pageSize        | undefined | PageSize?             |                                                                                              |
-| userPassword    | undefined | string?               |                                                                                              |
-| ownerPassword   | undefined | string?               |                                                                                              |
-| permissions     | undefined | DocumentPermissions?  |                                                                                              |
-| version         | undefined | PDFVersion?           |                                                                                              |
-| watermark       | undefined | Watermark?            |                                                                                              |
+- [API reference](./docs/API.md)
 
 ## Related projects
 

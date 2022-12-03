@@ -1,7 +1,7 @@
 import type { Plugin } from "unified";
 import * as mdast from "mdast";
 import { visit } from "unist-util-visit";
-import { mdastToPdf, Opts, ImageDataMap } from "./transformer";
+import { mdastToPdf, PdfOptions, ImageDataMap } from "./transformer";
 
 import Printer from "pdfmake";
 import { error } from "./utils";
@@ -33,9 +33,12 @@ const printer = new Printer({
   },
 });
 
-export type Options = Opts;
+export type { PdfOptions };
 
-const plugin: Plugin<[Options?]> = function (opts = {}) {
+/**
+ * Plugin for Node.js
+ */
+const plugin: Plugin<[PdfOptions?]> = function (opts = {}) {
   let images: ImageDataMap = {};
 
   this.Compiler = (node) => {

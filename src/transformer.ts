@@ -45,21 +45,29 @@ type Context = {
   readonly images: ImageDataMap;
 };
 
-export type Opts = {
+export interface PdfOptions
+  extends Pick<
+    TDocumentDefinitions,
+    | "pageMargins"
+    | "pageOrientation"
+    | "pageSize"
+    | "userPassword"
+    | "ownerPassword"
+    | "permissions"
+    | "version"
+    | "watermark"
+  > {
+  /**
+   * Set output type of `VFile.result`. `buffer` is `Promise<Buffer>`. `blob` is `Promise<Blob>`.
+   * @defaultValue "buffer"
+   */
   output?: "buffer" | "blob";
+  /**
+   * **You must set** if your markdown includes images.
+   */
   imageResolver?: ImageResolver;
   info?: TDocumentInformation;
-} & Pick<
-  TDocumentDefinitions,
-  | "pageMargins"
-  | "pageOrientation"
-  | "pageSize"
-  | "userPassword"
-  | "ownerPassword"
-  | "permissions"
-  | "version"
-  | "watermark"
->;
+}
 
 export function mdastToPdf(
   node: mdast.Root,
@@ -74,7 +82,7 @@ export function mdastToPdf(
     permissions,
     version,
     watermark,
-  }: Opts,
+  }: PdfOptions,
   images: ImageDataMap,
   build: (def: TDocumentDefinitions) => Promise<any>
 ): Promise<any> {
