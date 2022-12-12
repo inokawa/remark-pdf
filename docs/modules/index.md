@@ -2,13 +2,13 @@
 
 ## Table of contents
 
-### Interfaces
-
-- [PdfOptions](../interfaces/index.PdfOptions.md)
-
 ### Functions
 
 - [default](index.md#default)
+
+### Interfaces
+
+- [PdfOptions](../interfaces/index.PdfOptions.md)
 
 ## Functions
 
