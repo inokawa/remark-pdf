@@ -39,10 +39,12 @@ export default [
       {
         file: "lib/node.mjs",
         format: "cjs",
+        sourcemap: true,
       },
       {
         file: "lib/node.js",
         format: "es",
+        sourcemap: true,
       },
     ],
     external: externals,
