@@ -94,6 +94,18 @@ const text = "# hello world";
 
 - [API reference](./docs/API.md)
 
+## Contribute
+
+All contributions are welcome.
+If you find a problem, feel free to create an [issue](https://github.com/inokawa/remark-pdf/issues) or a [PR](https://github.com/inokawa/remark-pdf/pulls).
+
+### Making a Pull Request
+
+1. Clone this repo.
+2. Run `npm install`.
+3. Commit your fix.
+4. Make a PR and confirm all the CI checks passed.
+
 ## Related projects
 
 - [remark-slate-transformer](https://github.com/inokawa/remark-slate-transformer)
