@@ -8,11 +8,13 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "module": "./lib/index.mjs",
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.mjs",
       "default": "./lib/index.js"
     },
     "./node": {
-      "module": "./lib/node.mjs",
+      "types": "./lib/node.d.ts",
+      "import": "./lib/node.mjs",
       "default": "./lib/node.js"
     }
   },
