@@ -25,7 +25,7 @@ export default [
         sourcemap: true,
       },
       {
-        file: pkg.exports["."].module,
+        file: pkg.exports["."].import,
         format: "es",
         sourcemap: true,
       },
@@ -42,7 +42,7 @@ export default [
         sourcemap: true,
       },
       {
-        file: pkg.exports["./node"].module,
+        file: pkg.exports["./node"].import,
         format: "es",
         sourcemap: true,
       },

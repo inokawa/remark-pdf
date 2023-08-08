@@ -1,6 +1,6 @@
 {
   "name": "remark-pdf",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "remark plugin to compile markdown to pdf.",
   "main": "lib/index.js",
   "module": "lib/index.mjs",
