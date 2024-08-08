@@ -70,6 +70,15 @@ export interface PdfOptions
   info?: TDocumentInformation;
 }
 
+function deepMerge(target: any, source: any): any {
+  for (const key in source) {
+    if (source[key] instanceof Object && key in target) {
+      Object.assign(source[key], deepMerge(target[key], source[key]));
+    }
+  }
+  return { ...target, ...source };
+}
+
 export function mdastToPdf(
   node: mdast.Root,
   {
@@ -88,6 +97,27 @@ export function mdastToPdf(
   images: ImageDataMap,
   build: (def: TDocumentDefinitions) => Promise<any>
 ): Promise<any> {
+  const defaultStyles = {
+    [HEADING_1]: {
+      fontSize: 24,
+    },
+    [HEADING_2]: {
+      fontSize: 22,
+    },
+    [HEADING_3]: {
+      fontSize: 20,
+    },
+    [HEADING_4]: {
+      fontSize: 18,
+    },
+    [HEADING_5]: {
+      fontSize: 16,
+    },
+    [HEADING_6]: {
+      fontSize: 14,
+    },
+  };
+  const mergedStyles = deepMerge(defaultStyles, styles);
   const content = convertNodes(node.children, { deco: {}, images });
   const doc = build({
     info,
@@ -101,7 +131,7 @@ export function mdastToPdf(
     watermark,
     content,
     images,
-    styles,
+    styles: mergedStyles,
     defaultStyle: {
       font: isBrowser() ? "Roboto" : "Helvetica",
     },
