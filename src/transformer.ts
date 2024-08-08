@@ -360,17 +360,17 @@ function buildTableCell(
 
 function buildHtml({ type, value }: mdast.HTML, ctx: Context) {
   // FIXME: transform to text for now
-  return <ContentText>{ text: buildText(value, ctx), style: type };
+  return <ContentText>{ text: buildText(value, ctx)};
 }
 
 function buildCode({ type, value, lang, meta }: mdast.Code, ctx: Context) {
   // FIXME: transform to text for now
-  return <ContentText>{ text: buildText(value, ctx), style: type };
+  return <ContentText>{ text: buildText(value, ctx)};
 }
 
 function buildMath({ type, value }: mdast.Math, ctx: Context) {
   // FIXME: transform to text for now
-  return <ContentText>{ text: buildText(value, ctx), style: type };
+  return <ContentText>{ text: buildText(value, ctx)};
 }
 
 function buildInlineMath({ type, value }: mdast.InlineMath, ctx: Context) {
