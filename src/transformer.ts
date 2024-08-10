@@ -55,6 +55,7 @@ export interface PdfOptions
     | "ownerPassword"
     | "permissions"
     | "version"
+    | "styles"
     | "watermark"
   > {
   /**
@@ -69,6 +70,15 @@ export interface PdfOptions
   info?: TDocumentInformation;
 }
 
+function deepMerge(target: any, source: any): any {
+  for (const key in source) {
+    if (source[key] instanceof Object && key in target) {
+      Object.assign(source[key], deepMerge(target[key], source[key]));
+    }
+  }
+  return { ...target, ...source };
+}
+
 export function mdastToPdf(
   node: mdast.Root,
   {
@@ -79,6 +89,7 @@ export function mdastToPdf(
     pageSize,
     userPassword,
     ownerPassword,
+    styles,
     permissions,
     version,
     watermark,
@@ -86,6 +97,27 @@ export function mdastToPdf(
   images: ImageDataMap,
   build: (def: TDocumentDefinitions) => Promise<any>
 ): Promise<any> {
+  const defaultStyles = {
+    [HEADING_1]: {
+      fontSize: 24,
+    },
+    [HEADING_2]: {
+      fontSize: 22,
+    },
+    [HEADING_3]: {
+      fontSize: 20,
+    },
+    [HEADING_4]: {
+      fontSize: 18,
+    },
+    [HEADING_5]: {
+      fontSize: 16,
+    },
+    [HEADING_6]: {
+      fontSize: 14,
+    },
+  };
+  const mergedStyles = deepMerge(defaultStyles, styles);
   const content = convertNodes(node.children, { deco: {}, images });
   const doc = build({
     info,
@@ -99,30 +131,12 @@ export function mdastToPdf(
     watermark,
     content,
     images,
+    styles: mergedStyles,
     defaultStyle: {
       font: isBrowser() ? "Roboto" : "Helvetica",
     },
-    styles: {
-      [HEADING_1]: {
-        fontSize: 24,
-      },
-      [HEADING_2]: {
-        fontSize: 22,
-      },
-      [HEADING_3]: {
-        fontSize: 20,
-      },
-      [HEADING_4]: {
-        fontSize: 18,
-      },
-      [HEADING_5]: {
-        fontSize: 16,
-      },
-      [HEADING_6]: {
-        fontSize: 14,
-      },
-    },
-  });
+  }
+  );
   return doc;
 }
 
@@ -230,7 +244,7 @@ function convertNodes(nodes: mdast.Content[], ctx: Context) {
 }
 
 function buildParagraph({ type, children }: mdast.Paragraph, ctx: Context) {
-  return <ContentText>{ text: convertNodes(children, ctx) };
+  return <ContentText>{ text: convertNodes(children, ctx), style: type, };
 }
 
 function buildHeading({ type, children, depth }: mdast.Heading, ctx: Context) {
@@ -278,7 +292,7 @@ function buildThematicBreak({ type }: mdast.ThematicBreak, ctx: Context) {
 
 function buildBlockquote({ type, children }: mdast.Blockquote, ctx: Context) {
   // FIXME: do nothing for now
-  return <ContentText>{ text: convertNodes(children, ctx) };
+  return <ContentText>{ text: convertNodes(children, ctx), style: type };
 }
 
 function buildList(
@@ -346,17 +360,17 @@ function buildTableCell(
 
 function buildHtml({ type, value }: mdast.HTML, ctx: Context) {
   // FIXME: transform to text for now
-  return <ContentText>{ text: buildText(value, ctx) };
+  return <ContentText>{ text: buildText(value, ctx)};
 }
 
 function buildCode({ type, value, lang, meta }: mdast.Code, ctx: Context) {
   // FIXME: transform to text for now
-  return <ContentText>{ text: buildText(value, ctx) };
+  return <ContentText>{ text: buildText(value, ctx)};
 }
 
 function buildMath({ type, value }: mdast.Math, ctx: Context) {
   // FIXME: transform to text for now
-  return <ContentText>{ text: buildText(value, ctx) };
+  return <ContentText>{ text: buildText(value, ctx)};
 }
 
 function buildInlineMath({ type, value }: mdast.InlineMath, ctx: Context) {
