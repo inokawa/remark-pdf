@@ -36,7 +36,7 @@
     "unist-util-visit": "^4.1.0"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "10.0.1",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@storybook/react-vite": "9.0.15",
     "@types/mdast": "^3.0.10",
     "@types/unist": "2.0.6",
@@ -50,8 +50,8 @@
     "remark-gfm": "3.0.1",
     "remark-math": "5.1.1",
     "remark-parse": "10.0.1",
-    "rimraf": "3.0.2",
-    "rollup": "2.63.0",
+    "rimraf": "^6.0.0",
+    "rollup": "^4.44.1",
     "storybook": "9.0.15",
     "typedoc": "^0.28.7",
     "typedoc-plugin-markdown": "^4.7.0",
