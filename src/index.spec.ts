@@ -22,7 +22,7 @@ describe("e2e", () => {
   const toPdfProcessor = unified()
     .use(markdown)
     .use(gfm)
-    .use(footnotes, { inlineNotes: true })
+    .use(footnotes)
     .use(frontmatter, ["yaml", "toml"])
     .use(math)
     .use(pdf, { output: "buffer" });

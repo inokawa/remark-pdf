@@ -135,8 +135,7 @@ export function mdastToPdf(
     defaultStyle: {
       font: isBrowser() ? "Roboto" : "Helvetica",
     },
-  }
-  );
+  });
   return doc;
 }
 
@@ -224,7 +223,7 @@ function convertNodes(nodes: mdast.Content[], ctx: Context) {
         // FIXME: unimplemented
         break;
       case "footnote":
-        results.push(...buildFootnote(node, ctx));
+        // inline footnote was removed in mdast v5
         break;
       case "footnoteReference":
         // FIXME: unimplemented
@@ -244,7 +243,7 @@ function convertNodes(nodes: mdast.Content[], ctx: Context) {
 }
 
 function buildParagraph({ type, children }: mdast.Paragraph, ctx: Context) {
-  return <ContentText>{ text: convertNodes(children, ctx), style: type, };
+  return <ContentText>{ text: convertNodes(children, ctx), style: type };
 }
 
 function buildHeading({ type, children, depth }: mdast.Heading, ctx: Context) {
@@ -360,17 +359,17 @@ function buildTableCell(
 
 function buildHtml({ type, value }: mdast.HTML, ctx: Context) {
   // FIXME: transform to text for now
-  return <ContentText>{ text: buildText(value, ctx)};
+  return <ContentText>{ text: buildText(value, ctx) };
 }
 
 function buildCode({ type, value, lang, meta }: mdast.Code, ctx: Context) {
   // FIXME: transform to text for now
-  return <ContentText>{ text: buildText(value, ctx)};
+  return <ContentText>{ text: buildText(value, ctx) };
 }
 
 function buildMath({ type, value }: mdast.Math, ctx: Context) {
   // FIXME: transform to text for now
-  return <ContentText>{ text: buildText(value, ctx)};
+  return <ContentText>{ text: buildText(value, ctx) };
 }
 
 function buildInlineMath({ type, value }: mdast.InlineMath, ctx: Context) {
@@ -415,9 +414,4 @@ function buildImage(
   images: ImageDataMap
 ) {
   return <ContentImage>{ image: url /* width, height*/ };
-}
-
-function buildFootnote({ type, children }: mdast.Footnote, ctx: Context) {
-  // FIXME: unimplemented
-  return convertNodes(children, ctx);
 }
