@@ -8,11 +8,15 @@ import footnotes from "remark-footnotes";
 import frontmatter from "remark-frontmatter";
 import math from "remark-math";
 import pdf from "./node";
+import { pdf as pdfToImage } from "pdf-to-img";
+import { toMatchImageSnapshot } from "jest-image-snapshot";
 
 import { advanceTo } from "jest-date-mock";
 advanceTo(new Date(2018, 5, 27, 11, 30, 0));
 
 const FIXTURE_PATH = "../fixtures";
+
+expect.extend({ toMatchImageSnapshot });
 
 describe("e2e", () => {
   const toPdfProcessor = unified()
@@ -30,7 +34,10 @@ describe("e2e", () => {
       const doc = await toPdfProcessor.process(
         fs.readFileSync(path.join(fixturesDir, filename))
       );
-      expect((await doc.result) as any).toMatchSnapshot();
+      const generated = (await doc.result) as Buffer;
+      for await (const page of await pdfToImage(generated)) {
+        expect(page).toMatchImageSnapshot();
+      }
     });
   });
 });
