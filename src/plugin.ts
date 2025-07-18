@@ -1,11 +1,9 @@
 import type { Plugin } from "unified";
-import * as mdast from "mdast";
-import { visit } from "unist-util-visit";
 import { mdastToPdf, PdfOptions, ImageDataMap } from "./transformer";
 
 import * as pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
-(<any>pdfMake).vfs = pdfFonts.pdfMake.vfs;
+(pdfMake as any).vfs = pdfFonts.pdfMake.vfs;
 
 export type { PdfOptions };
 

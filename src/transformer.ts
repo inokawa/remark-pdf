@@ -82,7 +82,6 @@ function deepMerge(target: any, source: any): any {
 export function mdastToPdf(
   node: mdast.Root,
   {
-    output,
     info,
     pageMargins,
     pageOrientation,
@@ -139,7 +138,7 @@ export function mdastToPdf(
   return doc;
 }
 
-function convertNodes(nodes: mdast.Content[], ctx: Context) {
+function convertNodes(nodes: mdast.Content[], ctx: Context): Content[] {
   const results: Content[] = [];
   for (const node of nodes) {
     switch (node.type) {
@@ -150,7 +149,7 @@ function convertNodes(nodes: mdast.Content[], ctx: Context) {
         results.push(buildHeading(node, ctx));
         break;
       case "thematicBreak":
-        results.push(buildThematicBreak(node, ctx));
+        results.push(buildThematicBreak(node));
         break;
       case "blockquote":
         results.push(buildBlockquote(node, ctx));
@@ -235,18 +234,24 @@ function convertNodes(nodes: mdast.Content[], ctx: Context) {
         results.push(buildInlineMath(node, ctx));
         break;
       default:
-        const _: never = node;
+        error(node);
         break;
     }
   }
   return results;
 }
 
-function buildParagraph({ type, children }: mdast.Paragraph, ctx: Context) {
-  return <ContentText>{ text: convertNodes(children, ctx), style: type };
+function buildParagraph(
+  { type, children }: mdast.Paragraph,
+  ctx: Context
+): ContentText {
+  return { text: convertNodes(children, ctx), style: type };
 }
 
-function buildHeading({ type, children, depth }: mdast.Heading, ctx: Context) {
+function buildHeading(
+  { children, depth }: mdast.Heading,
+  ctx: Context
+): ContentText {
   let heading: string;
   switch (depth) {
     case 1:
@@ -268,14 +273,14 @@ function buildHeading({ type, children, depth }: mdast.Heading, ctx: Context) {
       heading = HEADING_6;
       break;
   }
-  return <ContentText>{
+  return {
     text: convertNodes(children, ctx),
     style: heading,
   };
 }
 
-function buildThematicBreak({ type }: mdast.ThematicBreak, ctx: Context) {
-  return <ContentCanvas>{
+function buildThematicBreak({}: mdast.ThematicBreak): ContentCanvas {
+  return {
     margin: [0, 12, 0, 0],
     canvas: [
       {
@@ -289,32 +294,38 @@ function buildThematicBreak({ type }: mdast.ThematicBreak, ctx: Context) {
   };
 }
 
-function buildBlockquote({ type, children }: mdast.Blockquote, ctx: Context) {
+function buildBlockquote(
+  { type, children }: mdast.Blockquote,
+  ctx: Context
+): ContentText {
   // FIXME: do nothing for now
-  return <ContentText>{ text: convertNodes(children, ctx), style: type };
+  return { text: convertNodes(children, ctx), style: type };
 }
 
 function buildList(
-  { type, children, ordered, start, spread }: mdast.List,
+  { children, ordered, start: _start, spread: _spread }: mdast.List,
   ctx: Context
-) {
+): ContentOrderedList | ContentUnorderedList {
   return ordered
-    ? <ContentOrderedList>{
+    ? {
         ol: children.map((l) => buildListItem(l, ctx)),
       }
-    : <ContentUnorderedList>{
+    : {
         ul: children.map((l) => buildListItem(l, ctx)),
       };
 }
 
 function buildListItem(
-  { type, children, checked, spread }: mdast.ListItem,
+  { children, checked: _checked, spread: _spread }: mdast.ListItem,
   ctx: Context
-) {
+): Content[] {
   return convertNodes(children, ctx);
 }
 
-function buildTable({ type, children, align }: mdast.Table, ctx: Context) {
+function buildTable(
+  { children, align }: mdast.Table,
+  ctx: Context
+): ContentTable {
   const cellAligns: Alignment[] | undefined = align?.map((a) => {
     switch (a) {
       case "left":
@@ -328,7 +339,7 @@ function buildTable({ type, children, align }: mdast.Table, ctx: Context) {
     }
   });
 
-  return <ContentTable>{
+  return {
     table: {
       body: children.map((r) => {
         return buildTableRow(r, ctx, cellAligns);
@@ -338,46 +349,50 @@ function buildTable({ type, children, align }: mdast.Table, ctx: Context) {
 }
 
 function buildTableRow(
-  { type, children }: mdast.TableRow,
+  { children }: mdast.TableRow,
   ctx: Context,
   cellAligns: Alignment[] | undefined
-) {
+): TableCell[] {
   return children.map((c, i) => {
     return buildTableCell(c, ctx, cellAligns?.[i]);
   });
 }
 
 function buildTableCell(
-  { type, children }: mdast.TableCell,
+  { children }: mdast.TableCell,
   ctx: Context,
   align: Alignment | undefined
-) {
-  return <TableCell>(
-    convertNodes(children, { ...ctx, deco: { ...ctx.deco, align } })
-  );
+): TableCell {
+  return convertNodes(children, { ...ctx, deco: { ...ctx.deco, align } });
 }
 
-function buildHtml({ type, value }: mdast.HTML, ctx: Context) {
+function buildHtml({ value }: mdast.HTML, ctx: Context): ContentText {
   // FIXME: transform to text for now
-  return <ContentText>{ text: buildText(value, ctx) };
+  return { text: buildText(value, ctx) };
 }
 
-function buildCode({ type, value, lang, meta }: mdast.Code, ctx: Context) {
+function buildCode(
+  { value, lang: _lang, meta: _meta }: mdast.Code,
+  ctx: Context
+): ContentText {
   // FIXME: transform to text for now
-  return <ContentText>{ text: buildText(value, ctx) };
+  return { text: buildText(value, ctx) };
 }
 
-function buildMath({ type, value }: mdast.Math, ctx: Context) {
+function buildMath({ value }: mdast.Math, ctx: Context): ContentText {
   // FIXME: transform to text for now
-  return <ContentText>{ text: buildText(value, ctx) };
+  return { text: buildText(value, ctx) };
 }
 
-function buildInlineMath({ type, value }: mdast.InlineMath, ctx: Context) {
+function buildInlineMath(
+  { value }: mdast.InlineMath,
+  ctx: Context
+): ContentText {
   // FIXME: transform to text for now
   return buildText(value, ctx);
 }
 
-function buildText(text: string, ctx: Context) {
+function buildText(text: string, ctx: Context): ContentText {
   const content: ContentText = { text };
   if (ctx.deco.strong) {
     ((content.style || (content.style = {})) as Style).bold = ctx.deco.strong;
@@ -401,17 +416,20 @@ function buildText(text: string, ctx: Context) {
   return content;
 }
 
-function buildBreak({ type }: mdast.Break, ctx: Context) {
+function buildBreak({}: mdast.Break, ctx: Context): ContentText {
   return buildText("", ctx);
 }
 
-function buildLink({ type, children, url, title }: mdast.Link, ctx: Context) {
+function buildLink(
+  { children, url, title: _title }: mdast.Link,
+  ctx: Context
+): Content[] {
   return convertNodes(children, { ...ctx, deco: { ...ctx.deco, link: url } });
 }
 
 function buildImage(
-  { type, url, title, alt }: mdast.Image,
-  images: ImageDataMap
-) {
-  return <ContentImage>{ image: url /* width, height*/ };
+  { url, title: _title, alt: _alt }: mdast.Image,
+  _images: ImageDataMap
+): ContentImage {
+  return { image: url /* width, height*/ };
 }
