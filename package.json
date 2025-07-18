@@ -53,10 +53,9 @@
     "rimraf": "3.0.2",
     "rollup": "2.63.0",
     "storybook": "9.0.15",
-    "tslib": "2.3.1",
-    "typedoc": "0.25.1",
-    "typedoc-plugin-markdown": "3.16.0",
-    "typescript": "5.1.6",
+    "typedoc": "^0.28.7",
+    "typedoc-plugin-markdown": "^4.7.0",
+    "typescript": "^5.8.3",
     "unified": "10.1.1",
     "vite": "^6.3.5",
     "vitest": "^3.2.4"
