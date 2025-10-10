@@ -23,6 +23,7 @@ const HEADING_3 = "head3";
 const HEADING_4 = "head4";
 const HEADING_5 = "head5";
 const HEADING_6 = "head6";
+const EMOJI     = "emoji";
 
 export type ImageDataMap = { [url: string]: string };
 
@@ -115,6 +116,8 @@ export function mdastToPdf(
     [HEADING_6]: {
       fontSize: 14,
     },
+    [EMOJI]: {
+    },
   };
   const mergedStyles = deepMerge(defaultStyles, styles);
   const content = convertNodes(node.children, { deco: {}, images });
@@ -188,7 +191,7 @@ function convertNodes(nodes: mdast.Content[], ctx: Context): Content[] {
         // FIXME: unimplemented
         break;
       case "text":
-        results.push(buildText(node.value, ctx));
+        results.push(...buildText(node.value, ctx));
         break;
       case "emphasis":
       case "strong":
@@ -204,10 +207,10 @@ function convertNodes(nodes: mdast.Content[], ctx: Context): Content[] {
       }
       case "inlineCode":
         // FIXME: transform to text for now
-        results.push(buildText(node.value, ctx));
+        results.push(...buildText(node.value, ctx));
         break;
       case "break":
-        results.push(buildBreak(node, ctx));
+        results.push(...buildBreak(node, ctx));
         break;
       case "link":
         results.push(...buildLink(node, ctx));
@@ -231,7 +234,7 @@ function convertNodes(nodes: mdast.Content[], ctx: Context): Content[] {
         results.push(buildMath(node, ctx));
         break;
       case "inlineMath":
-        results.push(buildInlineMath(node, ctx));
+        results.push(...buildInlineMath(node, ctx));
         break;
       default:
         error(node);
@@ -387,12 +390,12 @@ function buildMath({ value }: mdast.Math, ctx: Context): ContentText {
 function buildInlineMath(
   { value }: mdast.InlineMath,
   ctx: Context
-): ContentText {
+): ContentText[] {
   // FIXME: transform to text for now
   return buildText(value, ctx);
 }
 
-function buildText(text: string, ctx: Context): ContentText {
+function buildText(text: string, ctx: Context): ContentText[] {
   const content: ContentText = { text };
   if (ctx.deco.strong) {
     ((content.style || (content.style = {})) as Style).bold = ctx.deco.strong;
@@ -413,10 +416,34 @@ function buildText(text: string, ctx: Context): ContentText {
       ctx.deco.align;
   }
 
-  return content;
+  const matches = text.match(/\p{Extended_Pictographic}/ug);
+  if (matches) {
+    let segments: ContentText[] = [];
+    let lastIndex = 0;
+    matches.forEach((emoji: string) => {
+      // Add text before emoji
+      const textBefore = text.slice(lastIndex, text.indexOf(emoji, lastIndex));
+      if (textBefore) {
+        segments.push({...content, text: textBefore});
+      }
+      // Add emoji
+      segments.push({...content, text: emoji, style: EMOJI});
+      lastIndex = text.indexOf(emoji, lastIndex) + emoji.length;
+    });
+    // Add remaining text
+    if (lastIndex < text.length) {
+      const textAfter = text.slice(lastIndex);
+      if (textAfter) {
+        segments.push({...content, text: textAfter});
+      }
+    }
+    // console.error(content, segments);
+    return segments;
+  }
+  return [content];
 }
 
-function buildBreak({}: mdast.Break, ctx: Context): ContentText {
+function buildBreak({}: mdast.Break, ctx: Context): ContentText[] {
   return buildText("", ctx);
 }
 
