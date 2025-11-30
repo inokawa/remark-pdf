@@ -12,6 +12,7 @@ import type {
   TableCell,
   TDocumentDefinitions,
   TDocumentInformation,
+  TFontDictionary
 } from "pdfmake/interfaces";
 import { deepMerge, error, isBrowser } from "./utils";
 
@@ -69,11 +70,13 @@ export interface PdfOptions
    */
   imageResolver?: ImageResolver;
   info?: TDocumentInformation;
+  fonts?: TFontDictionary
 }
 
 export function mdastToPdf(
   node: mdast.Root,
   {
+    fonts,
     info,
     pageMargins,
     pageOrientation,
@@ -86,7 +89,7 @@ export function mdastToPdf(
     watermark,
   }: PdfOptions,
   images: ImageDataMap,
-  build: (def: TDocumentDefinitions) => Promise<any>
+  build: (def: TDocumentDefinitions & { fonts?: TFontDictionary }) => Promise<any>
 ): Promise<any> {
   const defaultStyles = {
     [HEADING_1]: {
@@ -124,6 +127,7 @@ export function mdastToPdf(
     watermark,
     content,
     images,
+    fonts,
     styles: mergedStyles,
     defaultStyle: {
       font: isBrowser() ? "Roboto" : "Helvetica",
