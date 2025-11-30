@@ -13,7 +13,7 @@ import type {
   TDocumentDefinitions,
   TDocumentInformation,
 } from "pdfmake/interfaces";
-import { error, isBrowser } from "./utils";
+import { deepMerge, error, isBrowser } from "./utils";
 
 type Content = Exclude<AllContent, any[]>;
 
@@ -69,15 +69,6 @@ export interface PdfOptions
    */
   imageResolver?: ImageResolver;
   info?: TDocumentInformation;
-}
-
-function deepMerge(target: any, source: any): any {
-  for (const key in source) {
-    if (source[key] instanceof Object && key in target) {
-      Object.assign(source[key], deepMerge(target[key], source[key]));
-    }
-  }
-  return { ...target, ...source };
 }
 
 export function mdastToPdf(
