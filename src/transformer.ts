@@ -50,6 +50,7 @@ type Context = {
 export interface PdfOptions
   extends Pick<
     TDocumentDefinitions,
+    | "defaultStyle"
     | "pageMargins"
     | "pageOrientation"
     | "pageSize"
@@ -76,6 +77,7 @@ export interface PdfOptions
 export function mdastToPdf(
   node: mdast.Root,
   {
+    defaultStyle,
     fonts,
     info,
     pageMargins,
@@ -131,6 +133,7 @@ export function mdastToPdf(
     styles: mergedStyles,
     defaultStyle: {
       font: isBrowser() ? "Roboto" : "Helvetica",
+      ...defaultStyle
     },
   });
   return doc;
