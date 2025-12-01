@@ -71,7 +71,8 @@ export interface PdfOptions
    */
   imageResolver?: ImageResolver;
   info?: TDocumentInformation;
-  fonts?: TFontDictionary
+  fonts?: TFontDictionary;
+  preventOrphans?: boolean;
 }
 
 export function mdastToPdf(
@@ -89,6 +90,7 @@ export function mdastToPdf(
     permissions,
     version,
     watermark,
+    preventOrphans
   }: PdfOptions,
   images: ImageDataMap,
   build: (def: TDocumentDefinitions & { fonts?: TFontDictionary }) => Promise<any>
@@ -122,6 +124,10 @@ export function mdastToPdf(
     pageMargins,
     pageOrientation,
     pageSize,
+    pageBreakBefore: preventOrphans
+      ? (currentNode, restNodes) =>
+        currentNode.headlineLevel === 1 && restNodes.length === 0
+      : undefined,
     userPassword,
     ownerPassword,
     permissions,
