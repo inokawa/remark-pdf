@@ -9,6 +9,7 @@ import type {
   ContentText,
   ContentUnorderedList,
   Style,
+  StyleDictionary,
   TableCell,
   TDocumentDefinitions,
   TDocumentInformation,
@@ -25,6 +26,7 @@ const HEADING_4 = "head4";
 const HEADING_5 = "head5";
 const HEADING_6 = "head6";
 const EMOJI     = "emoji";
+const HRULE     = "thematicBreak";
 
 export type ImageDataMap = { [url: string]: string };
 
@@ -45,6 +47,7 @@ type Decoration = Readonly<
 type Context = {
   readonly deco: Decoration;
   readonly images: ImageDataMap;
+  readonly styles: StyleDictionary;
 };
 
 export interface PdfOptions
@@ -93,7 +96,7 @@ export function mdastToPdf(
   images: ImageDataMap,
   build: (def: TDocumentDefinitions & { fonts?: TFontDictionary }) => Promise<any>
 ): Promise<any> {
-  const defaultStyles = {
+  const defaultStyles: StyleDictionary = {
     [HEADING_1]: {
       fontSize: 24,
     },
@@ -114,9 +117,12 @@ export function mdastToPdf(
     },
     [EMOJI]: {
     },
-  };
+    [HRULE]: {
+      margin: [0, 12, 0, 0]
+    }
+}
   const mergedStyles = deepMerge(defaultStyles, styles);
-  const content = convertNodes(node.children, { deco: {}, images });
+  const content = convertNodes(node.children, { deco: {}, images, styles: mergedStyles });
   const doc = build({
     info,
     pageMargins,
@@ -150,7 +156,7 @@ function convertNodes(nodes: mdast.Content[], ctx: Context): Content[] {
         results.push(buildHeading(node, ctx));
         break;
       case "thematicBreak":
-        results.push(buildThematicBreak(node));
+        results.push(buildThematicBreak(node, ctx));
         break;
       case "blockquote":
         results.push(buildBlockquote(node, ctx));
@@ -280,12 +286,14 @@ function buildHeading(
   };
 }
 
-function buildThematicBreak({}: mdast.ThematicBreak): ContentCanvas {
+function buildThematicBreak({ type }: mdast.ThematicBreak, ctx: Context): ContentCanvas {
+  const style = { ...ctx.styles[type] };
   return {
-    margin: [0, 12, 0, 0],
+    style: type,
     canvas: [
       {
         type: "line",
+        lineColor: style.color,
         x1: 0,
         y1: 0,
         x2: (514 / 100) * 100,
@@ -304,15 +312,17 @@ function buildBlockquote(
 }
 
 function buildList(
-  { children, ordered, start: _start, spread: _spread }: mdast.List,
+  { children, ordered, start: _start, spread: _spread, type }: mdast.List,
   ctx: Context
 ): ContentOrderedList | ContentUnorderedList {
   return ordered
     ? {
         ol: children.map((l) => buildListItem(l, ctx)),
+        style: type
       }
     : {
         ul: children.map((l) => buildListItem(l, ctx)),
+        style: type
       };
 }
 
