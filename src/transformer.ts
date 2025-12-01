@@ -27,6 +27,8 @@ const HEADING_5 = "head5";
 const HEADING_6 = "head6";
 const EMOJI     = "emoji";
 const HRULE     = "thematicBreak";
+const LINK      = "link";
+const LISTITEM  = "listItem";
 
 export type ImageDataMap = { [url: string]: string };
 
@@ -117,8 +119,13 @@ export function mdastToPdf(
     },
     [EMOJI]: {
     },
+    [LISTITEM]: {
+    },
+    [LINK]: {
+      color: "blue",
+    },
     [HRULE]: {
-      margin: [0, 12, 0, 0]
+      margin: [0, 12, 0, 0],
     }
 }
   const mergedStyles = deepMerge(defaultStyles, styles);
@@ -294,6 +301,7 @@ function buildThematicBreak({ type }: mdast.ThematicBreak, ctx: Context): Conten
       {
         type: "line",
         lineColor: style.color,
+        lineWidth: style.lineHeight || 1,
         x1: 0,
         y1: 0,
         x2: (514 / 100) * 100,
@@ -417,7 +425,10 @@ function buildText(text: string, ctx: Context): ContentText[] {
   }
   if (ctx.deco.link != null) {
     content.link = ctx.deco.link;
-    content.color = "blue";
+    content.style = {
+      ...ctx.styles[LINK],
+      ...((content.style || (content.style = {})) as Style)
+    }
   }
   if (ctx.deco.align != null) {
     ((content.style || (content.style = {})) as Style).alignment =
