@@ -1,8 +1,10 @@
+**API**
+
+***
+
 # API
 
-## Table of contents
+## Modules
 
-### Modules
-
-- [index](modules/index.md)
-- [node](modules/node.md)
+- [index](index/API.md)
+- [node](node/API.md)
