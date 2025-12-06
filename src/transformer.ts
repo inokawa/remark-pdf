@@ -13,7 +13,7 @@ import type {
   TableCell,
   TDocumentDefinitions,
   TDocumentInformation,
-  TFontDictionary
+  TFontDictionary,
 } from "pdfmake/interfaces";
 import { deepMerge, error, isBrowser } from "./utils";
 
@@ -25,10 +25,10 @@ const HEADING_3 = "head3";
 const HEADING_4 = "head4";
 const HEADING_5 = "head5";
 const HEADING_6 = "head6";
-const EMOJI     = "emoji";
-const HRULE     = "thematicBreak";
-const LINK      = "link";
-const LISTITEM  = "listItem";
+const EMOJI = "emoji";
+const HRULE = "thematicBreak";
+const LINK = "link";
+const LISTITEM = "listItem";
 
 export type ImageDataMap = { [url: string]: string };
 
@@ -49,7 +49,7 @@ type Decoration = Readonly<
 type Context = {
   readonly deco: Decoration;
   readonly images: ImageDataMap;
-  readonly styles: StyleDictionary;
+  readonly styles: Readonly<StyleDictionary>;
 };
 
 export interface PdfOptions
@@ -95,10 +95,12 @@ export function mdastToPdf(
     permissions,
     version,
     watermark,
-    preventOrphans
+    preventOrphans,
   }: PdfOptions,
   images: ImageDataMap,
-  build: (def: TDocumentDefinitions & { fonts?: TFontDictionary }) => Promise<any>
+  build: (
+    def: TDocumentDefinitions & { fonts?: TFontDictionary }
+  ) => Promise<any>
 ): Promise<any> {
   const defaultStyles: StyleDictionary = {
     [HEADING_1]: {
@@ -119,19 +121,21 @@ export function mdastToPdf(
     [HEADING_6]: {
       fontSize: 14,
     },
-    [EMOJI]: {
-    },
-    [LISTITEM]: {
-    },
+    [EMOJI]: {},
+    [LISTITEM]: {},
     [LINK]: {
       color: "blue",
     },
     [HRULE]: {
       margin: [0, 12, 0, 0],
-    }
-}
+    },
+  };
   const mergedStyles = deepMerge(defaultStyles, styles);
-  const content = convertNodes(node.children, { deco: {}, images, styles: mergedStyles });
+  const content = convertNodes(node.children, {
+    deco: {},
+    images,
+    styles: mergedStyles,
+  });
   const doc = build({
     info,
     pageMargins,
@@ -139,7 +143,7 @@ export function mdastToPdf(
     pageSize,
     pageBreakBefore: preventOrphans
       ? (currentNode, restNodes) =>
-        currentNode.headlineLevel === 1 && restNodes.length === 0
+          currentNode.headlineLevel === 1 && restNodes.length === 0
       : undefined,
     userPassword,
     ownerPassword,
@@ -152,7 +156,7 @@ export function mdastToPdf(
     styles: mergedStyles,
     defaultStyle: {
       font: isBrowser() ? "Roboto" : "Helvetica",
-      ...defaultStyle
+      ...defaultStyle,
     },
   });
   return doc;
@@ -299,7 +303,10 @@ function buildHeading(
   };
 }
 
-function buildThematicBreak({ type }: mdast.ThematicBreak, ctx: Context): ContentCanvas {
+function buildThematicBreak(
+  { type }: mdast.ThematicBreak,
+  ctx: Context
+): ContentCanvas {
   const style = { ...ctx.styles[type] };
   return {
     style: type,
@@ -332,11 +339,11 @@ function buildList(
   return ordered
     ? {
         ol: children.map((l) => buildListItem(l, ctx)),
-        style: type
+        style: type,
       }
     : {
         ul: children.map((l) => buildListItem(l, ctx)),
-        style: type
+        style: type,
       };
 }
 
@@ -433,15 +440,15 @@ function buildText(text: string, ctx: Context): ContentText[] {
     content.link = ctx.deco.link;
     content.style = {
       ...ctx.styles[LINK],
-      ...((content.style || (content.style = {})) as Style)
-    }
+      ...((content.style || (content.style = {})) as Style),
+    };
   }
   if (ctx.deco.align != null) {
     ((content.style || (content.style = {})) as Style).alignment =
       ctx.deco.align;
   }
 
-  const matches = text.match(/\p{Extended_Pictographic}/ug);
+  const matches = text.match(/\p{Extended_Pictographic}/gu);
   if (matches) {
     let segments: ContentText[] = [];
     let lastIndex = 0;
@@ -449,17 +456,17 @@ function buildText(text: string, ctx: Context): ContentText[] {
       // Add text before emoji
       const textBefore = text.slice(lastIndex, text.indexOf(emoji, lastIndex));
       if (textBefore) {
-        segments.push({...content, text: textBefore});
+        segments.push({ ...content, text: textBefore });
       }
       // Add emoji
-      segments.push({...content, text: emoji, style: EMOJI});
+      segments.push({ ...content, text: emoji, style: EMOJI });
       lastIndex = text.indexOf(emoji, lastIndex) + emoji.length;
     });
     // Add remaining text
     if (lastIndex < text.length) {
       const textAfter = text.slice(lastIndex);
       if (textAfter) {
-        segments.push({...content, text: textAfter});
+        segments.push({ ...content, text: textAfter });
       }
     }
     // console.error(content, segments);
