@@ -2,7 +2,10 @@
 
 ![npm](https://img.shields.io/npm/v/remark-pdf) ![npm](https://img.shields.io/npm/dw/remark-pdf) ![check](https://github.com/inokawa/remark-pdf/workflows/check/badge.svg) ![demo](https://github.com/inokawa/remark-pdf/workflows/demo/badge.svg)
 
-[remark](https://github.com/remarkjs/remark) plugin to compile markdown to pdf.
+> [remark](https://github.com/remarkjs/remark) plugin to compile markdown to pdf.
+
+- Uses [pdfmake](https://github.com/bpampuch/pdfmake) for compilation.
+- Works in browser and Node.js.
 
 ### 🚧 WIP 🚧
 
