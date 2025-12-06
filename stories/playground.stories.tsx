@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { unified } from "unified";
 import markdown from "remark-parse";
 import gfm from "remark-gfm";
@@ -7,6 +14,7 @@ import pdf from "../src";
 import MarkdownEditor from "./components/editor";
 // @ts-expect-error no type definition
 import text from "../fixtures/article.md?raw";
+import { Preview } from "./components/preview";
 
 export default {
   title: "Playground",
@@ -29,49 +37,70 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-const Section = ({ title, children }: { title: string, children: React.ReactNode }) => (
+const Section = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
   <div style={{ flex: 1, width: "48vh" }}>
-    <h3 style={{
-      fontFamily: "Nunito Sans, -apple-system, sans-serif",
-      margin: 0,
-      padding: "2px 5px",
-      "textAlign": "center",
-      border: "3px solid #ffffff",
-      backgroundColor: "rgb(246, 249, 252)"
-    }}>{title}</h3>
+    <h3
+      style={{
+        fontFamily: "Nunito Sans, -apple-system, sans-serif",
+        margin: 0,
+        padding: "2px 5px",
+        textAlign: "center",
+        border: "3px solid #ffffff",
+        backgroundColor: "rgb(246, 249, 252)",
+      }}
+    >
+      {title}
+    </h3>
     {children}
   </div>
 );
 
 export const MarkdownToPdf = () => {
-  const frameRef = useRef<HTMLIFrameElement>(null);
-  const makePdf = useCallback(async (contents: string) => {
-    const toPdfProcessor = unified()
-      .use(markdown)
-      .use(gfm)
-      .use(frontmatter)
-      .use(pdf, { output: "blob", styles: {
-        head1: {
-          fontSize: 25
-        }
-      } });
-    const toPdf = async (s: string) => {
-      const doc = await toPdfProcessor.process(s);
-      return doc.result as Blob;
-    };
-    const blob = await toPdf(contents);
-    if (frameRef.current) {
-      frameRef.current.src = `${URL.createObjectURL(blob)}#toolbar=0`;
-    }
-  }, [])
-  useEffect(() => { makePdf(text) }, []);
+  const [pending, startTransition] = useTransition();
+  const [data, setData] = useState<string | null>(null);
+  const makePdf = useCallback((contents: string) => {
+    startTransition(async () => {
+      const toPdfProcessor = unified()
+        .use(markdown)
+        .use(gfm)
+        .use(frontmatter)
+        .use(pdf, {
+          output: "blob",
+          styles: {
+            head1: {
+              fontSize: 25,
+            },
+          },
+        });
+      const toPdf = async (s: string) => {
+        const doc = await toPdfProcessor.process(s);
+        return doc.result as Blob;
+      };
+      const blob = await toPdf(contents);
+
+      setData(URL.createObjectURL(blob));
+    });
+  }, []);
+  useEffect(() => {
+    makePdf(text);
+  }, []);
   return (
     <Wrapper>
       <Section title="Edit markdown here">
         <MarkdownEditor initialValue={text} onChange={makePdf} />
       </Section>
       <Section title="Live PDF preview">
-        <iframe ref={frameRef} style={{ width: "100%", height: "100%" }} />
+        {pending || !data ? (
+          <div style={{ textAlign: "center" }}>rendering...</div>
+        ) : (
+          <Preview data={data} />
+        )}
       </Section>
     </Wrapper>
   );
