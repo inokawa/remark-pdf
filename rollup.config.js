@@ -20,12 +20,12 @@ export default [
     input: "src/index.ts",
     output: [
       {
-        file: pkg.exports["."].default,
+        file: pkg.exports["."].require,
         format: "cjs",
         sourcemap: true,
       },
       {
-        file: pkg.exports["."].import,
+        file: pkg.exports["."].default,
         format: "es",
         sourcemap: true,
       },
@@ -37,12 +37,12 @@ export default [
     input: "src/node.ts",
     output: [
       {
-        file: pkg.exports["./node"].default,
+        file: pkg.exports["./node"].require,
         format: "cjs",
         sourcemap: true,
       },
       {
-        file: pkg.exports["./node"].import,
+        file: pkg.exports["./node"].default,
         format: "es",
         sourcemap: true,
       },
