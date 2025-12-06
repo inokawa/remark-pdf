@@ -5,16 +5,17 @@
   "main": "lib/index.js",
   "module": "lib/index.mjs",
   "types": "lib/index.d.ts",
+  "type": "module",
   "exports": {
     "./package.json": "./package.json",
     ".": {
       "types": "./lib/index.d.ts",
-      "import": "./lib/index.mjs",
+      "require": "./lib/index.cjs",
       "default": "./lib/index.js"
     },
     "./node": {
       "types": "./lib/node.d.ts",
-      "import": "./lib/node.mjs",
+      "require": "./lib/node.cjs",
       "default": "./lib/node.js"
     }
   },
