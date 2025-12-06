@@ -1,5 +1,5 @@
 import type { Plugin } from "unified";
-import { mdastToPdf, PdfOptions, ImageDataMap } from "./transformer";
+import { mdastToPdf, PdfOptions, ImageDataMap } from "./mdast-to-pdf";
 
 import Printer from "pdfmake";
 import { deepMerge, error } from "./utils";
