@@ -1,6 +1,6 @@
 # remark-pdf
 
-![npm](https://img.shields.io/npm/v/remark-pdf) ![check](https://github.com/inokawa/remark-pdf/workflows/check/badge.svg) ![demo](https://github.com/inokawa/remark-pdf/workflows/demo/badge.svg)
+![npm](https://img.shields.io/npm/v/remark-pdf) ![npm](https://img.shields.io/npm/dw/remark-pdf) ![check](https://github.com/inokawa/remark-pdf/workflows/check/badge.svg) ![demo](https://github.com/inokawa/remark-pdf/workflows/demo/badge.svg)
 
 [remark](https://github.com/remarkjs/remark) plugin to compile markdown to pdf.
 
@@ -91,6 +91,7 @@ const text = "# hello world";
 ```
 
 #### Example: Custom fonts
+
 Use custom fonts in Node by providing a `fonts` object to configuration, which is a dictionary structured like `fonts[fontName][fontStyle][pathToFontFile]`. Use the fonts by name in your `styles` configurations; the font file will be autoselected based on the chosen `bold` and `italic` style specifications.
 
 Note that variable-width fonts are supported, but the path to the same font file must be supplied for all four font variant styles.
@@ -104,27 +105,27 @@ import * as fs from "fs";
 const pdfOpts = {
   output: "buffer",
   fonts: {
-    'National Park': {
-      normal: '/path/to/fonts/nationalpark-variablevf.ttf',
-      bold: '/path/to/fonts/nationalpark-variablevf.ttf',
-      italics: '/path/to/fonts/nationalpark-variablevf.ttf',
-      bolditalics: '/path/to/fonts/nationalpark-variablevf.ttf'
+    "National Park": {
+      normal: "/path/to/fonts/nationalpark-variablevf.ttf",
+      bold: "/path/to/fonts/nationalpark-variablevf.ttf",
+      italics: "/path/to/fonts/nationalpark-variablevf.ttf",
+      bolditalics: "/path/to/fonts/nationalpark-variablevf.ttf",
     },
-    'Merriweather Sans': {
-      normal: '/path/to/fonts/merriweathersans-light.ttf',
-      bold: '/path/to/fonts/merriweathersans-bold.ttf',
-      italics: '/path/to/fonts/merriweathersans-italic.ttf',
-      bolditalics: '/path/to/fonts/merriweathersans-bolditalic.ttf'
-    }
+    "Merriweather Sans": {
+      normal: "/path/to/fonts/merriweathersans-light.ttf",
+      bold: "/path/to/fonts/merriweathersans-bold.ttf",
+      italics: "/path/to/fonts/merriweathersans-italic.ttf",
+      bolditalics: "/path/to/fonts/merriweathersans-bolditalic.ttf",
+    },
   },
-  defaultStyle: { font: 'Merriweather Sans', italics: true },
+  defaultStyle: { font: "Merriweather Sans", italics: true },
   styles: {
     head1: {
       bold: true,
-      font: 'National Park',
-      fontSize: 24
-    }
-  }
+      font: "National Park",
+      fontSize: 24,
+    },
+  },
 };
 const processor = unified().use(markdown).use(pdf, pdfOpts);
 
