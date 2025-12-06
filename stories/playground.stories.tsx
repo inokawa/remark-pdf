@@ -1,5 +1,4 @@
 import React, {
-  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -10,6 +9,7 @@ import { unified } from "unified";
 import markdown from "remark-parse";
 import gfm from "remark-gfm";
 import frontmatter from "remark-frontmatter";
+import { saveAs } from "file-saver";
 import pdf from "../src";
 import MarkdownEditor from "./components/editor";
 // @ts-expect-error no type definition
@@ -92,6 +92,18 @@ export const MarkdownToPdf = () => {
   }, []);
   return (
     <Wrapper>
+      <div style={{ position: "absolute", right: 0, top: 0 }}>
+        <button
+          disabled={!data}
+          onClick={() => {
+            if (data) {
+              saveAs(data, "example.pdf");
+            }
+          }}
+        >
+          download
+        </button>
+      </div>
       <Section title="Edit markdown here">
         <MarkdownEditor initialValue={text} onChange={makePdf} />
       </Section>
