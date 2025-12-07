@@ -1,5 +1,5 @@
 import type { Plugin } from "unified";
-import { mdastToPdf, PdfOptions, ImageDataMap } from "./mdast-to-pdf";
+import { mdastToPdf, type PdfOptions, type ImageDataMap } from "./mdast-to-pdf";
 
 import * as pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";

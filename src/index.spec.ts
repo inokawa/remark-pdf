@@ -6,7 +6,7 @@ import markdown from "remark-parse";
 import gfm from "remark-gfm";
 import frontmatter from "remark-frontmatter";
 import math from "remark-math";
-import pdf, { PdfOptions } from "./node";
+import pdf, { type PdfOptions } from "./node";
 import { pdf as pdfToImage } from "pdf-to-img";
 import { toMatchImageSnapshot } from "jest-image-snapshot";
 
