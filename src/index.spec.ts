@@ -4,7 +4,6 @@ import path from "path";
 import { unified } from "unified";
 import markdown from "remark-parse";
 import gfm from "remark-gfm";
-import footnotes from "remark-footnotes";
 import frontmatter from "remark-frontmatter";
 import math from "remark-math";
 import pdf, { PdfOptions } from "./node";
@@ -20,7 +19,6 @@ describe("e2e", () => {
     return unified()
       .use(markdown)
       .use(gfm)
-      .use(footnotes)
       .use(frontmatter, ["yaml", "toml"])
       .use(math)
       .use(pdf, { ...options, output: "buffer" });
