@@ -1,4 +1,5 @@
 import typescript from "@rollup/plugin-typescript";
+import { dirname } from 'node:path'
 import pkg from "./package.json" with { type: "json" };
 
 const externals = [
@@ -11,6 +12,7 @@ const plugins = [
     tsconfig: "./tsconfig.json",
     outDir: ".",
     declaration: true,
+    declarationDir: dirname(pkg.types),
     exclude: ["src/**/*.spec.*"],
   }),
 ];
