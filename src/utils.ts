@@ -27,3 +27,15 @@ export function deepMerge<T extends object>(
   }
   return { ...target, ...source };
 }
+
+const alreadyWarned: { [message: string]: boolean } = {};
+
+/**
+ * @internal
+ */
+export function warnOnce(cond: boolean, message: string): void {
+  if (!cond && !alreadyWarned[message]) {
+    alreadyWarned[message] = true;
+    console.warn(message);
+  }
+}

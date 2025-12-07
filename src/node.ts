@@ -3,7 +3,8 @@ import { mdastToPdf, PdfOptions, ImageDataMap } from "./mdast-to-pdf";
 
 import Printer from "pdfmake";
 import { deepMerge, error } from "./utils";
-import { TFontDictionary } from "pdfmake/interfaces";
+import type { TFontDictionary } from "pdfmake/interfaces";
+import type { Root } from "mdast";
 
 const defaultFonts: TFontDictionary = {
   Courier: {
@@ -34,13 +35,21 @@ const defaultFonts: TFontDictionary = {
 
 export type { PdfOptions };
 
+declare module "unified" {
+  interface CompileResultMap {
+    pdf: Promise<unknown>;
+  }
+}
+
 /**
  * Plugin for Node.js
  */
-const plugin: Plugin<[PdfOptions?]> = function (opts = {}) {
+const plugin: Plugin<[PdfOptions?], Root, Promise<unknown>> = function (
+  opts = {}
+) {
   let images: ImageDataMap = {};
 
-  this.Compiler = (node) => {
+  this.compiler = (node) => {
     return mdastToPdf(node as any, opts, images, (def) => {
       const printer = new Printer(deepMerge(defaultFonts, opts.fonts));
       const pdf = printer.createPdfKitDocument(def);

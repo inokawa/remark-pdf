@@ -15,7 +15,7 @@ import type {
   TDocumentInformation,
   TFontDictionary,
 } from "pdfmake/interfaces";
-import { deepMerge, error, isBrowser } from "./utils";
+import { deepMerge, error, isBrowser, warnOnce } from "./utils";
 
 type Content = Exclude<AllContent, any[]>;
 
@@ -199,18 +199,18 @@ function convertNodes(nodes: mdast.Content[], ctx: Context): Content[] {
       case "code":
         results.push(buildCode(node, ctx));
         break;
-      case "yaml":
-        // FIXME: unimplemented
-        break;
-      case "toml":
-        // FIXME: unimplemented
-        break;
-      case "definition":
-        // FIXME: unimplemented
-        break;
-      case "footnoteDefinition":
-        // FIXME: unimplemented
-        break;
+      // case "yaml":
+      //   // FIXME: unimplemented
+      //   break;
+      // case "toml":
+      //   // FIXME: unimplemented
+      //   break;
+      // case "definition":
+      //   // FIXME: unimplemented
+      //   break;
+      // case "footnoteDefinition":
+      //   // FIXME: unimplemented
+      //   break;
       case "text":
         results.push(...buildText(node.value, ctx));
         break;
@@ -245,9 +245,9 @@ function convertNodes(nodes: mdast.Content[], ctx: Context): Content[] {
       case "imageReference":
         // FIXME: unimplemented
         break;
-      case "footnote":
-        // inline footnote was removed in mdast v5
-        break;
+      // case "footnote":
+      //   // inline footnote was removed in mdast v5
+      //   break;
       case "footnoteReference":
         // FIXME: unimplemented
         break;
@@ -258,7 +258,7 @@ function convertNodes(nodes: mdast.Content[], ctx: Context): Content[] {
         results.push(...buildInlineMath(node, ctx));
         break;
       default:
-        error(node);
+        warnOnce(true, `${node.type} node is not supported.`);
         break;
     }
   }
