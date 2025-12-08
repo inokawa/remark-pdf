@@ -38,10 +38,8 @@ If you have some feature requests or improvements, please create a [issue](https
 - [x] image
 - [ ] linkReference
 - [ ] imageReference
-- [ ] footnote
-- [ ] footnoteReference
-- [ ] math
-- [ ] inlineMath
+- [ ] footnote / footnoteReference
+- [ ] math / inlineMath
 
 ## Demo
 

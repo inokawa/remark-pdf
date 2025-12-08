@@ -50,7 +50,7 @@ const plugin: Plugin<[PdfOptions?], Root, Promise<unknown>> = function (
   let images: ImageDataMap = {};
 
   this.compiler = (node) => {
-    return mdastToPdf(node as any, opts, images, (def) => {
+    return mdastToPdf(node as Root, opts, images, (def) => {
       const printer = new Printer(deepMerge(defaultFonts, opts.fonts));
       const pdf = printer.createPdfKitDocument(def);
 

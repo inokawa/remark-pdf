@@ -23,7 +23,7 @@ const plugin: Plugin<[PdfOptions?], Root, Promise<unknown>> = function (
   let images: ImageDataMap = {};
 
   this.compiler = (node) => {
-    return mdastToPdf(node as any, opts, images, (def) => {
+    return mdastToPdf(node as Root, opts, images, (def) => {
       const pdf = pdfMake.createPdf(def);
       switch (opts.output ?? "buffer") {
         case "buffer":

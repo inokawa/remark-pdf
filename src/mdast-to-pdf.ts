@@ -162,7 +162,7 @@ export function mdastToPdf(
   return doc;
 }
 
-function convertNodes(nodes: mdast.Content[], ctx: Context): Content[] {
+function convertNodes(nodes: mdast.RootContent[], ctx: Context): Content[] {
   const results: Content[] = [];
   for (const node of nodes) {
     switch (node.type) {
@@ -258,7 +258,7 @@ function convertNodes(nodes: mdast.Content[], ctx: Context): Content[] {
         results.push(...buildInlineMath(node, ctx));
         break;
       default:
-        warnOnce(true, `${node.type} node is not supported.`);
+        warnOnce(`${node.type} node is not supported.`);
         break;
     }
   }

@@ -2,10 +2,10 @@ import typescript from "@rollup/plugin-typescript";
 import { dirname } from 'node:path'
 import pkg from "./package.json" with { type: "json" };
 
-const externals = [
+const external = (id) => [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.devDependencies),
-];
+].some((d) => id.startsWith(d));
 
 const plugins = [
   typescript({
@@ -32,7 +32,7 @@ export default [
         sourcemap: true,
       },
     ],
-    external: externals,
+    external,
     plugins: plugins,
   },
   {
@@ -49,7 +49,7 @@ export default [
         sourcemap: true,
       },
     ],
-    external: externals,
+    external,
     plugins: plugins,
   },
 ];
