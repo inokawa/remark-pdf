@@ -1,5 +1,5 @@
 import type { Plugin } from "unified";
-import { mdastToPdf, type PdfOptions, type ImageDataMap } from "./mdast-to-pdf";
+import { mdastToPdf, type PdfOptions } from "./mdast-to-pdf";
 
 import Printer from "pdfmake";
 import { deepMerge, error } from "./utils";
@@ -47,10 +47,8 @@ declare module "unified" {
 const plugin: Plugin<[PdfOptions?], Root, Promise<unknown>> = function (
   opts = {}
 ) {
-  let images: ImageDataMap = {};
-
   this.compiler = (node) => {
-    return mdastToPdf(node as Root, opts, images, (def) => {
+    return mdastToPdf(node as Root, opts, (def) => {
       const printer = new Printer(deepMerge(defaultFonts, opts.fonts));
       const pdf = printer.createPdfKitDocument(def);
 

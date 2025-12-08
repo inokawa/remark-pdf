@@ -30,15 +30,7 @@ const HRULE = "thematicBreak";
 const LINK = "link";
 const LISTITEM = "listItem";
 
-export type ImageDataMap = { [url: string]: string };
-
-export type ImageData = {
-  // image: string;
-  // width: number;
-  // height: number;
-};
-
-export type ImageResolver = (url: string) => Promise<ImageData> | ImageData;
+type ImageDataMap = { [url: string]: string };
 
 type Decoration = Readonly<
   {
@@ -71,10 +63,6 @@ export interface PdfOptions
    * @defaultValue "buffer"
    */
   output?: "buffer" | "blob";
-  /**
-   * **You must set** if your markdown includes images.
-   */
-  imageResolver?: ImageResolver;
   info?: TDocumentInformation;
   fonts?: TFontDictionary;
   preventOrphans?: boolean;
@@ -97,7 +85,6 @@ export function mdastToPdf(
     watermark,
     preventOrphans,
   }: PdfOptions,
-  images: ImageDataMap,
   build: (
     def: TDocumentDefinitions & { fonts?: TFontDictionary }
   ) => Promise<any>
@@ -133,7 +120,7 @@ export function mdastToPdf(
   const mergedStyles = deepMerge(defaultStyles, styles);
   const content = convertNodes(node.children, {
     deco: {},
-    images,
+    images: {},
     styles: mergedStyles,
   });
   const doc = build({
@@ -151,7 +138,7 @@ export function mdastToPdf(
     version,
     watermark,
     content,
-    images,
+    images: {},
     fonts,
     styles: mergedStyles,
     defaultStyle: {
