@@ -61,30 +61,26 @@ const Section = ({
   </div>
 );
 
+const toPdfProcessor = unified()
+  .use(markdown)
+  .use(gfm)
+  .use(frontmatter)
+  .use(pdf, {
+    output: "blob",
+    styles: {
+      head1: {
+        fontSize: 25,
+      },
+    },
+  });
+
 export const MarkdownToPdf = () => {
   const [pending, startTransition] = useTransition();
   const [data, setData] = useState<string | null>(null);
   const makePdf = useCallback((contents: string) => {
     startTransition(async () => {
-      const toPdfProcessor = unified()
-        .use(markdown)
-        .use(gfm)
-        .use(frontmatter)
-        .use(pdf, {
-          output: "blob",
-          styles: {
-            head1: {
-              fontSize: 25,
-            },
-          },
-        });
-      const toPdf = async (s: string) => {
-        const doc = await toPdfProcessor.process(s);
-        return doc.result as Blob;
-      };
-      const blob = await toPdf(contents);
-
-      setData(URL.createObjectURL(blob));
+      const res = await toPdfProcessor.process(contents);
+      setData(URL.createObjectURL((await res.result) as Blob));
     });
   }, []);
   useEffect(() => {
