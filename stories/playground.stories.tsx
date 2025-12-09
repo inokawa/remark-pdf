@@ -13,7 +13,7 @@ import { saveAs } from "file-saver";
 import pdf from "../src";
 import MarkdownEditor from "./components/editor";
 // @ts-expect-error no type definition
-import text from "../fixtures/article.md?raw";
+import text from "../README.md?raw";
 import { Preview } from "./components/preview";
 
 export default {
