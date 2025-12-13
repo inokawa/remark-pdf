@@ -4,7 +4,7 @@
 
 # Interface: PdfOptions
 
-Defined in: [src/transformer.ts:55](https://github.com/inokawa/remark-pdf/blob/df179a9f25c3f7aa68ab62daa54474119db994ee/src/transformer.ts#L55)
+Defined in: [src/mdast-to-pdf.ts:56](https://github.com/inokawa/remark-pdf/blob/a4035d9410a72288149c2c7d0644d51b34b0d1af/src/mdast-to-pdf.ts#L56)
 
 ## Extends
 
@@ -16,7 +16,7 @@ Defined in: [src/transformer.ts:55](https://github.com/inokawa/remark-pdf/blob/d
 
 > `optional` **output**: `"buffer"` \| `"blob"`
 
-Defined in: [src/transformer.ts:73](https://github.com/inokawa/remark-pdf/blob/df179a9f25c3f7aa68ab62daa54474119db994ee/src/transformer.ts#L73)
+Defined in: [src/mdast-to-pdf.ts:73](https://github.com/inokawa/remark-pdf/blob/a4035d9410a72288149c2c7d0644d51b34b0d1af/src/mdast-to-pdf.ts#L73)
 
 Set output type of `VFile.result`. `buffer` is `Promise<Buffer>`. `blob` is `Promise<Blob>`.
 
@@ -28,21 +28,11 @@ Set output type of `VFile.result`. `buffer` is `Promise<Buffer>`. `blob` is `Pro
 
 ***
 
-### imageResolver?
-
-> `optional` **imageResolver**: `ImageResolver`
-
-Defined in: [src/transformer.ts:77](https://github.com/inokawa/remark-pdf/blob/df179a9f25c3f7aa68ab62daa54474119db994ee/src/transformer.ts#L77)
-
-**You must set** if your markdown includes images.
-
-***
-
 ### info?
 
 > `optional` **info**: `TDocumentInformation`
 
-Defined in: [src/transformer.ts:78](https://github.com/inokawa/remark-pdf/blob/df179a9f25c3f7aa68ab62daa54474119db994ee/src/transformer.ts#L78)
+Defined in: [src/mdast-to-pdf.ts:74](https://github.com/inokawa/remark-pdf/blob/a4035d9410a72288149c2c7d0644d51b34b0d1af/src/mdast-to-pdf.ts#L74)
 
 ***
 
@@ -50,7 +40,7 @@ Defined in: [src/transformer.ts:78](https://github.com/inokawa/remark-pdf/blob/d
 
 > `optional` **fonts**: `TFontDictionary`
 
-Defined in: [src/transformer.ts:79](https://github.com/inokawa/remark-pdf/blob/df179a9f25c3f7aa68ab62daa54474119db994ee/src/transformer.ts#L79)
+Defined in: [src/mdast-to-pdf.ts:75](https://github.com/inokawa/remark-pdf/blob/a4035d9410a72288149c2c7d0644d51b34b0d1af/src/mdast-to-pdf.ts#L75)
 
 ***
 
@@ -58,7 +48,7 @@ Defined in: [src/transformer.ts:79](https://github.com/inokawa/remark-pdf/blob/d
 
 > `optional` **preventOrphans**: `boolean`
 
-Defined in: [src/transformer.ts:80](https://github.com/inokawa/remark-pdf/blob/df179a9f25c3f7aa68ab62daa54474119db994ee/src/transformer.ts#L80)
+Defined in: [src/mdast-to-pdf.ts:76](https://github.com/inokawa/remark-pdf/blob/a4035d9410a72288149c2c7d0644d51b34b0d1af/src/mdast-to-pdf.ts#L76)
 
 ***
 
