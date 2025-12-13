@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@types/pdfmake": "^0.2.12",
+    "mdast-util-definitions": "^6.0.0",
     "pdfmake": "^0.2.20",
     "unist-util-visit": "^5.0.0"
   },

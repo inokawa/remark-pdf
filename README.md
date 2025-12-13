@@ -17,28 +17,20 @@ If you have some feature requests or improvements, please create a [issue](https
 - [x] heading
 - [x] thematicBreak
 - [ ] blockquote
-- [x] list
-- [x] listItem
-- [x] table
-- [x] tableRow
-- [x] tableCell
-- [ ] html
-- [ ] code
-- [ ] yaml
-- [ ] toml
-- [ ] definition
-- [ ] footnoteDefinition
+- [x] list / listItem
+- [x] table / tableRow / tableCell
+- [x] definition
 - [x] text
 - [x] emphasis
 - [x] strong
 - [x] delete
 - [ ] inlineCode
 - [x] break
-- [x] link
-- [ ] image
-- [ ] linkReference
-- [ ] imageReference
-- [ ] footnote / footnoteReference
+- [x] link / linkReference
+- [ ] footnote / footnoteReference / footnoteDefinition
+- [ ] image / imageReference
+- [ ] html
+- [ ] code
 - [ ] math / inlineMath
 
 ## Demo
