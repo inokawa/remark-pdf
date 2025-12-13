@@ -47,7 +47,7 @@ type Decoration = Readonly<
 >;
 
 type Context = Readonly<{
-  next: (node: readonly mdast.RootContent[], ctx?: Context) => Content[];
+  render: (node: readonly mdast.RootContent[], ctx?: Context) => Content[];
   deco: Decoration;
   styles: Readonly<StyleDictionary>;
   definition: GetDefinition;
@@ -159,7 +159,7 @@ export function mdastToPdf(
   };
 
   const context: Context = {
-    next(nodes, c) {
+    render(nodes, c) {
       const results: Content[] = [];
       for (const node of nodes) {
         const builder = builders[node.type];
@@ -183,7 +183,7 @@ export function mdastToPdf(
     definition,
   };
 
-  const content = context.next(node.children);
+  const content = context.render(node.children);
   const doc = build({
     info,
     pageMargins,
@@ -211,7 +211,7 @@ export function mdastToPdf(
 }
 
 const buildParagraph: NodeBuilder<"paragraph"> = ({ type, children }, ctx) => {
-  return { text: ctx.next(children), style: type };
+  return { text: ctx.render(children), style: type };
 };
 
 const buildHeading: NodeBuilder<"heading"> = ({ children, depth }, ctx) => {
@@ -237,7 +237,7 @@ const buildHeading: NodeBuilder<"heading"> = ({ children, depth }, ctx) => {
       break;
   }
   return {
-    text: ctx.next(children),
+    text: ctx.render(children),
     style: heading,
   };
 };
@@ -265,14 +265,14 @@ const buildBlockquote: NodeBuilder<"blockquote"> = (
   ctx,
 ) => {
   // FIXME: do nothing for now
-  return { text: ctx.next(children), style: type };
+  return { text: ctx.render(children), style: type };
 };
 
 const buildList: NodeBuilder<"list"> = (
   { children, ordered, start: _start, spread: _spread, type },
   ctx,
 ) => {
-  const nodes = ctx.next(children);
+  const nodes = ctx.render(children);
   return ordered
     ? {
         ol: nodes,
@@ -288,7 +288,7 @@ const buildListItem: NodeBuilder<"listItem"> = (
   { children, checked: _checked, spread: _spread },
   ctx,
 ) => {
-  return ctx.next(children);
+  return ctx.render(children);
 };
 
 const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
@@ -309,7 +309,7 @@ const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
     table: {
       body: children.map((r) => {
         return r.children.map((c, i) => {
-          return ctx.next(c.children, {
+          return ctx.render(c.children, {
             ...ctx,
             deco: { ...ctx.deco, align: cellAligns?.[i] },
           });
@@ -371,21 +371,21 @@ const buildText: NodeBuilder<"text"> = ({ value: text }, ctx) => {
 };
 
 const buildEmphasis: NodeBuilder<"emphasis"> = (node, ctx) => {
-  return ctx.next(node.children, {
+  return ctx.render(node.children, {
     ...ctx,
     deco: { ...ctx.deco, emphasis: true },
   });
 };
 
 const buildStrong: NodeBuilder<"strong"> = (node, ctx) => {
-  return ctx.next(node.children, {
+  return ctx.render(node.children, {
     ...ctx,
     deco: { ...ctx.deco, strong: true },
   });
 };
 
 const buildDelete: NodeBuilder<"delete"> = (node, ctx) => {
-  return ctx.next(node.children, {
+  return ctx.render(node.children, {
     ...ctx,
     deco: { ...ctx.deco, delete: true },
   });
@@ -399,7 +399,7 @@ const buildLink: NodeBuilder<"link"> = (
   { children, url, title: _title },
   ctx,
 ) => {
-  return ctx.next(children, { ...ctx, deco: { ...ctx.deco, link: url } });
+  return ctx.render(children, { ...ctx, deco: { ...ctx.deco, link: url } });
 };
 
 // const buildImage: NodeBuilder<"image"> = ({
@@ -416,7 +416,7 @@ const buildLinkReference: NodeBuilder<"linkReference"> = (
 ) => {
   const def = ctx.definition(identifier);
   if (def == null) {
-    return ctx.next(children);
+    return ctx.render(children);
   }
   return buildLink({ type: "link", children, url: def.url }, ctx);
 };
