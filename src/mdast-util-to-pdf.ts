@@ -1,144 +1,75 @@
 import type * as mdast from "mdast";
+import { warnOnce } from "./utils";
+import { definitions } from "mdast-util-definitions";
 import type {
-  Alignment,
-  Content as AllContent,
-  ContentText,
-  Style,
-  StyleDictionary,
-  TDocumentDefinitions,
-  TDocumentInformation,
-  TFontDictionary,
-} from "pdfmake/interfaces";
-import { definitions, type GetDefinition } from "mdast-util-definitions";
-import { deepMerge, isBrowser, warnOnce } from "./utils";
+  Context,
+  FontType,
+  NodeBuilder,
+  NodeBuilders,
+  PdfContent,
+} from "./types";
+import { printPdf } from "./printer";
 
-type KnownNodeType = mdast.RootContent["type"];
+export interface PdfOptions {
+  info?: {
+    /** Document title. */
+    title?: string | undefined;
 
-type MdastNode<T extends string> = T extends KnownNodeType
-  ? Extract<mdast.RootContent, { type: T }>
-  : unknown;
+    /** Name of the author. */
+    author?: string | undefined;
 
-type NodeBuilder<T extends string> = (
-  node: MdastNode<T>,
-  ctx: Context,
-) => Content | Content[] | null;
+    /** Subject of the document. */
+    subject?: string | undefined;
 
-type NodeBuilders = {
-  [K in KnownNodeType]?: NodeBuilder<K>;
-};
+    /**
+     * Keywords associated with the document.
+     *
+     * A PDF file stores all keywords as a single string, as given here.
+     * For optimal compatibility, separate keywords using commas or spaces.
+     */
+    keywords?: string | undefined;
 
-type Content = Exclude<AllContent, any[]>;
+    /**
+     * Name of the creator.
+     *
+     * Defaults to `pdfmake`.
+     */
+    creator?: string | undefined;
 
-const HEADING_1 = "head1";
-const HEADING_2 = "head2";
-const HEADING_3 = "head3";
-const HEADING_4 = "head4";
-const HEADING_5 = "head5";
-const HEADING_6 = "head6";
-const EMOJI = "emoji";
-const HRULE = "thematicBreak";
-const LINK = "link";
-const LISTITEM = "listItem";
+    /**
+     * Name of the producer.
+     *
+     * Defaults to `pdfmake`.
+     */
+    producer?: string | undefined;
 
-type DecorationContext = Readonly<{
-  bold?: boolean;
-  italic?: boolean;
-  strike?: boolean;
-  link?: string;
-  align?: Alignment;
-}>;
+    /**
+     * Date the document was created.
+     *
+     * Defaults to the current date and time.
+     */
+    creationDate?: Date | undefined;
 
-type Context = Readonly<{
-  render: (node: readonly mdast.RootContent[], ctx?: Context) => Content[];
-  /**
-   * @internal
-   */
-  deco: DecorationContext;
-  /**
-   * @internal
-   */
-  styles: Readonly<StyleDictionary>;
-  /**
-   * @internal
-   */
-  definition: GetDefinition;
-}>;
+    /** Date the document was last modified. */
+    modDate?: Date | undefined;
 
-export interface PdfOptions extends Pick<
-  TDocumentDefinitions,
-  | "defaultStyle"
-  | "pageMargins"
-  | "pageOrientation"
-  | "pageSize"
-  | "userPassword"
-  | "ownerPassword"
-  | "permissions"
-  | "version"
-  | "styles"
-  | "watermark"
-> {
-  /**
-   * Set output type of `VFile.result`. `buffer` is `Promise<Buffer>`. `blob` is `Promise<Blob>`.
-   * @defaultValue "buffer"
-   */
-  output?: "buffer" | "blob";
-  info?: TDocumentInformation;
-  fonts?: TFontDictionary;
+    /** Indicates whether the document has been corrected for color misregistrations. */
+    trapped?: "True" | "False" | "Unknown" | undefined;
+  };
+  font?: FontType;
   preventOrphans?: boolean;
 }
 
-export function mdastToPdf(
+export async function mdastToPdf(
   node: mdast.Root,
   {
-    defaultStyle,
-    fonts,
     info,
-    pageMargins,
-    pageOrientation,
-    pageSize,
-    userPassword,
-    ownerPassword,
-    styles,
-    permissions,
-    version,
-    watermark,
     preventOrphans,
+    // https://github.com/Hopding/pdf-lib?tab=readme-ov-file#creating-and-filling-forms
+    font: fontProp = "Helvetica",
   }: PdfOptions,
-  build: (
-    def: TDocumentDefinitions & { fonts?: TFontDictionary },
-  ) => Promise<any>,
-): Promise<any> {
+): Promise<Uint8Array> {
   const definition = definitions(node);
-
-  const defaultStyles: StyleDictionary = {
-    [HEADING_1]: {
-      fontSize: 24,
-    },
-    [HEADING_2]: {
-      fontSize: 22,
-    },
-    [HEADING_3]: {
-      fontSize: 20,
-    },
-    [HEADING_4]: {
-      fontSize: 18,
-    },
-    [HEADING_5]: {
-      fontSize: 16,
-    },
-    [HEADING_6]: {
-      fontSize: 14,
-    },
-    [EMOJI]: {},
-    [LISTITEM]: {},
-    [LINK]: {
-      color: "blue",
-    },
-    [HRULE]: {
-      margin: [0, 12, 0, 0],
-    },
-  };
-  const mergedStyles = deepMerge(defaultStyles, styles);
 
   const builders: NodeBuilders = {
     paragraph: buildParagraph,
@@ -171,7 +102,7 @@ export function mdastToPdf(
 
   const context: Context = {
     render(nodes, c) {
-      const results: Content[] = [];
+      const results: PdfContent[] = [];
       for (const node of nodes) {
         const builder = builders[node.type];
         if (!builder) {
@@ -189,121 +120,93 @@ export function mdastToPdf(
       }
       return results;
     },
-    deco: {},
-    styles: mergedStyles,
+    config: {
+      head1: {
+        fontSize: 24,
+      },
+      head2: {
+        fontSize: 22,
+      },
+      head3: {
+        fontSize: 20,
+      },
+      head4: {
+        fontSize: 18,
+      },
+      head5: {
+        fontSize: 16,
+      },
+      head6: {
+        fontSize: 14,
+      },
+    },
+    style: {},
     definition,
   };
 
   const content = context.render(node.children);
-  const doc = build({
-    info,
-    pageMargins,
-    pageOrientation,
-    pageSize,
-    pageBreakBefore: preventOrphans
-      ? (currentNode, restNodes) =>
-          currentNode.headlineLevel === 1 && restNodes.length === 0
-      : undefined,
-    userPassword,
-    ownerPassword,
-    permissions,
-    version,
-    watermark,
-    content,
-    images: {},
-    fonts,
-    styles: mergedStyles,
-    defaultStyle: {
-      font: isBrowser() ? "Roboto" : "Helvetica",
-      ...defaultStyle,
+
+  return printPdf(content, {
+    pageSize: "A4",
+    font: fontProp,
+    margin: {
+      top: 40,
+      left: 40,
+      bottom: 40,
+      right: 40,
     },
   });
-  return doc;
 }
 
-const buildParagraph: NodeBuilder<"paragraph"> = ({ type, children }, ctx) => {
-  return { text: ctx.render(children), style: type };
+const buildParagraph: NodeBuilder<"paragraph"> = ({ children }, ctx) => {
+  return {
+    type: "paragraph",
+    children: ctx.render(children),
+  };
 };
 
 const buildHeading: NodeBuilder<"heading"> = ({ children, depth }, ctx) => {
-  let heading: string;
-  switch (depth) {
-    case 1:
-      heading = HEADING_1;
-      break;
-    case 2:
-      heading = HEADING_2;
-      break;
-    case 3:
-      heading = HEADING_3;
-      break;
-    case 4:
-      heading = HEADING_4;
-      break;
-    case 5:
-      heading = HEADING_5;
-      break;
-    case 6:
-      heading = HEADING_6;
-      break;
-  }
+  const style = ctx.config[`head${depth}`];
   return {
-    text: ctx.render(children),
-    style: heading,
-  };
-};
-
-const buildThematicBreak: NodeBuilder<"thematicBreak"> = ({ type }, ctx) => {
-  const style = { ...ctx.styles[type] };
-  return {
-    style: type,
-    canvas: [
-      {
-        type: "line",
-        lineColor: style.color,
-        lineWidth: style.lineHeight || 1,
-        x1: 0,
-        y1: 0,
-        x2: (514 / 100) * 100,
-        y2: 0,
+    type: "paragraph",
+    heading: depth,
+    children: ctx.render(children, {
+      ...ctx,
+      style: {
+        ...ctx.style,
+        fontSize: style.fontSize,
       },
-    ],
+    }),
   };
 };
 
-const buildBlockquote: NodeBuilder<"blockquote"> = (
-  { type, children },
-  ctx,
-) => {
-  // FIXME: do nothing for now
-  return { text: ctx.render(children), style: type };
+const buildThematicBreak: NodeBuilder<"thematicBreak"> = () => {
+  return { type: "pagebreak" };
 };
 
-const buildList: NodeBuilder<"list"> = (
-  { children, ordered, start: _start, spread: _spread, type },
-  ctx,
-) => {
-  const nodes = ctx.render(children);
-  return ordered
-    ? {
-        ol: nodes,
-        style: type,
-      }
-    : {
-        ul: nodes,
-        style: type,
-      };
+const buildBlockquote: NodeBuilder<"blockquote"> = ({ children }, ctx) => {
+  // FIXME: do nothing for now
+  return ctx.render(children);
+};
+
+const buildList: NodeBuilder<"list"> = ({ children, ordered }, ctx) => {
+  return ctx.render(children);
+  // return {
+  //   type: "paragraph",
+  //   children: nodes,
+  //   // style: type,
+  // };
 };
 
 const buildListItem: NodeBuilder<"listItem"> = (
-  { children, checked: _checked, spread: _spread },
+  { children, checked: _checked },
   ctx,
 ) => {
   return ctx.render(children);
 };
 
 const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
-  const cellAligns: Alignment[] | undefined = align?.map((a) => {
+  const cellAligns = align?.map((a) => {
     switch (a) {
       case "left":
         return "left";
@@ -317,87 +220,68 @@ const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
   });
 
   return {
-    table: {
-      body: children.map((r) => {
-        return r.children.map((c, i) => {
-          return ctx.render(c.children, {
-            ...ctx,
-            deco: { ...ctx.deco, align: cellAligns?.[i] },
-          });
-        });
-      }),
-    },
+    type: "table",
+    children: children.map((r) => {
+      return r.children.map((c, i) => {
+        return {
+          type: "paragraph",
+          align: cellAligns?.[i],
+          children: ctx.render(c.children),
+        };
+      });
+    }),
   };
 };
 
 const buildText: NodeBuilder<"text"> = ({ value: text }, ctx) => {
-  const style: Style = {};
-  const content: ContentText = { text, style };
-  if (ctx.deco.bold) {
-    style.bold = ctx.deco.bold;
-  }
-  if (ctx.deco.italic) {
-    style.italics = ctx.deco.italic;
-  }
-  if (ctx.deco.strike) {
-    content.decoration = "lineThrough";
-  }
-  if (ctx.deco.align != null) {
-    style.alignment = ctx.deco.align;
-  }
-  if (ctx.deco.link != null) {
-    content.link = ctx.deco.link;
-    content.style = {
-      ...ctx.styles[LINK],
-      ...style,
-    };
-  }
-
-  const matches = text.match(/\p{Extended_Pictographic}/gu);
-  if (matches) {
-    let segments: ContentText[] = [];
-    let lastIndex = 0;
-    matches.forEach((emoji: string) => {
-      // Add text before emoji
-      const textBefore = text.slice(lastIndex, text.indexOf(emoji, lastIndex));
-      if (textBefore) {
-        segments.push({ ...content, text: textBefore });
-      }
-      // Add emoji
-      segments.push({ ...content, text: emoji, style: EMOJI });
-      lastIndex = text.indexOf(emoji, lastIndex) + emoji.length;
-    });
-    // Add remaining text
-    if (lastIndex < text.length) {
-      const textAfter = text.slice(lastIndex);
-      if (textAfter) {
-        segments.push({ ...content, text: textAfter });
-      }
-    }
-    // console.error(content, segments);
-    return segments;
-  }
-  return [content];
+  // const matches = text.match(/\p{Extended_Pictographic}/gu);
+  // if (matches) {
+  //   let segments: ContentText[] = [];
+  //   let lastIndex = 0;
+  //   matches.forEach((emoji: string) => {
+  //     // Add text before emoji
+  //     const textBefore = text.slice(lastIndex, text.indexOf(emoji, lastIndex));
+  //     if (textBefore) {
+  //       segments.push({ ...content, text: textBefore });
+  //     }
+  //     // Add emoji
+  //     segments.push({ ...content, text: emoji, style: EMOJI });
+  //     lastIndex = text.indexOf(emoji, lastIndex) + emoji.length;
+  //   });
+  //   // Add remaining text
+  //   if (lastIndex < text.length) {
+  //     const textAfter = text.slice(lastIndex);
+  //     if (textAfter) {
+  //       segments.push({ ...content, text: textAfter });
+  //     }
+  //   }
+  //   // console.error(content, segments);
+  //   return segments;
+  // }
+  // return [content];
+  // emoji https://github.com/Hopding/pdf-lib/issues/217
+  // font https://crocro.com/news/20220517231535.html
+  return { type: "text", text, style: ctx.style };
 };
 
 const buildEmphasis: NodeBuilder<"emphasis"> = (node, ctx) => {
   return ctx.render(node.children, {
     ...ctx,
-    deco: { ...ctx.deco, italic: true },
+    style: { ...ctx.style, italic: true },
   });
 };
 
 const buildStrong: NodeBuilder<"strong"> = (node, ctx) => {
   return ctx.render(node.children, {
     ...ctx,
-    deco: { ...ctx.deco, bold: true },
+    style: { ...ctx.style, bold: true },
   });
 };
 
 const buildDelete: NodeBuilder<"delete"> = (node, ctx) => {
   return ctx.render(node.children, {
     ...ctx,
-    deco: { ...ctx.deco, strike: true },
+    style: { ...ctx.style, strike: true },
   });
 };
 
@@ -405,15 +289,12 @@ const buildBreak: NodeBuilder<"break"> = ({}, ctx) => {
   return buildText({ type: "text", value: "\n" }, ctx);
 };
 
-const buildLink: NodeBuilder<"link"> = (
-  { children, url, title: _title },
-  ctx,
-) => {
+const buildLink: NodeBuilder<"link"> = ({ children, url }, ctx) => {
   if (url.startsWith("#")) {
     // TODO support anchor link
     return ctx.render(children);
   }
-  return ctx.render(children, { ...ctx, deco: { ...ctx.deco, link: url } });
+  return ctx.render(children, { ...ctx, style: { ...ctx.style, link: url } });
 };
 
 // const buildImage: NodeBuilder<"image"> = ({

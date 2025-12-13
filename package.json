@@ -22,6 +22,7 @@
   "files": [
     "lib"
   ],
+  "sideEffects": false,
   "scripts": {
     "build": "rollup -c",
     "test": "vitest run",
@@ -32,9 +33,9 @@
     "prepublishOnly": "npm run typedoc && rimraf lib && npm run build"
   },
   "dependencies": {
-    "@types/pdfmake": "^0.2.12",
+    "css-line-break": "^2.1.0",
     "mdast-util-definitions": "^6.0.0",
-    "pdfmake": "^0.2.20",
+    "pdf-lib": "^1.17.1",
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {

@@ -5,7 +5,7 @@
 > [remark](https://github.com/remarkjs/remark) plugin to compile markdown to pdf.
 
 - Uses [pdfmake](https://github.com/bpampuch/pdfmake) for compilation, to avoid issues with puppeteer or headless chromium.
-- Works in browser and Node.js.
+- Works in any environment (e.g. browser, Node.js).
 
 ### 🚧 WIP 🚧
 
@@ -53,14 +53,14 @@ import markdown from "remark-parse";
 import pdf from "remark-pdf";
 import { saveAs } from "file-saver";
 
-const processor = unified().use(markdown).use(pdf, { output: "blob" });
+const processor = unified().use(markdown).use(pdf);
 
 const text = "# hello world";
 
 (async () => {
   const doc = await processor.process(text);
-  const blob = await doc.result;
-  saveAs(blob, "example.pdf");
+  const arrayBuffer = await doc.result;
+  saveAs(new Blob([arrayBuffer]), "example.pdf");
 })();
 ```
 
@@ -69,17 +69,17 @@ const text = "# hello world";
 ```javascript
 import { unified } from "unified";
 import markdown from "remark-parse";
-import pdf from "remark-pdf/node";
+import pdf from "remark-pdf";
 import * as fs from "fs";
 
-const processor = unified().use(markdown).use(pdf, { output: "buffer" });
+const processor = unified().use(markdown).use(pdf);
 
 const text = "# hello world";
 
 (async () => {
   const doc = await processor.process(text);
-  const buffer = await doc.result;
-  fs.writeFileSync("example.pdf", buffer);
+  const arrayBuffer = await doc.result;
+  fs.writeFileSync("example.pdf", Buffer.from(arrayBuffer));
 })();
 ```
 
@@ -92,11 +92,10 @@ Note that variable-width fonts are supported, but the path to the same font file
 ```javascript
 import { unified } from "unified";
 import markdown from "remark-parse";
-import pdf from "remark-pdf/node";
+import pdf from "remark-pdf";
 import * as fs from "fs";
 
 const pdfOpts = {
-  output: "buffer",
   fonts: {
     "National Park": {
       normal: "/path/to/fonts/nationalpark-variablevf.ttf",

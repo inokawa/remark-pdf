@@ -8,25 +8,20 @@ export const error = (message: string): never => {
 /**
  * @internal
  */
-export const isBrowser = () => {
-  try {
-    return typeof window !== "undefined";
-  } catch (e) {
-    return false;
-  }
-};
-
-export function deepMerge<T extends object>(
-  target: T,
-  source: Partial<T> | undefined
-): T {
-  for (const key in source) {
-    if (source[key] instanceof Object && key in target) {
-      Object.assign(source[key], deepMerge(target[key] as object, source[key]));
+export const isEqualObject = <T extends object>(a: T, b: T): boolean => {
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  if (aKeys.length !== bKeys.length) return false;
+  for (const k of aKeys) {
+    if (!(k in b)) {
+      return false;
+    }
+    if ((a as any)[k] !== (b as any)[k]) {
+      return false;
     }
   }
-  return { ...target, ...source };
-}
+  return true;
+};
 
 const alreadyWarned: { [message: string]: boolean } = {};
 
