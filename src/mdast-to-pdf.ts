@@ -9,6 +9,7 @@ import type {
   TDocumentInformation,
   TFontDictionary,
 } from "pdfmake/interfaces";
+import { definitions, type GetDefinition } from "mdast-util-definitions";
 import { deepMerge, isBrowser, warnOnce } from "./utils";
 
 type KnownNodeType = mdast.RootContent["type"];
@@ -49,6 +50,7 @@ type Context = Readonly<{
   next: (node: readonly mdast.RootContent[], ctx?: Context) => Content[];
   deco: Decoration;
   styles: Readonly<StyleDictionary>;
+  definition: GetDefinition;
 }>;
 
 export interface PdfOptions extends Pick<
@@ -95,6 +97,8 @@ export function mdastToPdf(
     def: TDocumentDefinitions & { fonts?: TFontDictionary },
   ) => Promise<any>,
 ): Promise<any> {
+  const definition = definitions(node);
+
   const defaultStyles: StyleDictionary = {
     [HEADING_1]: {
       fontSize: 24,
@@ -146,7 +150,7 @@ export function mdastToPdf(
     inlineCode: fallbackText,
     break: buildBreak,
     link: buildLink,
-    // linkReference: buildLinkReference,
+    linkReference: buildLinkReference,
     // image: warnImage,
     // imageReference: warnImage,
     // footnoteReference: buildFootnoteReference,
@@ -176,6 +180,7 @@ export function mdastToPdf(
     },
     deco: {},
     styles: mergedStyles,
+    definition,
   };
 
   const content = context.next(node.children);
@@ -404,6 +409,17 @@ const buildLink: NodeBuilder<"link"> = (
 // }) => {
 //   return { image: url /* width, height*/ };
 // };
+
+const buildLinkReference: NodeBuilder<"linkReference"> = (
+  { children, identifier },
+  ctx,
+) => {
+  const def = ctx.definition(identifier);
+  if (def == null) {
+    return ctx.next(children);
+  }
+  return buildLink({ type: "link", children, url: def.url }, ctx);
+};
 
 const noop = () => {
   return null;
