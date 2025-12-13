@@ -2,20 +2,29 @@ import * as mdast from "./mdast";
 import type {
   Alignment,
   Content as AllContent,
-  ContentCanvas,
-  ContentImage,
-  ContentOrderedList,
-  ContentTable,
   ContentText,
-  ContentUnorderedList,
   Style,
   StyleDictionary,
-  TableCell,
   TDocumentDefinitions,
   TDocumentInformation,
   TFontDictionary,
 } from "pdfmake/interfaces";
-import { deepMerge, error, isBrowser, warnOnce } from "./utils";
+import { deepMerge, isBrowser, warnOnce } from "./utils";
+
+type KnownNodeType = mdast.RootContent["type"];
+
+type MdastNode<T extends string> = T extends KnownNodeType
+  ? Extract<mdast.RootContent, { type: T }>
+  : unknown;
+
+type NodeBuilder<T extends string> = (
+  node: MdastNode<T>,
+  ctx: Context,
+) => Content | Content[] | null;
+
+type NodeBuilders = {
+  [K in KnownNodeType]?: NodeBuilder<K>;
+};
 
 type Content = Exclude<AllContent, any[]>;
 
@@ -30,34 +39,31 @@ const HRULE = "thematicBreak";
 const LINK = "link";
 const LISTITEM = "listItem";
 
-type ImageDataMap = { [url: string]: string };
-
 type Decoration = Readonly<
   {
     [key in (mdast.Emphasis | mdast.Strong | mdast.Delete)["type"]]?: true;
   } & { link?: string; align?: Alignment }
 >;
 
-type Context = {
-  readonly deco: Decoration;
-  readonly images: ImageDataMap;
-  readonly styles: Readonly<StyleDictionary>;
-};
+type Context = Readonly<{
+  next: (node: readonly mdast.RootContent[], ctx?: Context) => Content[];
+  deco: Decoration;
+  styles: Readonly<StyleDictionary>;
+}>;
 
-export interface PdfOptions
-  extends Pick<
-    TDocumentDefinitions,
-    | "defaultStyle"
-    | "pageMargins"
-    | "pageOrientation"
-    | "pageSize"
-    | "userPassword"
-    | "ownerPassword"
-    | "permissions"
-    | "version"
-    | "styles"
-    | "watermark"
-  > {
+export interface PdfOptions extends Pick<
+  TDocumentDefinitions,
+  | "defaultStyle"
+  | "pageMargins"
+  | "pageOrientation"
+  | "pageSize"
+  | "userPassword"
+  | "ownerPassword"
+  | "permissions"
+  | "version"
+  | "styles"
+  | "watermark"
+> {
   /**
    * Set output type of `VFile.result`. `buffer` is `Promise<Buffer>`. `blob` is `Promise<Blob>`.
    * @defaultValue "buffer"
@@ -86,8 +92,8 @@ export function mdastToPdf(
     preventOrphans,
   }: PdfOptions,
   build: (
-    def: TDocumentDefinitions & { fonts?: TFontDictionary }
-  ) => Promise<any>
+    def: TDocumentDefinitions & { fonts?: TFontDictionary },
+  ) => Promise<any>,
 ): Promise<any> {
   const defaultStyles: StyleDictionary = {
     [HEADING_1]: {
@@ -118,11 +124,61 @@ export function mdastToPdf(
     },
   };
   const mergedStyles = deepMerge(defaultStyles, styles);
-  const content = convertNodes(node.children, {
+
+  const builders: NodeBuilders = {
+    paragraph: buildParagraph,
+    heading: buildHeading,
+    thematicBreak: buildThematicBreak,
+    blockquote: buildBlockquote,
+    list: buildList,
+    listItem: buildListItem,
+    table: buildTable,
+    tableRow: noop,
+    tableCell: noop,
+    html: fallbackText,
+    code: fallbackText,
+    definition: noop,
+    // footnoteDefinition: buildFootnoteDefinition,
+    text: buildText,
+    emphasis: buildEmphasis,
+    strong: buildStrong,
+    delete: buildDelete,
+    inlineCode: fallbackText,
+    break: buildBreak,
+    link: buildLink,
+    // linkReference: buildLinkReference,
+    // image: warnImage,
+    // imageReference: warnImage,
+    // footnoteReference: buildFootnoteReference,
+    math: fallbackText,
+    inlineMath: fallbackText,
+  };
+
+  const context: Context = {
+    next(nodes, c) {
+      const results: Content[] = [];
+      for (const node of nodes) {
+        const builder = builders[node.type];
+        if (!builder) {
+          warnOnce(`${node.type} node is not supported without plugins.`);
+          continue;
+        }
+        const r = builder(node as any, c ?? this);
+        if (r) {
+          if (Array.isArray(r)) {
+            results.push(...r);
+          } else {
+            results.push(r);
+          }
+        }
+      }
+      return results;
+    },
     deco: {},
-    images: {},
     styles: mergedStyles,
-  });
+  };
+
+  const content = context.next(node.children);
   const doc = build({
     info,
     pageMargins,
@@ -149,120 +205,11 @@ export function mdastToPdf(
   return doc;
 }
 
-function convertNodes(nodes: mdast.RootContent[], ctx: Context): Content[] {
-  const results: Content[] = [];
-  for (const node of nodes) {
-    switch (node.type) {
-      case "paragraph":
-        results.push(buildParagraph(node, ctx));
-        break;
-      case "heading":
-        results.push(buildHeading(node, ctx));
-        break;
-      case "thematicBreak":
-        results.push(buildThematicBreak(node, ctx));
-        break;
-      case "blockquote":
-        results.push(buildBlockquote(node, ctx));
-        break;
-      case "list":
-        results.push(buildList(node, ctx));
-        break;
-      case "listItem":
-        error("unreachable");
-        break;
-      case "table":
-        results.push(buildTable(node, ctx));
-        break;
-      case "tableRow":
-        error("unreachable");
-        break;
-      case "tableCell":
-        error("unreachable");
-        break;
-      case "html":
-        results.push(buildHtml(node, ctx));
-        break;
-      case "code":
-        results.push(buildCode(node, ctx));
-        break;
-      // case "yaml":
-      //   // FIXME: unimplemented
-      //   break;
-      // case "toml":
-      //   // FIXME: unimplemented
-      //   break;
-      // case "definition":
-      //   // FIXME: unimplemented
-      //   break;
-      // case "footnoteDefinition":
-      //   // FIXME: unimplemented
-      //   break;
-      case "text":
-        results.push(...buildText(node.value, ctx));
-        break;
-      case "emphasis":
-      case "strong":
-      case "delete": {
-        const { type, children } = node;
-        results.push(
-          ...convertNodes(children, {
-            ...ctx,
-            deco: { ...ctx.deco, [type]: true },
-          })
-        );
-        break;
-      }
-      case "inlineCode":
-        // FIXME: transform to text for now
-        results.push(...buildText(node.value, ctx));
-        break;
-      case "break":
-        results.push(...buildBreak(node, ctx));
-        break;
-      case "link":
-        results.push(...buildLink(node, ctx));
-        break;
-      case "image":
-        results.push(buildImage(node, ctx.images));
-        break;
-      case "linkReference":
-        // FIXME: unimplemented
-        break;
-      case "imageReference":
-        // FIXME: unimplemented
-        break;
-      // case "footnote":
-      //   // inline footnote was removed in mdast v5
-      //   break;
-      case "footnoteReference":
-        // FIXME: unimplemented
-        break;
-      case "math":
-        results.push(buildMath(node, ctx));
-        break;
-      case "inlineMath":
-        results.push(...buildInlineMath(node, ctx));
-        break;
-      default:
-        warnOnce(`${node.type} node is not supported.`);
-        break;
-    }
-  }
-  return results;
-}
+const buildParagraph: NodeBuilder<"paragraph"> = ({ type, children }, ctx) => {
+  return { text: ctx.next(children), style: type };
+};
 
-function buildParagraph(
-  { type, children }: mdast.Paragraph,
-  ctx: Context
-): ContentText {
-  return { text: convertNodes(children, ctx), style: type };
-}
-
-function buildHeading(
-  { children, depth }: mdast.Heading,
-  ctx: Context
-): ContentText {
+const buildHeading: NodeBuilder<"heading"> = ({ children, depth }, ctx) => {
   let heading: string;
   switch (depth) {
     case 1:
@@ -285,15 +232,12 @@ function buildHeading(
       break;
   }
   return {
-    text: convertNodes(children, ctx),
+    text: ctx.next(children),
     style: heading,
   };
-}
+};
 
-function buildThematicBreak(
-  { type }: mdast.ThematicBreak,
-  ctx: Context
-): ContentCanvas {
+const buildThematicBreak: NodeBuilder<"thematicBreak"> = ({ type }, ctx) => {
   const style = { ...ctx.styles[type] };
   return {
     style: type,
@@ -309,42 +253,40 @@ function buildThematicBreak(
       },
     ],
   };
-}
+};
 
-function buildBlockquote(
-  { type, children }: mdast.Blockquote,
-  ctx: Context
-): ContentText {
+const buildBlockquote: NodeBuilder<"blockquote"> = (
+  { type, children },
+  ctx,
+) => {
   // FIXME: do nothing for now
-  return { text: convertNodes(children, ctx), style: type };
-}
+  return { text: ctx.next(children), style: type };
+};
 
-function buildList(
-  { children, ordered, start: _start, spread: _spread, type }: mdast.List,
-  ctx: Context
-): ContentOrderedList | ContentUnorderedList {
+const buildList: NodeBuilder<"list"> = (
+  { children, ordered, start: _start, spread: _spread, type },
+  ctx,
+) => {
+  const nodes = ctx.next(children);
   return ordered
     ? {
-        ol: children.map((l) => buildListItem(l, ctx)),
+        ol: nodes,
         style: type,
       }
     : {
-        ul: children.map((l) => buildListItem(l, ctx)),
+        ul: nodes,
         style: type,
       };
-}
+};
 
-function buildListItem(
-  { children, checked: _checked, spread: _spread }: mdast.ListItem,
-  ctx: Context
-): Content[] {
-  return convertNodes(children, ctx);
-}
+const buildListItem: NodeBuilder<"listItem"> = (
+  { children, checked: _checked, spread: _spread },
+  ctx,
+) => {
+  return ctx.next(children);
+};
 
-function buildTable(
-  { children, align }: mdast.Table,
-  ctx: Context
-): ContentTable {
+const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
   const cellAligns: Alignment[] | undefined = align?.map((a) => {
     switch (a) {
       case "left":
@@ -361,57 +303,18 @@ function buildTable(
   return {
     table: {
       body: children.map((r) => {
-        return buildTableRow(r, ctx, cellAligns);
+        return r.children.map((c, i) => {
+          return ctx.next(c.children, {
+            ...ctx,
+            deco: { ...ctx.deco, align: cellAligns?.[i] },
+          });
+        });
       }),
     },
   };
-}
+};
 
-function buildTableRow(
-  { children }: mdast.TableRow,
-  ctx: Context,
-  cellAligns: Alignment[] | undefined
-): TableCell[] {
-  return children.map((c, i) => {
-    return buildTableCell(c, ctx, cellAligns?.[i]);
-  });
-}
-
-function buildTableCell(
-  { children }: mdast.TableCell,
-  ctx: Context,
-  align: Alignment | undefined
-): TableCell {
-  return convertNodes(children, { ...ctx, deco: { ...ctx.deco, align } });
-}
-
-function buildHtml({ value }: mdast.HTML, ctx: Context): ContentText {
-  // FIXME: transform to text for now
-  return { text: buildText(value, ctx) };
-}
-
-function buildCode(
-  { value, lang: _lang, meta: _meta }: mdast.Code,
-  ctx: Context
-): ContentText {
-  // FIXME: transform to text for now
-  return { text: buildText(value, ctx) };
-}
-
-function buildMath({ value }: mdast.Math, ctx: Context): ContentText {
-  // FIXME: transform to text for now
-  return { text: buildText(value, ctx) };
-}
-
-function buildInlineMath(
-  { value }: mdast.InlineMath,
-  ctx: Context
-): ContentText[] {
-  // FIXME: transform to text for now
-  return buildText(value, ctx);
-}
-
-function buildText(text: string, ctx: Context): ContentText[] {
+const buildText: NodeBuilder<"text"> = ({ value: text }, ctx) => {
   const content: ContentText = { text };
   if (ctx.deco.strong) {
     ((content.style || (content.style = {})) as Style).bold = ctx.deco.strong;
@@ -460,22 +363,55 @@ function buildText(text: string, ctx: Context): ContentText[] {
     return segments;
   }
   return [content];
-}
+};
 
-function buildBreak({}: mdast.Break, ctx: Context): ContentText[] {
-  return buildText("", ctx);
-}
+const buildEmphasis: NodeBuilder<"emphasis"> = (node, ctx) => {
+  return ctx.next(node.children, {
+    ...ctx,
+    deco: { ...ctx.deco, emphasis: true },
+  });
+};
 
-function buildLink(
-  { children, url, title: _title }: mdast.Link,
-  ctx: Context
-): Content[] {
-  return convertNodes(children, { ...ctx, deco: { ...ctx.deco, link: url } });
-}
+const buildStrong: NodeBuilder<"strong"> = (node, ctx) => {
+  return ctx.next(node.children, {
+    ...ctx,
+    deco: { ...ctx.deco, strong: true },
+  });
+};
 
-function buildImage(
-  { url, title: _title, alt: _alt }: mdast.Image,
-  _images: ImageDataMap
-): ContentImage {
-  return { image: url /* width, height*/ };
-}
+const buildDelete: NodeBuilder<"delete"> = (node, ctx) => {
+  return ctx.next(node.children, {
+    ...ctx,
+    deco: { ...ctx.deco, delete: true },
+  });
+};
+
+const buildBreak: NodeBuilder<"break"> = ({}, ctx) => {
+  return buildText({ type: "text", value: "" }, ctx);
+};
+
+const buildLink: NodeBuilder<"link"> = (
+  { children, url, title: _title },
+  ctx,
+) => {
+  return ctx.next(children, { ...ctx, deco: { ...ctx.deco, link: url } });
+};
+
+// const buildImage: NodeBuilder<"image"> = ({
+//   url,
+//   title: _title,
+//   alt: _alt,
+// }) => {
+//   return { image: url /* width, height*/ };
+// };
+
+const noop = () => {
+  return null;
+};
+
+const fallbackText = (node: { type: string; value: string }, ctx: Context) => {
+  warnOnce(
+    `${node.type} node is not supported without plugins, falling back to text.`,
+  );
+  return buildText({ type: "text", value: node.value }, ctx);
+};
