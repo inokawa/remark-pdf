@@ -35,7 +35,7 @@ If you have some feature requests or improvements, please create a [issue](https
 - [ ] inlineCode
 - [x] break
 - [x] link
-- [x] image
+- [ ] image
 - [ ] linkReference
 - [ ] imageReference
 - [ ] footnote / footnoteReference
