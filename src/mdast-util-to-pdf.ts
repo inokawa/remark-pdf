@@ -48,8 +48,17 @@ type Decoration = Readonly<
 
 type Context = Readonly<{
   render: (node: readonly mdast.RootContent[], ctx?: Context) => Content[];
+  /**
+   * @internal
+   */
   deco: Decoration;
+  /**
+   * @internal
+   */
   styles: Readonly<StyleDictionary>;
+  /**
+   * @internal
+   */
   definition: GetDefinition;
 }>;
 
