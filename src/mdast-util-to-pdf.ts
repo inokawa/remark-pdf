@@ -40,18 +40,20 @@ const HRULE = "thematicBreak";
 const LINK = "link";
 const LISTITEM = "listItem";
 
-type Decoration = Readonly<
-  {
-    [key in (mdast.Emphasis | mdast.Strong | mdast.Delete)["type"]]?: true;
-  } & { link?: string; align?: Alignment }
->;
+type DecorationContext = Readonly<{
+  bold?: boolean;
+  italic?: boolean;
+  strike?: boolean;
+  link?: string;
+  align?: Alignment;
+}>;
 
 type Context = Readonly<{
   render: (node: readonly mdast.RootContent[], ctx?: Context) => Content[];
   /**
    * @internal
    */
-  deco: Decoration;
+  deco: DecorationContext;
   /**
    * @internal
    */
@@ -330,14 +332,14 @@ const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
 
 const buildText: NodeBuilder<"text"> = ({ value: text }, ctx) => {
   const content: ContentText = { text };
-  if (ctx.deco.strong) {
-    ((content.style || (content.style = {})) as Style).bold = ctx.deco.strong;
+  if (ctx.deco.bold) {
+    ((content.style || (content.style = {})) as Style).bold = ctx.deco.bold;
   }
-  if (ctx.deco.emphasis) {
+  if (ctx.deco.italic) {
     ((content.style || (content.style = {})) as Style).italics =
-      ctx.deco.emphasis;
+      ctx.deco.italic;
   }
-  if (ctx.deco.delete) {
+  if (ctx.deco.strike) {
     content.decoration = "lineThrough";
   }
   if (ctx.deco.link != null) {
@@ -382,21 +384,21 @@ const buildText: NodeBuilder<"text"> = ({ value: text }, ctx) => {
 const buildEmphasis: NodeBuilder<"emphasis"> = (node, ctx) => {
   return ctx.render(node.children, {
     ...ctx,
-    deco: { ...ctx.deco, emphasis: true },
+    deco: { ...ctx.deco, italic: true },
   });
 };
 
 const buildStrong: NodeBuilder<"strong"> = (node, ctx) => {
   return ctx.render(node.children, {
     ...ctx,
-    deco: { ...ctx.deco, strong: true },
+    deco: { ...ctx.deco, bold: true },
   });
 };
 
 const buildDelete: NodeBuilder<"delete"> = (node, ctx) => {
   return ctx.render(node.children, {
     ...ctx,
-    deco: { ...ctx.deco, delete: true },
+    deco: { ...ctx.deco, strike: true },
   });
 };
 
