@@ -4,7 +4,7 @@
 
 > [remark](https://github.com/remarkjs/remark) plugin to compile markdown to pdf.
 
-- Uses [pdfmake](https://github.com/bpampuch/pdfmake) for compilation, to avoid issues with puppeteer.
+- Uses [pdfmake](https://github.com/bpampuch/pdfmake) for compilation, to avoid issues with puppeteer or headless chromium.
 - Works in browser and Node.js.
 
 ### 🚧 WIP 🚧
