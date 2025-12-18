@@ -134,10 +134,26 @@ describe("e2e", () => {
     }
   });
 
-  it("list-numbering-restart", async () => {
-    const md = fs.readFileSync(
-      path.join(fixturesDir, "list-numbering-restart.md")
-    );
+  it("list-bullet", async () => {
+    const md = fs.readFileSync(path.join(fixturesDir, "list-bullet.md"));
+    const doc = await processor().process(md);
+    const generated = (await doc.result) as Buffer;
+    for await (const page of await pdfToImage(generated)) {
+      expect(page).toMatchImageSnapshot();
+    }
+  });
+
+  it("list-ordered", async () => {
+    const md = fs.readFileSync(path.join(fixturesDir, "list-ordered.md"));
+    const doc = await processor().process(md);
+    const generated = (await doc.result) as Buffer;
+    for await (const page of await pdfToImage(generated)) {
+      expect(page).toMatchImageSnapshot();
+    }
+  });
+
+  it("list-task", async () => {
+    const md = fs.readFileSync(path.join(fixturesDir, "list-task.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -172,8 +188,8 @@ describe("e2e", () => {
     }
   });
 
-  it("phrasing-1", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "phrasing-1.md"));
+  it("decoration", async () => {
+    const md = fs.readFileSync(path.join(fixturesDir, "decoration.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -181,8 +197,8 @@ describe("e2e", () => {
     }
   });
 
-  it("phrasing-2", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "phrasing-2.md"));
+  it("alt", async () => {
+    const md = fs.readFileSync(path.join(fixturesDir, "alt.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -193,7 +209,7 @@ describe("e2e", () => {
   it("text-emojis", async () => {
     const md = fs.readFileSync(path.join(fixturesDir, "text-emojis.md"));
     const doc = await processor({ styles: { emoji: { fontSize: 0 } } }).process(
-      md
+      md,
     );
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {

@@ -1,6 +1,6 @@
-# Multiple Numbered Lists
+# Ordered Lists
 
-This tests that separate numbered lists restart numbering at 1.
+This is a test for ordered list.
 
 ## First List
 
@@ -25,6 +25,7 @@ Outer list:
 1. First outer
    1. First inner
    2. Second inner
+     1. Third
 2. Second outer
 3. Third outer
 

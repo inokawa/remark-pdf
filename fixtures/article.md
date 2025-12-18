@@ -1,9 +1,3 @@
----
-title: "This is frontmatter"
-date: 2020-04-30 12:34
-categories: [JavaScript, React]
----
-
 # heading 1
 
 ## heading 2
@@ -21,7 +15,6 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 aaaaaaaa**bold**_emphasis_~~delete~~`inline code`
 
 - list
-
   - list
     - list
   - list
@@ -42,7 +35,7 @@ aaaaaaaa**bold**_emphasis_~~delete~~`inline code`
 
 This is [link to GitHub.com](https://github.com/).
 
-This is ![image](https://github.githubassets.com/images/modules/logos_page/Octocat.png).
+This is ![image](https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png).
 
 > quote
 > quote
@@ -61,10 +54,6 @@ This is ![image](https://github.githubassets.com/images/modules/logos_page/Octoc
 | be         |          be |      be      |
 | left       |       right |    center    |
 | aligned    |     aligned |   aligned    |
-
-<div style="color:red;">
-This is <u>HTML</u>
-</div>
 
 ---
 
