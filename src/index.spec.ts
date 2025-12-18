@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 import { unified } from "unified";
 import markdown from "remark-parse";
@@ -27,7 +27,7 @@ describe("e2e", () => {
   const fixturesDir = path.join(__dirname, FIXTURE_PATH);
 
   it("article", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "article.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "article.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -36,7 +36,7 @@ describe("e2e", () => {
   });
 
   it("lorem", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "lorem.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "lorem.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -45,7 +45,7 @@ describe("e2e", () => {
   });
 
   it("makurano", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "makurano.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "makurano.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -54,7 +54,7 @@ describe("e2e", () => {
   });
 
   it("break", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "break.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "break.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -63,7 +63,7 @@ describe("e2e", () => {
   });
 
   it("code", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "code.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "code.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -72,7 +72,7 @@ describe("e2e", () => {
   });
 
   it("footnotes", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "footnotes.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "footnotes.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -81,7 +81,7 @@ describe("e2e", () => {
   });
 
   it("footnotes2", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "footnotes2.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "footnotes2.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -90,7 +90,7 @@ describe("e2e", () => {
   });
 
   it("frontmatter", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "frontmatter.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "frontmatter.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -99,7 +99,7 @@ describe("e2e", () => {
   });
 
   it("heading", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "heading.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "heading.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -108,7 +108,7 @@ describe("e2e", () => {
   });
 
   it("reference", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "reference.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "reference.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -117,7 +117,7 @@ describe("e2e", () => {
   });
 
   it("list-bullet", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "list-bullet.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "list-bullet.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -126,7 +126,7 @@ describe("e2e", () => {
   });
 
   it("list-ordered", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "list-ordered.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "list-ordered.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -135,7 +135,7 @@ describe("e2e", () => {
   });
 
   it("list-task", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "list-task.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "list-task.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -144,7 +144,7 @@ describe("e2e", () => {
   });
 
   it("math", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "math.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "math.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -153,7 +153,7 @@ describe("e2e", () => {
   });
 
   it("tag", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "tag.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "tag.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -162,7 +162,7 @@ describe("e2e", () => {
   });
 
   it("paragraph", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "paragraph.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "paragraph.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -171,7 +171,7 @@ describe("e2e", () => {
   });
 
   it("decoration", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "decoration.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "decoration.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -180,7 +180,7 @@ describe("e2e", () => {
   });
 
   it("alt", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "alt.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "alt.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -189,7 +189,7 @@ describe("e2e", () => {
   });
 
   it("text-emojis", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "text-emojis.md"));
+    const md = await fs.readFile(path.join(fixturesDir, "text-emojis.md"));
     const doc = await processor({ styles: { emoji: { fontSize: 0 } } }).process(
       md,
     );
