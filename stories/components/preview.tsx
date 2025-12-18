@@ -1,9 +1,21 @@
-import React from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 
-export const Preview = ({ data }: { data: string }) => {
+export const Preview = ({ data }: { data: Blob }) => {
+  const url = useMemo(() => URL.createObjectURL(data), [data]);
+
+  const prev = useRef(url);
+  useEffect(() => {
+    const prevUrl = prev.current;
+    if (prevUrl !== url) {
+      URL.revokeObjectURL(prevUrl);
+    }
+
+    prev.current = url;
+  }, [url]);
+
   return (
     <iframe
-      src={`${data}#toolbar=0`}
+      src={`${url}#toolbar=0`}
       style={{ width: "100%", height: "100%" }}
     />
   );

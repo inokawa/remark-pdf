@@ -77,11 +77,11 @@ const toPdfProcessor = unified()
 
 const Component = ({ text }: { text: string }) => {
   const [pending, startTransition] = useTransition();
-  const [data, setData] = useState<string | null>(null);
+  const [data, setData] = useState<Blob | null>(null);
   const makePdf = useCallback((contents: string) => {
     startTransition(async () => {
       const res = await toPdfProcessor.process(contents);
-      setData(URL.createObjectURL((await res.result) as Blob));
+      setData((await res.result) as Blob);
     });
   }, []);
   useEffect(() => {
