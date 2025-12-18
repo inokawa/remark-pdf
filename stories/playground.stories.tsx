@@ -5,6 +5,7 @@ import React, {
   useState,
   useTransition,
 } from "react";
+import type { StoryObj } from "@storybook/react-vite";
 import { unified } from "unified";
 import markdown from "remark-parse";
 import gfm from "remark-gfm";
@@ -13,7 +14,7 @@ import { saveAs } from "file-saver";
 import pdf from "../src";
 import MarkdownEditor from "./components/editor";
 // @ts-expect-error no type definition
-import text from "../README.md?raw";
+import readmeMd from "../README.md?raw";
 import { Preview } from "./components/preview";
 
 export default {
@@ -30,7 +31,7 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
         flexDirection: "row",
         fontSize: "10.5pt",
       }),
-      []
+      [],
     )}
   >
     {children}
@@ -74,7 +75,7 @@ const toPdfProcessor = unified()
     },
   });
 
-export const MarkdownToPdf = () => {
+const Component = ({ text }: { text: string }) => {
   const [pending, startTransition] = useTransition();
   const [data, setData] = useState<string | null>(null);
   const makePdf = useCallback((contents: string) => {
@@ -112,4 +113,8 @@ export const MarkdownToPdf = () => {
       </Section>
     </Wrapper>
   );
+};
+
+export const Readme: StoryObj = {
+  render: () => <Component text={readmeMd} />,
 };
