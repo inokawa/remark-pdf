@@ -89,17 +89,8 @@ describe("e2e", () => {
     }
   });
 
-  it("frontmatter-toml", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "frontmatter-toml.md"));
-    const doc = await processor().process(md);
-    const generated = (await doc.result) as Buffer;
-    for await (const page of await pdfToImage(generated)) {
-      expect(page).toMatchImageSnapshot();
-    }
-  });
-
-  it("frontmatter-yaml", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "frontmatter-yaml.md"));
+  it("frontmatter", async () => {
+    const md = fs.readFileSync(path.join(fixturesDir, "frontmatter.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -116,17 +107,8 @@ describe("e2e", () => {
     }
   });
 
-  it("image-reference", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "image-reference.md"));
-    const doc = await processor().process(md);
-    const generated = (await doc.result) as Buffer;
-    for await (const page of await pdfToImage(generated)) {
-      expect(page).toMatchImageSnapshot();
-    }
-  });
-
-  it("link-reference", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "link-reference.md"));
+  it("reference", async () => {
+    const md = fs.readFileSync(path.join(fixturesDir, "reference.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -170,8 +152,8 @@ describe("e2e", () => {
     }
   });
 
-  it("ml", async () => {
-    const md = fs.readFileSync(path.join(fixturesDir, "ml.md"));
+  it("tag", async () => {
+    const md = fs.readFileSync(path.join(fixturesDir, "tag.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
