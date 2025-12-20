@@ -410,6 +410,10 @@ const buildLink: NodeBuilder<"link"> = (
   { children, url, title: _title },
   ctx,
 ) => {
+  if (url.startsWith("#")) {
+    // TODO support anchor link
+    return ctx.render(children);
+  }
   return ctx.render(children, { ...ctx, deco: { ...ctx.deco, link: url } });
 };
 
