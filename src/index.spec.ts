@@ -107,8 +107,17 @@ describe("e2e", () => {
     }
   });
 
-  it("reference", async () => {
-    const md = await fs.readFile(path.join(fixturesDir, "reference.md"));
+  it("link", async () => {
+    const md = await fs.readFile(path.join(fixturesDir, "link.md"));
+    const doc = await processor().process(md);
+    const generated = (await doc.result) as Buffer;
+    for await (const page of await pdfToImage(generated)) {
+      expect(page).toMatchImageSnapshot();
+    }
+  });
+
+  it("image", async () => {
+    const md = await fs.readFile(path.join(fixturesDir, "image.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
@@ -172,15 +181,6 @@ describe("e2e", () => {
 
   it("decoration", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "decoration.md"));
-    const doc = await processor().process(md);
-    const generated = (await doc.result) as Buffer;
-    for await (const page of await pdfToImage(generated)) {
-      expect(page).toMatchImageSnapshot();
-    }
-  });
-
-  it("alt", async () => {
-    const md = await fs.readFile(path.join(fixturesDir, "alt.md"));
     const doc = await processor().process(md);
     const generated = (await doc.result) as Buffer;
     for await (const page of await pdfToImage(generated)) {
