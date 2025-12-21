@@ -1,4 +1,4 @@
-import * as mdast from "./mdast";
+import type * as mdast from "mdast";
 import type {
   Alignment,
   Content as AllContent,
