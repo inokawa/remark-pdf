@@ -25,7 +25,7 @@ If you have some feature requests or improvements, please create a [issue](https
 - [x] strong
 - [x] delete
 - [ ] inlineCode
-- [ ] break
+- [x] break
 - [x] link / linkReference
 - [ ] footnote / footnoteReference / footnoteDefinition
 - [ ] image / imageReference

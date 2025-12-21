@@ -403,7 +403,7 @@ const buildDelete: NodeBuilder<"delete"> = (node, ctx) => {
 };
 
 const buildBreak: NodeBuilder<"break"> = ({}, ctx) => {
-  return buildText({ type: "text", value: "" }, ctx);
+  return buildText({ type: "text", value: "\n" }, ctx);
 };
 
 const buildLink: NodeBuilder<"link"> = (
