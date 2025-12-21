@@ -331,27 +331,26 @@ const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
 };
 
 const buildText: NodeBuilder<"text"> = ({ value: text }, ctx) => {
-  const content: ContentText = { text };
+  const style: Style = {};
+  const content: ContentText = { text, style };
   if (ctx.deco.bold) {
-    ((content.style || (content.style = {})) as Style).bold = ctx.deco.bold;
+    style.bold = ctx.deco.bold;
   }
   if (ctx.deco.italic) {
-    ((content.style || (content.style = {})) as Style).italics =
-      ctx.deco.italic;
+    style.italics = ctx.deco.italic;
   }
   if (ctx.deco.strike) {
     content.decoration = "lineThrough";
+  }
+  if (ctx.deco.align != null) {
+    style.alignment = ctx.deco.align;
   }
   if (ctx.deco.link != null) {
     content.link = ctx.deco.link;
     content.style = {
       ...ctx.styles[LINK],
-      ...((content.style || (content.style = {})) as Style),
+      ...style,
     };
-  }
-  if (ctx.deco.align != null) {
-    ((content.style || (content.style = {})) as Style).alignment =
-      ctx.deco.align;
   }
 
   const matches = text.match(/\p{Extended_Pictographic}/gu);
