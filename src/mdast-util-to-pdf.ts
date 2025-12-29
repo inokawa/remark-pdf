@@ -1,16 +1,10 @@
 import type * as mdast from "mdast";
-import type {
-  Alignment,
-  Content as AllContent,
-  ContentText,
-  Style,
-  StyleDictionary,
-  TDocumentDefinitions,
-  TDocumentInformation,
-  TFontDictionary,
-} from "pdfmake/interfaces";
+import PDFDocument from "pdfkit";
+import Decimal from "@jsamr/counter-style/presets/decimal";
+import Disc from "@jsamr/counter-style/presets/disc";
 import { definitions, type GetDefinition } from "mdast-util-definitions";
-import { deepMerge, isBrowser, warnOnce } from "./utils";
+import deepmerge from "deepmerge";
+import { warnOnce } from "./utils";
 
 type KnownNodeType = mdast.RootContent["type"];
 
@@ -21,121 +15,205 @@ type MdastNode<T extends string> = T extends KnownNodeType
 type NodeBuilder<T extends string> = (
   node: MdastNode<T>,
   ctx: Context,
-) => Content | Content[] | null;
+) => PdfLayout | PdfLayout[] | null;
 
 type NodeBuilders = {
   [K in KnownNodeType]?: NodeBuilder<K>;
 };
 
-type Content = Exclude<AllContent, any[]>;
+type StandardFontType =
+  | "Courier"
+  | "Helvetica"
+  | "Symbol"
+  | "Times"
+  | "ZapfDingbats";
 
-const HEADING_1 = "head1";
-const HEADING_2 = "head2";
-const HEADING_3 = "head3";
-const HEADING_4 = "head4";
-const HEADING_5 = "head5";
-const HEADING_6 = "head6";
-const EMOJI = "emoji";
-const HRULE = "thematicBreak";
-const LINK = "link";
-const LISTITEM = "listItem";
+type FontBuffer = ArrayBuffer | Uint8Array;
 
-type DecorationContext = Readonly<{
-  bold?: boolean;
-  italic?: boolean;
-  strike?: boolean;
+/**
+ * Custom font definition.
+ */
+export interface CustomFont {
+  name: string;
+  normal: FontBuffer;
+  bold?: FontBuffer;
+  italic?: FontBuffer;
+  bolditalic?: FontBuffer;
+}
+
+type Alignment = "left" | "right" | "center";
+
+interface PdfParagraph {
+  type: "paragraph";
+  list?: ListContext;
+  children: PdfLayout[];
+}
+
+interface PdfTable {
+  type: "table";
+  align?: Alignment[];
+  cells: { children: PdfLayout[] }[][];
+}
+
+interface PdfPageBreak {
+  type: "pagebreak";
+}
+
+interface PdfText {
+  type: "text";
+  text: string;
   link?: string;
-  align?: Alignment;
+  style: TextStyle;
+}
+
+type PdfLayout = PdfParagraph | PdfPageBreak | PdfTable | PdfText;
+
+type ListContext = Readonly<{
+  level: number;
+  meta: Readonly<
+    | {
+        type: "bullet";
+      }
+    | {
+        type: "ordered";
+      }
+    | {
+        type: "task";
+        checked: boolean;
+      }
+  >;
 }>;
 
+interface TextStyle {
+  fontSize: number;
+  font: string;
+  color: string;
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  strike: boolean;
+}
+
+interface StyleOption {
+  link: Partial<TextStyle>;
+  head1: Partial<TextStyle>;
+  head2: Partial<TextStyle>;
+  head3: Partial<TextStyle>;
+  head4: Partial<TextStyle>;
+  head5: Partial<TextStyle>;
+  head6: Partial<TextStyle>;
+}
+
 type Context = Readonly<{
-  render: (node: readonly mdast.RootContent[], ctx?: Context) => Content[];
+  render: (node: readonly mdast.RootContent[], ctx?: Context) => PdfLayout[];
   /**
    * @internal
    */
-  deco: DecorationContext;
+  style: TextStyle;
   /**
    * @internal
    */
-  styles: Readonly<StyleDictionary>;
+  config: StyleOption;
+  /**
+   * @internal
+   */
+  list?: ListContext;
+  /**
+   * @internal
+   */
+  link?: string;
   /**
    * @internal
    */
   definition: GetDefinition;
 }>;
 
-export type PdfBuilder = (
-  def: TDocumentDefinitions & { fonts?: TFontDictionary },
-) => Promise<ArrayBuffer>;
-
-export interface PdfOptions extends Pick<
-  TDocumentDefinitions,
-  | "defaultStyle"
-  | "pageMargins"
-  | "pageOrientation"
-  | "pageSize"
-  | "userPassword"
-  | "ownerPassword"
-  | "permissions"
-  | "version"
-  | "styles"
-  | "watermark"
-> {
-  info?: TDocumentInformation;
-  fonts?: TFontDictionary;
-  preventOrphans?: boolean;
+export interface PdfOptions {
+  /**
+   * Standard fonts or privided custom fonts.
+   * @default "Helvetica"
+   */
+  fonts?: (StandardFontType | CustomFont)[];
+  /**
+   * Page size.
+   * https://pdfkit.org/docs/paper_sizes.html
+   * @default A4
+   */
+  size?:
+    | "A0"
+    | "A1"
+    | "A2"
+    | "A3"
+    | "A4"
+    | "A5"
+    | "A6"
+    | "A7"
+    | "A8"
+    | "A9"
+    | "A10"
+    | "B0"
+    | "B1"
+    | "B2"
+    | "B3"
+    | "B4"
+    | "B5"
+    | "B6"
+    | "B7"
+    | "B8"
+    | "B9"
+    | "B10"
+    | "C0"
+    | "C1"
+    | "C2"
+    | "C3"
+    | "C4"
+    | "C5"
+    | "C6"
+    | "C7"
+    | "C8"
+    | "C9"
+    | "C10";
+  /**
+   * Page margin.
+   * @default 40
+   */
+  margin?:
+    | number
+    | { top?: number; left?: number; bottom?: number; right?: number };
+  /**
+   * Page orientation.
+   * @default "portrait"
+   */
+  orientation?: "portrait" | "landscape";
+  /**
+   * Spacing after Paragraphs.
+   * @default undefined
+   */
+  spacing?: number;
+  /**
+   * Styles that override the defaults.
+   */
+  styles?: Partial<StyleOption> & { default?: Partial<TextStyle> };
+  // preventOrphans?: boolean;
 }
 
 export async function mdastToPdf(
   node: mdast.Root,
   {
-    defaultStyle,
-    fonts,
-    info,
-    pageMargins,
-    pageOrientation,
-    pageSize,
-    userPassword,
-    ownerPassword,
-    styles,
-    permissions,
-    version,
-    watermark,
-    preventOrphans,
-  }: PdfOptions,
-  build: Promise<{ default: PdfBuilder }>,
+    fonts = ["Helvetica"],
+    size: pageSize = "A4",
+    margin,
+    orientation,
+    spacing,
+    styles: { default: defaultStyle, ...style } = {},
+    // preventOrphans,
+  }: PdfOptions = {},
 ): Promise<ArrayBuffer> {
   const definition = definitions(node);
 
-  const defaultStyles: StyleDictionary = {
-    [HEADING_1]: {
-      fontSize: 24,
-    },
-    [HEADING_2]: {
-      fontSize: 22,
-    },
-    [HEADING_3]: {
-      fontSize: 20,
-    },
-    [HEADING_4]: {
-      fontSize: 18,
-    },
-    [HEADING_5]: {
-      fontSize: 16,
-    },
-    [HEADING_6]: {
-      fontSize: 14,
-    },
-    [EMOJI]: {},
-    [LISTITEM]: {},
-    [LINK]: {
-      color: "blue",
-    },
-    [HRULE]: {
-      margin: [0, 12, 0, 0],
-    },
-  };
-  const mergedStyles = deepMerge(defaultStyles, styles);
+  const defaultFont = fonts[0]!;
+  const defaultFontName =
+    typeof defaultFont === "string" ? defaultFont : defaultFont.name;
 
   const builders: NodeBuilders = {
     paragraph: buildParagraph,
@@ -168,7 +246,7 @@ export async function mdastToPdf(
 
   const context: Context = {
     render(nodes, c) {
-      const results: Content[] = [];
+      const results: PdfLayout[] = [];
       for (const node of nodes) {
         const builder = builders[node.type];
         if (!builder) {
@@ -186,215 +264,412 @@ export async function mdastToPdf(
       }
       return results;
     },
-    deco: {},
-    styles: mergedStyles,
+    style: {
+      font: defaultFontName,
+      fontSize: 12,
+      color: "black",
+      bold: false,
+      italic: false,
+      underline: false,
+      strike: false,
+      ...defaultStyle,
+    },
+    config: deepmerge<StyleOption>(
+      {
+        head1: {
+          fontSize: 24,
+        },
+        head2: {
+          fontSize: 22,
+        },
+        head3: {
+          fontSize: 20,
+        },
+        head4: {
+          fontSize: 18,
+        },
+        head5: {
+          fontSize: 16,
+        },
+        head6: {
+          fontSize: 14,
+        },
+        link: {
+          color: "#0000FF",
+          underline: true,
+        },
+      },
+      style,
+    ),
     definition,
   };
 
-  const content = context.render(node.children);
-  const doc = (await build).default({
-    info,
-    pageMargins,
-    pageOrientation,
-    pageSize,
-    pageBreakBefore: preventOrphans
-      ? (currentNode, restNodes) =>
-          currentNode.headlineLevel === 1 && restNodes.length === 0
-      : undefined,
-    userPassword,
-    ownerPassword,
-    permissions,
-    version,
-    watermark,
-    content,
-    images: {},
-    fonts,
-    styles: mergedStyles,
-    defaultStyle: {
-      font: isBrowser() ? "Roboto" : "Helvetica",
-      ...defaultStyle,
+  const nodes = context.render(node.children);
+
+  const doc = new PDFDocument({
+    size: pageSize,
+    margins: {
+      top: typeof margin === "number" ? margin : (margin?.top ?? 40),
+      left: typeof margin === "number" ? margin : (margin?.left ?? 40),
+      bottom: typeof margin === "number" ? margin : (margin?.bottom ?? 40),
+      right: typeof margin === "number" ? margin : (margin?.right ?? 40),
     },
+    layout: orientation,
+    compress: true,
+    // https://github.com/foliojs/pdfkit/issues/369#issuecomment-2545904551
+    tagged: true,
+    pdfVersion: "1.7",
+    subset: "PDF/A-3a",
   });
-  return doc;
+
+  type RegisteredFont = {
+    normal: string;
+    bold?: string;
+    italic?: string;
+    bolditalic?: string;
+  };
+  const fontMap = new Map<string, RegisteredFont>();
+  for (const font of fonts) {
+    if (typeof font !== "string") {
+      const fontName = font.name;
+      const defaultFont: RegisteredFont = {
+        normal: fontName,
+      };
+      doc.registerFont(defaultFont.normal, font.normal);
+      if (font.bold) {
+        defaultFont.bold = `${fontName}-Bold`;
+        doc.registerFont(defaultFont.bold, font.bold);
+      }
+      if (font.italic) {
+        defaultFont.italic = `${fontName}-Italic`;
+        doc.registerFont(defaultFont.italic, font.italic);
+      }
+      if (font.bolditalic) {
+        defaultFont.bolditalic = `${fontName}-BoldItalic`;
+        doc.registerFont(defaultFont.bolditalic, font.bolditalic);
+      }
+      fontMap.set(fontName, defaultFont);
+    } else {
+      fontMap.set(
+        font,
+        font === "Courier"
+          ? {
+              normal: "Courier",
+              bold: "Courier-Bold",
+              italic: "Courier-Oblique",
+              bolditalic: "Courier-BoldOblique",
+            }
+          : font === "Times"
+            ? {
+                normal: "Times-Roman",
+                bold: "Times-Bold",
+                italic: "Times-Italic",
+                bolditalic: "Times-BoldItalic",
+              }
+            : font === "Symbol"
+              ? { normal: "Symbol" }
+              : font === "ZapfDingbats"
+                ? { normal: "ZapfDingbats" }
+                : {
+                    normal: "Helvetica",
+                    bold: "Helvetica-Bold",
+                    italic: "Helvetica-Oblique",
+                    bolditalic: "Helvetica-BoldOblique",
+                  },
+      );
+    }
+  }
+  const chunks: Buffer[] = [];
+  doc.on("data", (chunk: Buffer) => {
+    chunks.push(chunk);
+  });
+
+  const renderInlines = (
+    nodes: readonly PdfLayout[],
+    opts?: { width?: number; align?: Alignment; indent?: number },
+    block?: { x: number; y: number },
+  ) => {
+    const texts = nodes.filter((n) => n.type === "text");
+    for (let i = 0; i < texts.length; i++) {
+      const node = texts[i]!;
+      const style = node.style;
+      const options: PDFKit.Mixins.TextOptions = {
+        strike: style.strike,
+        underline: style.underline,
+        link: node.link ?? null,
+        continued: i < texts.length - 1,
+      };
+
+      let targetFont = fontMap.get(style.font);
+      if (!targetFont) {
+        targetFont = fontMap.get(defaultFontName)!;
+      }
+      let font = targetFont.normal;
+      if (style.bold && style.italic && targetFont.bolditalic) {
+        font = targetFont.bolditalic;
+      } else if (style.bold && targetFont.bold) {
+        font = targetFont.bold;
+      } else if (style.italic && targetFont.italic) {
+        font = targetFont.italic;
+      }
+
+      doc.font(font).fontSize(style.fontSize).fillColor(style.color);
+
+      if (opts) {
+        options.width = opts.width;
+        options.align = opts.align;
+        options.indent = opts.indent;
+      }
+      if (block) {
+        doc.text(node.text, block.x, block.y, options);
+      } else {
+        const lines = node.text.split("\n");
+        if (lines.length <= 1 || lines.every((t) => !t)) {
+          doc.text(node.text, options);
+        } else {
+          for (let i = 0; i < lines.length; i++) {
+            const text = lines[i]!;
+            let op = options;
+            if (i !== 0) {
+              op = { ...op, continued: false };
+            }
+            doc.text(text || "\n", op);
+          }
+        }
+      }
+    }
+  };
+
+  const listStack: number[] = [];
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i]!;
+
+    switch (node.type) {
+      case "paragraph": {
+        if (node.list) {
+          const { level, meta } = node.list;
+          while (listStack.length > level + 1) {
+            listStack.pop();
+          }
+          while (listStack.length <= level) {
+            listStack.push(0);
+          }
+          if (meta.type === "ordered") {
+            listStack[level]!++;
+          }
+          const num = listStack[level]!;
+
+          renderInlines(
+            [
+              {
+                type: "text",
+                text:
+                  meta.type === "ordered"
+                    ? Decimal.renderMarker(num)
+                    : Disc.renderMarker(num),
+                style: (node.children[0]! as PdfText).style,
+              },
+              ...node.children,
+            ],
+            { indent: 10 * level },
+          );
+        } else {
+          listStack.splice(0);
+          renderInlines(node.children);
+        }
+        if (spacing) {
+          doc.moveDown(spacing);
+        }
+        break;
+      }
+      case "text": {
+        // fallback to block
+        renderInlines([node]);
+        break;
+      }
+      case "table": {
+        const pageWidth =
+          doc.page.width - doc.page.margins.left - doc.page.margins.right;
+        const cellWidth = pageWidth / node.cells[0]!.length;
+        const cellPadding = 2;
+        const startX = doc.x;
+        let y = doc.y;
+        for (const row of node.cells) {
+          let cellHeight = 0;
+          for (let j = 0, x = startX; j < row.length; j++, x += cellWidth) {
+            const cell = row[j]!;
+            renderInlines(
+              cell.children,
+              {
+                width: cellWidth - cellPadding * 2,
+                align: node.align?.[j] ?? "left",
+              },
+              {
+                x: x + cellPadding,
+                y: y + cellPadding * 2,
+              },
+            );
+            cellHeight = Math.max(cellHeight, doc.y - y);
+          }
+
+          for (let j = 0, x = startX; j < row.length; j++, x += cellWidth) {
+            doc.rect(x, y, cellWidth, cellHeight).stroke();
+          }
+
+          y += cellHeight;
+          doc.x = startX;
+          doc.y = y;
+        }
+        break;
+      }
+      case "pagebreak": {
+        doc.addPage();
+        break;
+      }
+      default: {
+        node satisfies never;
+        break;
+      }
+    }
+  }
+
+  doc.end();
+  return new Promise<ArrayBuffer>((resolve) => {
+    doc.on("end", () => {
+      resolve(Buffer.concat(chunks).buffer);
+    });
+  });
 }
 
-const buildParagraph: NodeBuilder<"paragraph"> = ({ type, children }, ctx) => {
-  return { text: ctx.render(children), style: type };
+const buildParagraph: NodeBuilder<"paragraph"> = ({ children }, ctx) => {
+  return {
+    type: "paragraph",
+    children: ctx.render(children),
+    list: ctx.list,
+  };
 };
 
 const buildHeading: NodeBuilder<"heading"> = ({ children, depth }, ctx) => {
-  let heading: string;
-  switch (depth) {
-    case 1:
-      heading = HEADING_1;
-      break;
-    case 2:
-      heading = HEADING_2;
-      break;
-    case 3:
-      heading = HEADING_3;
-      break;
-    case 4:
-      heading = HEADING_4;
-      break;
-    case 5:
-      heading = HEADING_5;
-      break;
-    case 6:
-      heading = HEADING_6;
-      break;
-  }
-  return {
-    text: ctx.render(children),
-    style: heading,
-  };
-};
+  const style = ctx.config[`head${depth}`];
 
-const buildThematicBreak: NodeBuilder<"thematicBreak"> = ({ type }, ctx) => {
-  const style = { ...ctx.styles[type] };
   return {
-    style: type,
-    canvas: [
-      {
-        type: "line",
-        lineColor: style.color,
-        lineWidth: style.lineHeight || 1,
-        x1: 0,
-        y1: 0,
-        x2: (514 / 100) * 100,
-        y2: 0,
+    type: "paragraph",
+    list: ctx.list,
+    children: ctx.render(children, {
+      ...ctx,
+      style: {
+        ...ctx.style,
+        ...style,
       },
-    ],
+    }),
   };
 };
 
-const buildBlockquote: NodeBuilder<"blockquote"> = (
-  { type, children },
-  ctx,
-) => {
+const buildThematicBreak: NodeBuilder<"thematicBreak"> = () => {
+  return {
+    type: "pagebreak",
+  };
+};
+
+const buildBlockquote: NodeBuilder<"blockquote"> = ({ children }, ctx) => {
   // FIXME: do nothing for now
-  return { text: ctx.render(children), style: type };
-};
-
-const buildList: NodeBuilder<"list"> = (
-  { children, ordered, start: _start, spread: _spread, type },
-  ctx,
-) => {
-  const nodes = ctx.render(children);
-  return ordered
-    ? {
-        ol: nodes,
-        style: type,
-      }
-    : {
-        ul: nodes,
-        style: type,
-      };
-};
-
-const buildListItem: NodeBuilder<"listItem"> = (
-  { children, checked: _checked, spread: _spread },
-  ctx,
-) => {
   return ctx.render(children);
 };
 
-const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
-  const cellAligns: Alignment[] | undefined = align?.map((a) => {
-    switch (a) {
-      case "left":
-        return "left";
-      case "right":
-        return "right";
-      case "center":
-        return "center";
-      default:
-        return "left";
-    }
+const buildList: NodeBuilder<"list"> = ({ children, ordered }, ctx) => {
+  const parentList = ctx.list;
+  return ctx.render(children, {
+    ...ctx,
+    list: {
+      level: !parentList ? 0 : parentList.level + 1,
+      meta: { type: ordered ? "ordered" : "bullet" },
+    },
   });
+};
+
+const buildListItem: NodeBuilder<"listItem"> = ({ children, checked }, ctx) => {
+  let list = ctx.list;
+  if (list) {
+    // listItem must be the child of list
+    if (checked != null) {
+      list = {
+        level: list.level,
+        meta: {
+          type: "task",
+          checked,
+        },
+      };
+    }
+  }
+  return ctx.render(children, { ...ctx, list });
+};
+
+const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
+  const cellAligns: Alignment[] | undefined = align?.map((a) => a ?? "left");
 
   return {
-    table: {
-      body: children.map((r) => {
-        return r.children.map((c, i) => {
-          return ctx.render(c.children, {
-            ...ctx,
-            deco: { ...ctx.deco, align: cellAligns?.[i] },
-          });
-        });
-      }),
-    },
+    type: "table",
+    align: cellAligns,
+    cells: children.map((r) => {
+      return r.children.map((c) => {
+        return { children: ctx.render(c.children) };
+      });
+    }),
   };
 };
 
 const buildText: NodeBuilder<"text"> = ({ value: text }, ctx) => {
-  const style: Style = {};
-  const content: ContentText = { text, style };
-  if (ctx.deco.bold) {
-    style.bold = ctx.deco.bold;
-  }
-  if (ctx.deco.italic) {
-    style.italics = ctx.deco.italic;
-  }
-  if (ctx.deco.strike) {
-    content.decoration = "lineThrough";
-  }
-  if (ctx.deco.align != null) {
-    style.alignment = ctx.deco.align;
-  }
-  if (ctx.deco.link != null) {
-    content.link = ctx.deco.link;
-    content.style = {
-      ...ctx.styles[LINK],
-      ...style,
-    };
-  }
-
-  const matches = text.match(/\p{Extended_Pictographic}/gu);
-  if (matches) {
-    let segments: ContentText[] = [];
-    let lastIndex = 0;
-    matches.forEach((emoji: string) => {
-      // Add text before emoji
-      const textBefore = text.slice(lastIndex, text.indexOf(emoji, lastIndex));
-      if (textBefore) {
-        segments.push({ ...content, text: textBefore });
-      }
-      // Add emoji
-      segments.push({ ...content, text: emoji, style: EMOJI });
-      lastIndex = text.indexOf(emoji, lastIndex) + emoji.length;
-    });
-    // Add remaining text
-    if (lastIndex < text.length) {
-      const textAfter = text.slice(lastIndex);
-      if (textAfter) {
-        segments.push({ ...content, text: textAfter });
-      }
-    }
-    // console.error(content, segments);
-    return segments;
-  }
-  return [content];
+  const content: PdfText = {
+    type: "text",
+    text,
+    style: ctx.style,
+    link: ctx.link,
+  };
+  // const matches = text.match(/\p{Extended_Pictographic}/gu);
+  // if (matches) {
+  //   let segments: PdfText[] = [];
+  //   let lastIndex = 0;
+  //   matches.forEach((emoji: string) => {
+  //     // Add text before emoji
+  //     const textBefore = text.slice(lastIndex, text.indexOf(emoji, lastIndex));
+  //     if (textBefore) {
+  //       segments.push({ ...content, text: textBefore });
+  //     }
+  //     // Add emoji
+  //     segments.push({ ...content, text: emoji, style: EMOJI });
+  //     lastIndex = text.indexOf(emoji, lastIndex) + emoji.length;
+  //   });
+  //   // Add remaining text
+  //   if (lastIndex < text.length) {
+  //     const textAfter = text.slice(lastIndex);
+  //     if (textAfter) {
+  //       segments.push({ ...content, text: textAfter });
+  //     }
+  //   }
+  //   // console.error(content, segments);
+  //   return segments;
+  // }
+  return content;
 };
 
 const buildEmphasis: NodeBuilder<"emphasis"> = (node, ctx) => {
   return ctx.render(node.children, {
     ...ctx,
-    deco: { ...ctx.deco, italic: true },
+    style: { ...ctx.style, italic: true },
   });
 };
 
 const buildStrong: NodeBuilder<"strong"> = (node, ctx) => {
   return ctx.render(node.children, {
     ...ctx,
-    deco: { ...ctx.deco, bold: true },
+    style: { ...ctx.style, bold: true },
   });
 };
 
 const buildDelete: NodeBuilder<"delete"> = (node, ctx) => {
   return ctx.render(node.children, {
     ...ctx,
-    deco: { ...ctx.deco, strike: true },
+    style: { ...ctx.style, strike: true },
   });
 };
 
@@ -402,15 +677,19 @@ const buildBreak: NodeBuilder<"break"> = ({}, ctx) => {
   return buildText({ type: "text", value: "\n" }, ctx);
 };
 
-const buildLink: NodeBuilder<"link"> = (
-  { children, url, title: _title },
-  ctx,
-) => {
+const buildLink: NodeBuilder<"link"> = ({ children, url }, ctx) => {
   if (url.startsWith("#")) {
     // TODO support anchor link
     return ctx.render(children);
   }
-  return ctx.render(children, { ...ctx, deco: { ...ctx.deco, link: url } });
+  return ctx.render(children, {
+    ...ctx,
+    link: url,
+    style: {
+      ...ctx.style,
+      ...ctx.config.link,
+    },
+  });
 };
 
 // const buildImage: NodeBuilder<"image"> = ({

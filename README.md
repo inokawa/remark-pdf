@@ -4,8 +4,8 @@
 
 > [remark](https://github.com/remarkjs/remark) plugin to compile markdown to pdf.
 
-- Uses [pdfmake](https://github.com/bpampuch/pdfmake) for compilation, to avoid issues with puppeteer or headless chromium.
-- Works in browser and Node.js.
+- Uses [pdfkit](https://github.com/foliojs/pdfkit) for compilation, to avoid issues with puppeteer or headless chromium.
+- Works in any environment (e.g. browser, Node.js).
 
 ### 🚧 WIP 🚧
 
@@ -85,7 +85,7 @@ const text = "# hello world";
 
 #### Example: Custom fonts
 
-Use custom fonts in Node by providing a `fonts` object to configuration, which is a dictionary structured like `fonts[fontName][fontStyle][pathToFontFile]`. Use the fonts by name in your `styles` configurations; the font file will be autoselected based on the chosen `bold` and `italic` style specifications.
+Use custom fonts in Node by providing a `fonts` object to configuration. Use the fonts by name in your `styles` configurations; the font file will be autoselected based on the chosen `bold` and `italic` style specifications.
 
 Note that variable-width fonts are supported, but the path to the same font file must be supplied for all four font variant styles.
 
@@ -95,31 +95,38 @@ import markdown from "remark-parse";
 import pdf from "remark-pdf";
 import * as fs from "fs";
 
-const pdfOpts = {
-  fonts: {
-    "National Park": {
-      normal: "/path/to/fonts/nationalpark-variablevf.ttf",
-      bold: "/path/to/fonts/nationalpark-variablevf.ttf",
-      italics: "/path/to/fonts/nationalpark-variablevf.ttf",
-      bolditalics: "/path/to/fonts/nationalpark-variablevf.ttf",
+const processor = unified()
+  .use(markdown)
+  .use(pdf, {
+    fonts: [
+      {
+        name: "National Park",
+        normal: fs.readFileSync("/path/to/fonts/nationalpark-variablevf.ttf"),
+        bold: fs.readFileSync("/path/to/fonts/nationalpark-variablevf.ttf"),
+        italic: fs.readFileSync("/path/to/fonts/nationalpark-variablevf.ttf"),
+        bolditalic: fs.readFileSync(
+          "/path/to/fonts/nationalpark-variablevf.ttf",
+        ),
+      },
+      {
+        name: "Merriweather Sans",
+        normal: fs.readFileSync("/path/to/fonts/merriweathersans-light.ttf"),
+        bold: fs.readFileSync("/path/to/fonts/merriweathersans-bold.ttf"),
+        italic: fs.readFileSync("/path/to/fonts/merriweathersans-italic.ttf"),
+        bolditalic: fs.readFileSync(
+          "/path/to/fonts/merriweathersans-bolditalic.ttf",
+        ),
+      },
+    ],
+    styles: {
+      default: { font: "Merriweather Sans", italic: true },
+      head1: {
+        bold: true,
+        font: "National Park",
+        fontSize: 24,
+      },
     },
-    "Merriweather Sans": {
-      normal: "/path/to/fonts/merriweathersans-light.ttf",
-      bold: "/path/to/fonts/merriweathersans-bold.ttf",
-      italics: "/path/to/fonts/merriweathersans-italic.ttf",
-      bolditalics: "/path/to/fonts/merriweathersans-bolditalic.ttf",
-    },
-  },
-  defaultStyle: { font: "Merriweather Sans", italics: true },
-  styles: {
-    head1: {
-      bold: true,
-      font: "National Park",
-      fontSize: 24,
-    },
-  },
-};
-const processor = unified().use(markdown).use(pdf, pdfOpts);
+  });
 
 const text = `
 # Header in National Park bold
