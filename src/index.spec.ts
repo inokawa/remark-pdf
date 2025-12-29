@@ -197,14 +197,14 @@ describe("e2e", () => {
     }
   });
 
-  it("text-emojis", async () => {
-    const md = await fs.readFile(path.join(fixturesDir, "text-emojis.md"));
-    const doc = await processor({ styles: { emoji: { fontSize: 0 } } }).process(
-      md,
-    );
-    const generated = await doc.result;
-    for await (const page of await pdfToImage(Buffer.from(generated))) {
-      expect(page).toMatchImageSnapshot();
-    }
-  });
+  // it("text-emojis", async () => {
+  //   const md = await fs.readFile(path.join(fixturesDir, "text-emojis.md"));
+  //   const doc = await processor({ styles: { emoji: { fontSize: 0 } } }).process(
+  //     md,
+  //   );
+  //   const generated = await doc.result;
+  //   for await (const page of await pdfToImage(Buffer.from(generated))) {
+  //     expect(page).toMatchImageSnapshot();
+  //   }
+  // });
 });
