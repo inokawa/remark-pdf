@@ -129,8 +129,8 @@ Body text in Merriweather Sans Italic
 
 (async () => {
   const doc = await processor.process(text);
-  const buffer = await doc.result;
-  fs.writeFileSync("example.pdf", buffer);
+  const arrayBuffer = await doc.result;
+  fs.writeFileSync("example.pdf", Buffer.from(arrayBuffer));
 })();
 ```
 
