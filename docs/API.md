@@ -4,7 +4,10 @@
 
 # API
 
-## Modules
+## Interfaces
 
-- [index](index/API.md)
-- [node](node/API.md)
+- [PdfOptions](interfaces/PdfOptions.md)
+
+## Variables
+
+- [default](variables/default.md)

@@ -1,10 +1,10 @@
-[**API**](../../API.md)
+[**API**](../API.md)
 
 ***
 
 # Interface: PdfOptions
 
-Defined in: [src/mdast-to-pdf.ts:56](https://github.com/inokawa/remark-pdf/blob/a4035d9410a72288149c2c7d0644d51b34b0d1af/src/mdast-to-pdf.ts#L56)
+Defined in: [src/mdast-util-to-pdf.ts:71](https://github.com/inokawa/remark-pdf/blob/9bbda8ce019f1389f0ea48090834d799b653c423/src/mdast-util-to-pdf.ts#L71)
 
 ## Extends
 
@@ -12,27 +12,11 @@ Defined in: [src/mdast-to-pdf.ts:56](https://github.com/inokawa/remark-pdf/blob/
 
 ## Properties
 
-### output?
-
-> `optional` **output**: `"buffer"` \| `"blob"`
-
-Defined in: [src/mdast-to-pdf.ts:73](https://github.com/inokawa/remark-pdf/blob/a4035d9410a72288149c2c7d0644d51b34b0d1af/src/mdast-to-pdf.ts#L73)
-
-Set output type of `VFile.result`. `buffer` is `Promise<Buffer>`. `blob` is `Promise<Blob>`.
-
-#### Default Value
-
-```ts
-"buffer"
-```
-
-***
-
 ### info?
 
 > `optional` **info**: `TDocumentInformation`
 
-Defined in: [src/mdast-to-pdf.ts:74](https://github.com/inokawa/remark-pdf/blob/a4035d9410a72288149c2c7d0644d51b34b0d1af/src/mdast-to-pdf.ts#L74)
+Defined in: [src/mdast-util-to-pdf.ts:84](https://github.com/inokawa/remark-pdf/blob/9bbda8ce019f1389f0ea48090834d799b653c423/src/mdast-util-to-pdf.ts#L84)
 
 ***
 
@@ -40,7 +24,7 @@ Defined in: [src/mdast-to-pdf.ts:74](https://github.com/inokawa/remark-pdf/blob/
 
 > `optional` **fonts**: `TFontDictionary`
 
-Defined in: [src/mdast-to-pdf.ts:75](https://github.com/inokawa/remark-pdf/blob/a4035d9410a72288149c2c7d0644d51b34b0d1af/src/mdast-to-pdf.ts#L75)
+Defined in: [src/mdast-util-to-pdf.ts:85](https://github.com/inokawa/remark-pdf/blob/9bbda8ce019f1389f0ea48090834d799b653c423/src/mdast-util-to-pdf.ts#L85)
 
 ***
 
@@ -48,7 +32,7 @@ Defined in: [src/mdast-to-pdf.ts:75](https://github.com/inokawa/remark-pdf/blob/
 
 > `optional` **preventOrphans**: `boolean`
 
-Defined in: [src/mdast-to-pdf.ts:76](https://github.com/inokawa/remark-pdf/blob/a4035d9410a72288149c2c7d0644d51b34b0d1af/src/mdast-to-pdf.ts#L76)
+Defined in: [src/mdast-util-to-pdf.ts:86](https://github.com/inokawa/remark-pdf/blob/9bbda8ce019f1389f0ea48090834d799b653c423/src/mdast-util-to-pdf.ts#L86)
 
 ***
 
