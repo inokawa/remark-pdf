@@ -64,6 +64,10 @@ type Context = Readonly<{
   definition: GetDefinition;
 }>;
 
+export type PdfBuilder = (
+  def: TDocumentDefinitions & { fonts?: TFontDictionary },
+) => Promise<ArrayBuffer>;
+
 export interface PdfOptions extends Pick<
   TDocumentDefinitions,
   | "defaultStyle"
@@ -77,17 +81,12 @@ export interface PdfOptions extends Pick<
   | "styles"
   | "watermark"
 > {
-  /**
-   * Set output type of `VFile.result`. `buffer` is `Promise<Buffer>`. `blob` is `Promise<Blob>`.
-   * @defaultValue "buffer"
-   */
-  output?: "buffer" | "blob";
   info?: TDocumentInformation;
   fonts?: TFontDictionary;
   preventOrphans?: boolean;
 }
 
-export function mdastToPdf(
+export async function mdastToPdf(
   node: mdast.Root,
   {
     defaultStyle,
@@ -104,10 +103,8 @@ export function mdastToPdf(
     watermark,
     preventOrphans,
   }: PdfOptions,
-  build: (
-    def: TDocumentDefinitions & { fonts?: TFontDictionary },
-  ) => Promise<any>,
-): Promise<any> {
+  build: Promise<{ default: PdfBuilder }>,
+): Promise<ArrayBuffer> {
   const definition = definitions(node);
 
   const defaultStyles: StyleDictionary = {
@@ -195,7 +192,7 @@ export function mdastToPdf(
   };
 
   const content = context.render(node.children);
-  const doc = build({
+  const doc = (await build).default({
     info,
     pageMargins,
     pageOrientation,
