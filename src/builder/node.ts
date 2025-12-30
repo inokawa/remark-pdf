@@ -1,4 +1,4 @@
-import { type PdfBuilder, type PdfOptions } from "../mdast-util-to-pdf";
+import { type PdfBuilder } from "../mdast-util-to-pdf";
 
 import Printer from "pdfmake";
 import { deepMerge } from "../utils";
@@ -30,14 +30,6 @@ const defaultFonts: TFontDictionary = {
     normal: "ZapfDingbats",
   },
 };
-
-export type { PdfOptions };
-
-declare module "unified" {
-  interface CompileResultMap {
-    pdf: Promise<ArrayBuffer>;
-  }
-}
 
 const builder: PdfBuilder = (def) => {
   const printer = new Printer(deepMerge(defaultFonts, def.fonts));
