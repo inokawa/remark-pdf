@@ -67,7 +67,6 @@ const toPdfProcessor = unified()
   .use(gfm)
   .use(frontmatter)
   .use(pdf, {
-    output: "blob",
     styles: {
       head1: {
         fontSize: 25,
@@ -81,7 +80,7 @@ const Component = ({ text }: { text: string }) => {
   const makePdf = useCallback((contents: string) => {
     startTransition(async () => {
       const res = await toPdfProcessor.process(contents);
-      setData((await res.result) as Blob);
+      setData(new Blob([await res.result], { type: "application/pdf" }));
     });
   }, []);
   useEffect(() => {

@@ -12,11 +12,6 @@
       "types": "./lib/index.d.ts",
       "require": "./lib/index.cjs",
       "default": "./lib/index.js"
-    },
-    "./node": {
-      "types": "./lib/node.d.ts",
-      "require": "./lib/node.cjs",
-      "default": "./lib/node.js"
     }
   },
   "files": [
