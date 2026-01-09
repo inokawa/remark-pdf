@@ -47,7 +47,7 @@ npm install remark-pdf
 
 ### Browser
 
-```javascript
+```ts
 import { unified } from "unified";
 import markdown from "remark-parse";
 import pdf from "remark-pdf";
@@ -59,14 +59,17 @@ const text = "# hello world";
 
 (async () => {
   const doc = await processor.process(text);
-  const arrayBuffer = await doc.result;
-  saveAs(new Blob([arrayBuffer], { type: "application/pdf" }), "example.pdf");
+  const uint8Array = doc.value;
+  saveAs(
+    new Blob([uint8Array as BlobPart], { type: "application/pdf" }),
+    "example.pdf",
+  );
 })();
 ```
 
 ### Node.js
 
-```javascript
+```ts
 import { unified } from "unified";
 import markdown from "remark-parse";
 import pdf from "remark-pdf";
@@ -78,8 +81,8 @@ const text = "# hello world";
 
 (async () => {
   const doc = await processor.process(text);
-  const arrayBuffer = await doc.result;
-  fs.writeFileSync("example.pdf", Buffer.from(arrayBuffer));
+  const uint8Array = doc.value;
+  fs.writeFileSync("example.pdf", uint8Array);
 })();
 ```
 
@@ -129,8 +132,8 @@ Body text in Merriweather Sans Italic
 
 (async () => {
   const doc = await processor.process(text);
-  const arrayBuffer = await doc.result;
-  fs.writeFileSync("example.pdf", Buffer.from(arrayBuffer));
+  const uint8Array = doc.value;
+  fs.writeFileSync("example.pdf", uint8Array);
 })();
 ```
 

@@ -80,7 +80,11 @@ const Component = ({ text }: { text: string }) => {
   const makePdf = useCallback((contents: string) => {
     startTransition(async () => {
       const res = await toPdfProcessor.process(contents);
-      setData(new Blob([await res.result], { type: "application/pdf" }));
+      setData(
+        new Blob([res.value as BlobPart], {
+          type: "application/pdf",
+        }),
+      );
     });
   }, []);
   useEffect(() => {
