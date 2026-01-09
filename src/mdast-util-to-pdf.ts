@@ -66,7 +66,7 @@ type Context = Readonly<{
 
 export type PdfBuilder = (
   def: TDocumentDefinitions & { fonts?: TFontDictionary },
-) => Promise<ArrayBuffer>;
+) => Promise<Uint8Array>;
 
 export interface PdfOptions extends Pick<
   TDocumentDefinitions,
@@ -104,7 +104,7 @@ export async function mdastToPdf(
     preventOrphans,
   }: PdfOptions,
   build: Promise<{ default: PdfBuilder }>,
-): Promise<ArrayBuffer> {
+): Promise<Uint8Array> {
   const definition = definitions(node);
 
   const defaultStyles: StyleDictionary = {

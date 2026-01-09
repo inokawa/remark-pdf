@@ -8,7 +8,7 @@ const builder: PdfBuilder = (def) => {
   const pdf = pdfMake.createPdf(def);
 
   return new Promise((resolve) => {
-    pdf.getBuffer((b) => resolve(b.buffer as ArrayBuffer));
+    pdf.getBuffer((b) => resolve(new Uint8Array(b)));
   });
 };
 

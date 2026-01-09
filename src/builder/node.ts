@@ -40,7 +40,7 @@ const builder: PdfBuilder = (def) => {
     pdf.on("data", (chunk) => chunks.push(chunk));
     pdf.on("end", () => {
       const buf = Buffer.concat(chunks);
-      return resolve(buf.buffer);
+      return resolve(new Uint8Array(buf));
     });
     pdf.on("error", (e) => {
       reject(e);
