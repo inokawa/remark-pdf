@@ -28,7 +28,8 @@ aaaaaaaaboldemphasisdeleteinline code
 3. aaa
 4. ordered list
 This is link to GitHub.com.
-This is .
+This is
+.
 quote
 quote
 quote
@@ -181,7 +182,10 @@ H
 quoted heading"
 `;
 
-exports[`e2e > image 2`] = `"This is ."`;
+exports[`e2e > image 2`] = `
+"This is
+."
+`;
 
 exports[`e2e > latex 2`] = `
 "https://mathjax.github.io/MathJax-demos-web/page/tex-chtml.html

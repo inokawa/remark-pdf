@@ -5,6 +5,8 @@ import Disc from "@jsamr/counter-style/presets/disc";
 import { definitions, type GetDefinition } from "mdast-util-definitions";
 import deepmerge from "deepmerge";
 import { warnOnce } from "./utils";
+import imageSize from "image-size";
+import { visit } from "unist-util-visit";
 
 type KnownNodeType = mdast.RootContent["type"];
 
@@ -66,7 +68,12 @@ interface PdfText {
   style: TextStyle;
 }
 
-type PdfLayout = PdfParagraph | PdfPageBreak | PdfTable | PdfText;
+interface PdfImage {
+  type: "image";
+  data: PdfImageData;
+}
+
+type PdfLayout = PdfParagraph | PdfPageBreak | PdfTable | PdfText | PdfImage;
 
 type ListContext = Readonly<{
   level: number;
@@ -104,6 +111,12 @@ interface StyleOption {
   head6: Partial<TextStyle>;
 }
 
+export type PdfImageData = Readonly<{
+  data: ArrayBuffer;
+  width: number;
+  height: number;
+}>;
+
 type Context = Readonly<{
   render: (node: readonly mdast.RootContent[], ctx?: Context) => PdfLayout[];
   /**
@@ -117,6 +130,10 @@ type Context = Readonly<{
   /**
    * @internal
    */
+  images: ReadonlyMap<string, PdfImageData | null>;
+  /**
+   * @internal
+   */
   list?: ListContext;
   /**
    * @internal
@@ -127,6 +144,12 @@ type Context = Readonly<{
    */
   definition: GetDefinition;
 }>;
+
+type LoadImageFn = (url: string) => Promise<ArrayBuffer>;
+const loadWithFetch: LoadImageFn = async (url) => {
+  const res = await fetch(url);
+  return res.arrayBuffer();
+};
 
 export interface PdfOptions {
   /**
@@ -194,6 +217,11 @@ export interface PdfOptions {
    * Styles that override the defaults.
    */
   styles?: Partial<StyleOption> & { default?: Partial<TextStyle> };
+  /**
+   * A function to resolve image data from url.
+   * @default {@link loadWithFetch}
+   */
+  loadImage?: LoadImageFn;
   // preventOrphans?: boolean;
 }
 
@@ -206,10 +234,53 @@ export async function mdastToPdf(
     orientation,
     spacing,
     styles: { default: defaultStyle, ...style } = {},
+    loadImage = loadWithFetch,
     // preventOrphans,
   }: PdfOptions = {},
 ): Promise<ArrayBuffer> {
   const definition = definitions(node);
+
+  const images = new Map<string, PdfImageData | null>();
+  const imageList: (mdast.Image | mdast.Definition)[] = [];
+  visit(node, "image", (node) => {
+    imageList.push(node);
+  });
+  visit(node, "imageReference", (node) => {
+    const maybeImage = definition(node.identifier)!;
+    if (maybeImage) {
+      imageList.push(maybeImage);
+    }
+  });
+  if (imageList.length !== 0) {
+    const promises = new Map<string, Promise<void>>();
+    imageList.forEach(({ url }) => {
+      if (images.has(url)) {
+        return;
+      }
+      if (!promises.has(url)) {
+        promises.set(
+          url,
+          (async () => {
+            let data: ArrayBuffer;
+            try {
+              data = await loadImage(url);
+            } catch (e) {
+              warnOnce(`Failed to load image: ${url} ${e}`);
+              return;
+            }
+
+            const { type, width, height } = imageSize(new Uint8Array(data));
+            if (type === "png" || type === "jpg") {
+              images.set(url, { data, width, height });
+            } else {
+              warnOnce(`Not supported image type: ${type}`);
+            }
+          })(),
+        );
+      }
+    });
+    await Promise.all(promises.values());
+  }
 
   const defaultFont = fonts[0]!;
   const defaultFontName =
@@ -237,8 +308,8 @@ export async function mdastToPdf(
     break: buildBreak,
     link: buildLink,
     linkReference: buildLinkReference,
-    // image: warnImage,
-    // imageReference: warnImage,
+    image: buildImage,
+    imageReference: buildImageReference,
     // footnoteReference: buildFootnoteReference,
     math: fallbackText,
     inlineMath: fallbackText,
@@ -301,6 +372,7 @@ export async function mdastToPdf(
       },
       style,
     ),
+    images,
     definition,
   };
 
@@ -389,9 +461,17 @@ export async function mdastToPdf(
     opts?: { width?: number; align?: Alignment; indent?: number },
     block?: { x: number; y: number },
   ) => {
-    const texts = nodes.filter((n) => n.type === "text");
+    const texts = nodes.filter((n) => n.type === "text" || n.type === "image");
     for (let i = 0; i < texts.length; i++) {
       const node = texts[i]!;
+      if (node.type === "image") {
+        const { data, width, height } = node.data;
+        doc.image(data, {
+          width,
+          height,
+        });
+        continue;
+      }
       const style = node.style;
       const options: PDFKit.Mixins.TextOptions = {
         strike: style.strike,
@@ -482,7 +562,8 @@ export async function mdastToPdf(
         }
         break;
       }
-      case "text": {
+      case "text":
+      case "image": {
         // fallback to block
         renderInlines([node]);
         break;
@@ -692,14 +773,6 @@ const buildLink: NodeBuilder<"link"> = ({ children, url }, ctx) => {
   });
 };
 
-// const buildImage: NodeBuilder<"image"> = ({
-//   url,
-//   title: _title,
-//   alt: _alt,
-// }) => {
-//   return { image: url /* width, height*/ };
-// };
-
 const buildLinkReference: NodeBuilder<"linkReference"> = (
   { children, identifier },
   ctx,
@@ -709,6 +782,25 @@ const buildLinkReference: NodeBuilder<"linkReference"> = (
     return ctx.render(children);
   }
   return buildLink({ type: "link", children, url: def.url }, ctx);
+};
+
+const buildImage: NodeBuilder<"image"> = (node, ctx) => {
+  const image = ctx.images.get(node.url);
+  if (!image) {
+    return null;
+  }
+  return { type: "image", data: image };
+};
+
+const buildImageReference: NodeBuilder<"imageReference"> = (node, ctx) => {
+  const def = ctx.definition(node.identifier);
+  if (def == null) {
+    return null;
+  }
+  return buildImage(
+    { type: "image", url: def.url, alt: node.alt, title: def.title },
+    ctx,
+  );
 };
 
 const noop = () => {
