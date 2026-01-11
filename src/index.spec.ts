@@ -86,8 +86,11 @@ describe("e2e", () => {
   });
 
   it("makurano", async () => {
+    const font = await fs.readFile(path.join(fixturesDir, "fonts/ipaexg00401/ipaexg.ttf"));
     const md = await fs.readFile(path.join(fixturesDir, "makurano.md"));
-    const doc = await processor().process(md);
+    const doc = await processor({
+      fonts: [{ name: "ipa", normal: font }],
+    }).process(md);
     const generated = await doc.result;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
