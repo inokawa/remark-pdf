@@ -9,10 +9,23 @@ import math from "remark-math";
 import pdf, { type PdfOptions } from "./plugin";
 import { pdf as pdfToImage } from "pdf-to-img";
 import { toMatchImageSnapshot } from "jest-image-snapshot";
+import { extractText } from "unpdf";
 
 const FIXTURE_PATH = "../fixtures";
 
 expect.extend({ toMatchImageSnapshot });
+
+const copyArrayBuffer = (buffer: ArrayBuffer) => {
+  const newBuffer = new ArrayBuffer(buffer.byteLength);
+  const uint8Array = new Uint8Array(newBuffer);
+  uint8Array.set(new Uint8Array(buffer));
+  return uint8Array;
+};
+
+const getPdfText = async (buffer: ArrayBuffer): Promise<string> => {
+  return (await extractText(copyArrayBuffer(buffer), { mergePages: true }))
+    .text;
+};
 
 describe("e2e", () => {
   const processor = (options: PdfOptions = {}) => {
@@ -33,6 +46,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("lorem", async () => {
@@ -42,6 +56,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("makurano", async () => {
@@ -51,6 +66,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("break", async () => {
@@ -60,6 +76,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("footnotes", async () => {
@@ -69,6 +86,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("footnotes2", async () => {
@@ -78,6 +96,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("heading", async () => {
@@ -87,6 +106,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("paragraph", async () => {
@@ -96,6 +116,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("decoration", async () => {
@@ -105,6 +126,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("link", async () => {
@@ -114,6 +136,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("image", async () => {
@@ -123,6 +146,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("list-bullet", async () => {
@@ -132,6 +156,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("list-ordered", async () => {
@@ -141,6 +166,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("list-task", async () => {
@@ -150,6 +176,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("code", async () => {
@@ -159,6 +186,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("frontmatter", async () => {
@@ -168,6 +196,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("math", async () => {
@@ -177,6 +206,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("latex", async () => {
@@ -186,6 +216,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("tag", async () => {
@@ -195,6 +226,7 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
   it("text-emojis", async () => {
@@ -206,5 +238,6 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
+    expect(await getPdfText(generated)).toMatchSnapshot();
   });
 });
