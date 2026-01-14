@@ -33,7 +33,6 @@
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
-    "@napi-rs/canvas": "^0.1.88",
     "@rollup/plugin-typescript": "^12.0.0",
     "@storybook/react-vite": "10.1.11",
     "@types/file-saver": "^2.0.7",
@@ -64,7 +63,6 @@
     "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.9.3",
     "unified": "^11.0.4",
-    "unpdf": "^1.4.0",
     "vite": "^7.2.7",
     "vitest": "^4.0.15"
   },

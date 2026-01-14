@@ -1,41 +1,378 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`e2e > article 3`] = `"heading 1 heading 2 heading 3 heading 4 heading 5 heading 6 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaboldemphasisdeleteinline code listlistlist list list not checked checked ordered list1. ordered list2. ordered list3. aaa1. aaa2. eeeee1. eeeee2. aaa3. ordered list4. This is link to GitHub.com. This is . quote quote quote quote quotequoted quote Left align Right align Center align This This This column column column will will will be be be left right center aligned aligned aligned function $initHighlight(block, cls) { try { if (cls.search(/\\bno\\-highlight\\b/) != -1) return process(block, true, 0x0F) + \` class="\${cls}"\`; } catch (e) { /* handle exception */ } for (var i = 0 / 2; i < classes.length; i++) { if (checkCondition(classes[i]) === undefined) console.log('undefined'); } return ( <div> <web-component>{block}</web-component> </div> ) } export $initHighlight;"`;
+exports[`e2e > article 3`] = `
+"heading 1
+heading 2
+heading 3
+heading 4
+heading 5
+heading 6
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaboldemphasisdeleteinline code
+listlistlist
+list
+list
+not checked
+checked
+ordered list1. ordered list2. ordered list3. aaa1. aaa2. eeeee1. eeeee2.
+aaa3.
+ordered list4.
+This is link to GitHub.com.
+This is .
+quote
+quote
+quote
+quote
+quotequoted quote
+Left align Right align Center align
+This This This
+column column column
+will will will
+be be be
+left right center
+aligned aligned aligned
+function $initHighlight(block, cls) {
+try {
+if (cls.search(/\\bno\\-highlight\\b/) != -1)
+return process(block, true, 0x0F) +
+\` class="\${cls}"\`;
+} catch (e) {
+/* handle exception */
+}
+for (var i = 0 / 2; i < classes.length; i++) {
+if (checkCondition(classes[i]) === undefined)
+console.log('undefined');
+}
+return (
+<div>
+<web-component>{block}</web-component>
+</div>
+)
+}
+export $initHighlight;"
+`;
 
-exports[`e2e > break 2`] = `"a hard break b thematic break c"`;
+exports[`e2e > break 2`] = `
+"a
+hard
+break
+b
+thematic break
+c"
+`;
 
-exports[`e2e > code 2`] = `"@font-face { font-family: Chunkfive; src: url("Chunkfive.otf"); } body, .usertext { color: #f0f0f0; background: #600; font-family: Chunkfive, sans; --heading-1: 30px/32px Helvetica, sans-serif; } @import url(print.css); @media print { a[href^="http"]::after { content: attr(href); } } function $initHighlight(block, cls) { try { if (cls.search(/\\bno\\-highlight\\b/) != -1) return process(block, true, 0x0F) + \` class="\${cls}"\`; } catch (e) { /* handle exception */ } for (var i = 0 / 2; i < classes.length; i++) { if (checkCondition(classes[i]) === undefined) console.log('undefined'); } return ( <div> <web-component>{block}</web-component> </div> ) } export $initHighlight; class MyClass { public static myValue: string; constructor(init: string) { this.myValue = init; } } import fs = require("fs"); module MyModule { export interface MyInterface extends Other { myProperty: any; } } declare magicNumber number; myArray.forEach(() => { }); // fat arrow syntax unknown lang"`;
+exports[`e2e > code 2`] = `
+"@font-face {
+font-family: Chunkfive;
+src: url("Chunkfive.otf");
+}
+body,
+.usertext {
+color: #f0f0f0;
+background: #600;
+font-family: Chunkfive, sans;
+--heading-1: 30px/32px Helvetica, sans-serif;
+}
+@import url(print.css);
+@media print {
+a[href^="http"]::after {
+content: attr(href);
+}
+}
+function $initHighlight(block, cls) {
+try {
+if (cls.search(/\\bno\\-highlight\\b/) != -1)
+return process(block, true, 0x0F) +
+\` class="\${cls}"\`;
+} catch (e) {
+/* handle exception */
+}
+for (var i = 0 / 2; i < classes.length; i++) {
+if (checkCondition(classes[i]) === undefined)
+console.log('undefined');
+}
+return (
+<div>
+<web-component>{block}</web-component>
+</div>
+)
+}
+export $initHighlight;
+class MyClass {
+public static myValue: string;
+constructor(init: string) {
+this.myValue = init;
+}
+}
+import fs = require("fs");
+module MyModule {
+export interface MyInterface extends Other {
+myProperty: any;
+}
+}
+declare magicNumber number;
+myArray.forEach(() => { }); // fat arrow syntax
+unknown lang"
+`;
 
-exports[`e2e > decoration 2`] = `"aaa aaaaaaa aaaaaa aaaaaaaa aaaaaaaa aaaaaaa aaaa aaaaaaaa aaa aaaaaaaaaa aa a aa aa aaa aaaaa aaaa aaa*aa*aa_aa_a~~aa~~a heading list quote link to GitHub.com link to GitHub.com"`;
+exports[`e2e > decoration 2`] = `
+"aaa aaaaaaa aaaaaa aaaaaaaa aaaaaaaa aaaaaaa aaaa aaaaaaaa aaa
+aaaaaaaaaa aa a aa aa aaa aaaaa aaaa aaa*aa*aa_aa_a~~aa~~a
+heading
+list
+quote
+link to GitHub.com
+link to GitHub.com"
+`;
 
 exports[`e2e > footnotes 2`] = `"This is footnote."`;
 
-exports[`e2e > footnotes2 2`] = `"Comprehensive Footnote Test This document tests various footnote scenarios to ensure proper rendering in DOCX format. Reference Style Footnotes Here is a reference footnote in a paragraph. Another reference footnote with a string identifier. Footnotes in Headings This heading has a footnote Footnotes in Lists List item with footnote Nested item with reference Ordered list with footnote1. Footnotes in Blockquotes This blockquote has a footnote. Footnotes in Links Here is a link with footnote in the text. Complex Nested Footnotes This is a bold text with footnote and italic with footnote. String Identifiers Testing various string identifier patterns and and . Footnote Definitions"`;
+exports[`e2e > footnotes2 2`] = `
+"Comprehensive Footnote Test
+This document tests various footnote scenarios to ensure proper rendering in DOCX format.
+Reference Style Footnotes
+Here is a reference footnote in a paragraph. Another reference footnote with a string identifier.
+Footnotes in Headings
+This heading has a footnote
+Footnotes in Lists
+List item with footnote
+Nested item with reference
+Ordered list with footnote1.
+Footnotes in Blockquotes
+This blockquote has a footnote.
+Footnotes in Links
+Here is a link with footnote in the text.
+Complex Nested Footnotes
+This is a bold text with footnote and italic with footnote.
+String Identifiers
+Testing various string identifier patterns and and .
+Footnote Definitions"
+`;
 
-exports[`e2e > frontmatter 2`] = `"Other markdown blablabla +++ title = "This is toml" date = "2020-04-30 22:34" +++ Other markdown blablabla"`;
+exports[`e2e > frontmatter 2`] = `
+"Other markdown
+blablabla
++++
+title = "This is toml"
+date = "2020-04-30 22:34"
++++
+Other markdown
+blablabla"
+`;
 
-exports[`e2e > heading 2`] = `"Alpha aaaa Bravo bbbb Charlie cccc Delta dddd E F G H"`;
+exports[`e2e > heading 2`] = `
+"Alpha
+aaaa
+Bravo
+bbbb
+Charlie
+cccc
+Delta
+dddd
+E
+F
+G
+H"
+`;
 
 exports[`e2e > image 2`] = `"This is ."`;
 
-exports[`e2e > latex 2`] = `"https://mathjax.github.io/MathJax-demos-web/page/tex-chtml.html When a \\ne 0, there are two solutions to ax^2 + bx + c = 0 and they are x = {-b \\pm \\sqrt{b^2-4ac} \\over 2a}. The Lorenz Equations \\begin{align} \\dot{x} & = \\sigma(y-x) \\\\ \\dot{y} & = \\rho x - y - xz \\\\ \\dot{z} & = -\\beta z + xy \\end{align} The Cauchy-Schwarz Inequality \\left( \\sum*{k=1}^n a_k b_k \\right)^{\\!\\!2} \\leq \\left( \\sum*{k=1}^n a*k^2 \\right) \\left( \\sum*{k=1}^n b_k^2 \\right) A Cross Product Formula \\mathbf{V}\\_1 \\times \\mathbf{V}\\_2 = \\begin{vmatrix} \\mathbf{i} & \\mathbf{j} & \\mathbf{k} \\\\ \\frac{\\partial X}{\\partial u} & \\frac{\\partial Y}{\\partial u} & 0 \\\\ \\frac{\\partial X}{\\partial v} & \\frac{\\partial Y}{\\partial v} & 0 \\\\ \\end{vmatrix} The probability of getting (k) heads when flipping (n) coins is: P(E) = {n \\choose k} p^k (1-p)^{ n-k} An Identity of Ramanujan \\frac{1}{\\left(\\sqrt{\\phi \\sqrt{5}}-\\phi\\right) e^{\\frac25 \\pi}} = 1 + \\dfrac{e^{-2\\pi}}{ 1 + \\dfrac{e^{-4\\pi}}{ 1 + \\dfrac{e^{-6\\pi}}{ 1 + \\dfrac{e^{-8\\pi}}{1+\\ldots} } } } A Rogers-Ramanujan Identity 1 + \\frac{q^2}{(1-q)}+\\frac{q^6}{(1-q)(1-q^2)}+\\cdots = \\prod\\_{j=0}^{\\infty}\\frac{1}{(1-q^{5j+2})(1-q^{5j+3})}, \\quad\\quad \\text{for $|q| < 1$}. Maxwell's Equations \\begin{align} \\nabla \\times \\vec{\\mathbf{B}}\\, - \\frac{1}{c}\\, \\frac{\\partial\\vec{\\mathbf{E}}}{\\partial t} & = \\frac{4\\pi}{c}\\vec{\\mathbf{j}} \\\\[3pt] \\nabla \\cdot \\vec{\\mathbf{E}} & = 4 \\pi \\rho \\\\[3pt] \\nabla \\times \\vec{\\mathbf{E}}\\, + \\frac{1}{c}\\, \\frac{\\partial\\vec{\\mathbf{B}}}{\\partial t} & = \\vec{\\mathbf{0}} \\\\[3pt] \\nabla \\cdot \\vec{\\mathbf{B}} & = 0 \\end{align} In-line Mathematics Finally, while display equations look good for a page of samples, the ability to mix math and text in a paragraph is also important. This expression \\sqrt{3x-1}+(1+x)^2 is an example of an inline equation. As you see, MathJax equations can be used this way as well, without unduly disturbing the spacing between lines."`;
+exports[`e2e > latex 2`] = `
+"https://mathjax.github.io/MathJax-demos-web/page/tex-chtml.html
+When a \\ne 0, there are two solutions to ax^2 + bx + c = 0 and they are
+x = {-b \\pm \\sqrt{b^2-4ac} \\over 2a}.
+The Lorenz Equations
+\\begin{align}
+\\dot{x} & = \\sigma(y-x) \\\\
+\\dot{y} & = \\rho x - y - xz \\\\
+\\dot{z} & = -\\beta z + xy
+\\end{align}
+The Cauchy-Schwarz Inequality
+\\left( \\sum*{k=1}^n a_k b_k \\right)^{\\!\\!2} \\leq
+\\left( \\sum*{k=1}^n a*k^2 \\right) \\left( \\sum*{k=1}^n b_k^2 \\right)
+A Cross Product Formula
+\\mathbf{V}\\_1 \\times \\mathbf{V}\\_2 =
+\\begin{vmatrix}
+\\mathbf{i} & \\mathbf{j} & \\mathbf{k} \\\\
+\\frac{\\partial X}{\\partial u} & \\frac{\\partial Y}{\\partial u} & 0 \\\\
+\\frac{\\partial X}{\\partial v} & \\frac{\\partial Y}{\\partial v} & 0 \\\\
+\\end{vmatrix}
+The probability of getting (k) heads when flipping (n) coins is:
+P(E) = {n \\choose k} p^k (1-p)^{ n-k}
+An Identity of Ramanujan
+\\frac{1}{\\left(\\sqrt{\\phi \\sqrt{5}}-\\phi\\right) e^{\\frac25 \\pi}} =
+1 + \\dfrac{e^{-2\\pi}}{
+1 + \\dfrac{e^{-4\\pi}}{
+1 + \\dfrac{e^{-6\\pi}}{
+1 + \\dfrac{e^{-8\\pi}}{1+\\ldots}
+}
+}
+}
+A Rogers-Ramanujan Identity
+1 + \\frac{q^2}{(1-q)}+\\frac{q^6}{(1-q)(1-q^2)}+\\cdots =
+\\prod\\_{j=0}^{\\infty}\\frac{1}{(1-q^{5j+2})(1-q^{5j+3})},
+\\quad\\quad \\text{for $|q| < 1$}.
+Maxwell's Equations
+\\begin{align}
+\\nabla \\times \\vec{\\mathbf{B}}\\, - \\frac{1}{c}\\, \\frac{\\partial\\vec{\\mathbf{E}}}{\\partial t}
+& = \\frac{4\\pi}{c}\\vec{\\mathbf{j}} \\\\[3pt]
+\\nabla \\cdot \\vec{\\mathbf{E}} & = 4 \\pi \\rho \\\\[3pt]
+\\nabla \\times \\vec{\\mathbf{E}}\\, + \\frac{1}{c}\\, \\frac{\\partial\\vec{\\mathbf{B}}}{\\partial t}
+& = \\vec{\\mathbf{0}} \\\\[3pt]
+\\nabla \\cdot \\vec{\\mathbf{B}} & = 0
+\\end{align}
+In-line Mathematics
+Finally, while display equations look good for a page of samples, the
+ability to mix math and text in a paragraph is also important. This
+expression \\sqrt{3x-1}+(1+x)^2 is an example of an inline equation. As
+you see, MathJax equations can be used this way as well, without unduly
+disturbing the spacing between lines."
+`;
 
-exports[`e2e > link 2`] = `"Header link to GitHub.com Sub Header This is link to header. This is link reference."`;
+exports[`e2e > link 2`] = `
+"Header
+link to GitHub.com
+Sub Header
+This is link to header.
+This is link reference."
+`;
 
-exports[`e2e > list-bullet 2`] = `"Bullet Lists This is a test for bullet list. First List Items in first list: Apple Banana Cherry Second List Dog Elephant Fox Nested Lists Outer list: First outer First inner Second inner Third Second outer Third outer Another separate list: Alpha Beta Gamma"`;
+exports[`e2e > list-bullet 2`] = `
+"Bullet Lists
+This is a test for bullet list.
+First List
+Items in first list:
+Apple
+Banana
+Cherry
+Second List
+Dog
+Elephant
+Fox
+Nested Lists
+Outer list:
+First outer
+First inner
+Second inner
+Third
+Second outer
+Third outer
+Another separate list:
+Alpha
+Beta
+Gamma"
+`;
 
-exports[`e2e > list-ordered 2`] = `"Ordered Lists This is a test for ordered list. First List Items in first list: Apple1. Banana2. Cherry3. Second List Items in second list should restart at 1: Dog1. Elephant2. Fox3. Nested Lists Outer list: First outer1. First inner1. Second inner2. Third1. Second outer2. Third outer3. Another separate list should restart: Alpha1. Beta2. Gamma3."`;
+exports[`e2e > list-ordered 2`] = `
+"Ordered Lists
+This is a test for ordered list.
+First List
+Items in first list:
+Apple1. Banana2. Cherry3.
+Second List
+Items in second list should restart at 1:
+Dog1. Elephant2. Fox3.
+Nested Lists
+Outer list:
+First outer1. First inner1. Second inner2. Third1.
+Second outer2. Third outer3.
+Another separate list should restart:
+Alpha1. Beta2. Gamma3."
+`;
 
-exports[`e2e > list-task 2`] = `"Task Lists This is a test for task list. First List Items in first list: Apple Banana Cherry Second List Dog Elephant Fox Nested Lists Outer list: First outer First inner Second inner Third Second outer Third outer Another separate list: Alpha Beta Gamma"`;
+exports[`e2e > list-task 2`] = `
+"Task Lists
+This is a test for task list.
+First List
+Items in first list:
+Apple
+Banana
+Cherry
+Second List
+Dog
+Elephant
+Fox
+Nested Lists
+Outer list:
+First outer
+First inner
+Second inner
+Third
+Second outer
+Third outer
+Another separate list:
+Alpha
+Beta
+Gamma"
+`;
 
-exports[`e2e > lorem 2`] = `"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."`;
+exports[`e2e > lorem 2`] = `
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+`;
 
-exports[`e2e > makurano 2`] = `"f%0o00B0Q0|0n00„0F0„0F0W0•0O0j0Š0†0O\\q0N0o00Y0S0Wf0K0Š0f0}+0\`0a0_0‹–ò0n0}00O0_0j0s0M0_0‹0 Y0o0Y 0g0n0S0•0o0U0‰0j0Š0•Ç0‚0j0{0†Í0nY0O˜Û0s0a0L0r0_0‹00~0_00_0\`N0dNŒ0d0j0i00{0n0K0k0F0aQI0Š0fˆL0O0‚00’0K0W0–è0j0i–M0‹0‚00’0K0W0 yË0o0Yf®0Yeå0n0U0W0f0\\q0nzï0D0h•Ñ0F0j0Š0_0‹0k0pÏ0n[Ý0i0S0•0xˆL0O0h0f0N0dVÛ0d0NŒ0dN0d0j0i0˜Û0s0D0]0P0U0x0B0o0Œ0j0Š00~0D0f0–Á0j0i0n0d0‰0m0_0‹0L00D0h\\0U0O‰‹0†0‹0o00D0h0’0K0W0eåQe0Š0o0f0f0˜¨0n—ó0†k0n—ó0j0i00o0_0Š0u0y0M0k0B0‰0Z0 Q¬0o00d0h0•0f0–ê0n–M0Š0_0‹0o0Š0u0y0M0k0‚0B0‰0Z0—0n0D0hv}0M0‚00~0_0U0‰0g0‚00D0h[Ò0M0k0pk0j0i\`%0N0J0S0W0f0p-c0f0•0_0‹0‚00D0h0d0M0e0M0W0f<0k0j0Š0f00l0‹0O0†0‹0s0‚0f0D0Q0p0pkhv0npk0‚0v}0Mpp0L0a0k0j0Š0f00•0•0W0"`;
+exports[`e2e > makurano 2`] = `
+"f%0o00B0Q0|0n00„0F0„0F0W0•0O0j0Š0†0O\\q0N0o00Y0S0Wf0K0Š0f0}+0\`0a0_0‹–ò0n0}00O0_0j0s0M0_0‹0
+Y0o0Y 0g0n0S0•0o0U0‰0j0Š0•Ç0‚0j0{0†Í0nY0O˜Û0s0a0L0r0_0‹00~0_00_0\`N0dNŒ0d0j0i00{0n0K0k0F0aQI0Š0fˆL0O0‚00’0K0W0–è0j0i–M0‹0‚00’0K0W0
+yË0o0Yf®0Yeå0n0U0W0f0\\q0nzï0D0h•Ñ0F0j0Š0_0‹0k0pÏ0n[Ý0i0S0•0xˆL0O0h0f0N0dVÛ0d0NŒ0dN0d0j0i0˜Û0s0D0]0P0U0x0B0o0Œ0j0Š00~0D0f0–Á0j0i0n0d0‰0m0_0‹0L00D0h\\0U0O‰‹0†0‹0o00D0h0’0K0W0eåQe0Š0o0f0f0˜¨0n—ó0†k0n—ó0j0i00o0_0Š0u0y0M0k0B0‰0Z0
+Q¬0o00d0h0•0f0–ê0n–M0Š0_0‹0o0Š0u0y0M0k0‚0B0‰0Z0—0n0D0hv}0M0‚00~0_0U0‰0g0‚00D0h[Ò0M0k0pk0j0i\`%0N0J0S0W0f0p-c0f0•0_0‹0‚00D0h0d0M0e0M0W0f<0k0j0Š0f00l0‹0O0†0‹0s0‚0f0D0Q0p0pkhv0npk0‚0v}0Mpp0L0a0k0j0Š0f00•0•0W0"
+`;
 
-exports[`e2e > math 2`] = `"Lift(L) can be determined by Lift Coefficient (C_L) like the following equation. L = \\frac{1}{2} \\rho v^2 S C_L i hbar \\frac{partial psi}{partial t} = H psi(x,t) \\f\\relax{x} = \\int_{-\\infty}^\\infty\\f\\hat\\xi\\,e^{2 \\pi i \\xi x}\\,d\\xi \\frac{a+b}{c+d} \\sqrt[30]{a+\\sqrt{b+c}} \\sum_{k=1}^{n} k=\\frac{n(n+1)}{2} \\alpha\\beta\\gamma\\delta\\epsilon\\zeta\\eta\\theta\\iota\\kappa\\lambda\\mu\\nu\\xi o\\pi\\rho\\sigma\\tau\\upsilon\\phi\\chi\\psi\\omega \\varepsilon\\vartheta\\varrho\\varsigma\\varphi \\Gamma\\Delta\\Theta\\Lambda\\Xi\\Pi\\Sigma\\Upsilon\\Phi\\Psi\\Omega"`;
+exports[`e2e > math 2`] = `
+"Lift(L) can be determined by Lift Coefficient (C_L) like the following
+equation.
+L = \\frac{1}{2} \\rho v^2 S C_L
+i hbar \\frac{partial psi}{partial t} = H psi(x,t)
+\\f\\relax{x} = \\int_{-\\infty}^\\infty\\f\\hat\\xi\\,e^{2 \\pi i \\xi x}\\,d\\xi
+\\frac{a+b}{c+d}
+\\sqrt[30]{a+\\sqrt{b+c}}
+\\sum_{k=1}^{n} k=\\frac{n(n+1)}{2}
+\\alpha\\beta\\gamma\\delta\\epsilon\\zeta\\eta\\theta\\iota\\kappa\\lambda\\mu\\nu\\xi
+o\\pi\\rho\\sigma\\tau\\upsilon\\phi\\chi\\psi\\omega
+\\varepsilon\\vartheta\\varrho\\varsigma\\varphi
+\\Gamma\\Delta\\Theta\\Lambda\\Xi\\Pi\\Sigma\\Upsilon\\Phi\\Psi\\Omega"
+`;
 
-exports[`e2e > paragraph 2`] = `"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."`;
+exports[`e2e > paragraph 2`] = `
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+`;
 
-exports[`e2e > tag 2`] = `"<div> <span>This is <b>html</b></span> inside <u>docx</u>. </div> <table><tr><td>aaaaa</td></tr></table> <!--comment--> mailto:foobarbaz aaaaaa"`;
+exports[`e2e > tag 2`] = `
+"<div>
+<span>This is <b>html</b></span> inside <u>docx</u>.
+</div>
+<table><tr><td>aaaaa</td></tr></table>
+<!--comment-->
+mailto:foobarbaz
+aaaaaa"
+`;
 
-exports[`e2e > text-emojis 2`] = `"Document with emojis! Ø = Þ A bold emoji: Ø < ß , an emphatic one: Ø > Ý , a deleted one: Ø = Ý , in inline code: Ø < ß • bold emoji: Ø < ß emphatic emoji: Ø > Ý deleted emoji: Ø = Ý inline code emoji: Ø < ß • not checked: & checked: ' & Ø = Ý ÷ Ø = Ý õ Ø = Ý ù"`;
+exports[`e2e > text-emojis 2`] = `
+"Document with emojis! Ø = Þ
+A bold emoji: Ø < ß , an emphatic one: Ø > Ý , a deleted one: Ø = Ý , in inline code: Ø < ß •
+bold emoji: Ø < ß
+emphatic emoji: Ø > Ý
+deleted emoji: Ø = Ý
+inline code emoji: Ø < ß •
+not checked: &
+checked: ' & Ø = Ý ÷ Ø = Ý õ Ø = Ý ù"
+`;

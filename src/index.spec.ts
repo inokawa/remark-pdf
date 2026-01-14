@@ -9,7 +9,7 @@ import math from "remark-math";
 import pdf, { type PdfOptions } from "./plugin";
 import { pdf as pdfToImage } from "pdf-to-img";
 import { toMatchImageSnapshot } from "jest-image-snapshot";
-import { extractText } from "unpdf";
+import * as pdfjsLib from "pdfjs-dist";
 
 const FIXTURE_PATH = "../fixtures";
 
@@ -23,8 +23,24 @@ const copyArrayBuffer = (buffer: ArrayBuffer) => {
 };
 
 const getPdfText = async (buffer: ArrayBuffer): Promise<string> => {
-  return (await extractText(copyArrayBuffer(buffer), { mergePages: true }))
-    .text;
+  const pdfData = copyArrayBuffer(buffer);
+
+  const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+  const pdf = await loadingTask.promise;
+
+  return (
+    await Promise.all(
+      Array.from({ length: pdf.numPages }).map(async (_, i) => {
+        const pageNumber = i + 1;
+        const page = await pdf.getPage(pageNumber);
+        const content = await page.getTextContent();
+        return content.items
+          .filter((i) => "str" in i)
+          .map((i) => i.str + (i.hasEOL ? "\n" : ""))
+          .join("");
+      }),
+    )
+  ).join("\n");
 };
 
 describe("e2e", () => {
