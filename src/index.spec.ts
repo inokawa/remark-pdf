@@ -105,16 +105,6 @@ describe("e2e", () => {
     expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
-  it("footnotes2", async () => {
-    const md = await fs.readFile(path.join(fixturesDir, "footnotes2.md"));
-    const doc = await processor().process(md);
-    const generated = await doc.result;
-    for await (const page of await pdfToImage(Buffer.from(generated))) {
-      expect(page).toMatchImageSnapshot();
-    }
-    expect(await getPdfText(generated)).toMatchSnapshot();
-  });
-
   it("heading", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "heading.md"));
     const doc = await processor().process(md);

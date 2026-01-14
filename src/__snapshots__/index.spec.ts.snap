@@ -127,28 +127,21 @@ link to GitHub.com
 link to GitHub.com"
 `;
 
-exports[`e2e > footnotes 2`] = `"This is footnote."`;
-
-exports[`e2e > footnotes2 2`] = `
-"Comprehensive Footnote Test
-This document tests various footnote scenarios to ensure proper rendering in DOCX format.
-Reference Style Footnotes
-Here is a reference footnote in a paragraph. Another reference footnote with a string identifier.
-Footnotes in Headings
-This heading has a footnote
+exports[`e2e > footnotes 2`] = `
+"Footnotes
+This is footnote.
+Footnotes
+Here is footnotes.
 Footnotes in Lists
-List item with footnote
-Nested item with reference
-Ordered list with footnote1.
+List item
+Nested item
+Ordered list1.
 Footnotes in Blockquotes
-This blockquote has a footnote.
+Blockquote.
 Footnotes in Links
-Here is a link with footnote in the text.
+Here is a link in the text.
 Complex Nested Footnotes
-This is a bold text with footnote and italic with footnote.
-String Identifiers
-Testing various string identifier patterns and and .
-Footnote Definitions"
+This is a bold text and italic."
 `;
 
 exports[`e2e > frontmatter 2`] = `
@@ -174,7 +167,9 @@ dddd
 E
 F
 G
-H"
+H
+listed heading
+quoted heading"
 `;
 
 exports[`e2e > image 2`] = `"This is ."`;
