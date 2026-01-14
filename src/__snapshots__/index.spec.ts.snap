@@ -28,8 +28,7 @@ aaaaaaaaboldemphasisdeleteinline code
 3. aaa
 4. ordered list
 This is link to GitHub.com.
-This is
-.
+This is .
 quote
 quote
 quote
@@ -67,13 +66,14 @@ export $initHighlight;"
 
 exports[`e2e > break 4`] = `
 "a
-hardbreak
+hard
+break
 b
 thematic break
 c"
 `;
 
-exports[`e2e > code 3`] = `
+exports[`e2e > code 2`] = `
 "@font-face {
 font-family: Chunkfive;
 src: url("Chunkfive.otf");
@@ -128,8 +128,8 @@ unknown lang"
 `;
 
 exports[`e2e > decoration 2`] = `
-"aaa aaaaaaa aaaaaa aaaaaaaa aaaaaaaa aaaaaaa aaaa aaaaaaaa aaaaaa
-aaaaaaa aa a aa aa aaa aaaaa aaaa aaa*aa*aa_aa_a~~aa~~a
+"aaa aaaaaaa aaaaaa aaaaaaaa aaaaaaaa aaaaaaa aaaa aaaaaaaa aaa
+aaaaaaaaaa aa a aa aa aaa aaaaa aaaa aaa*aa*aa_aa_a~~aa~~a
 heading
 • list
 quote
@@ -182,10 +182,7 @@ H
 quoted heading"
 `;
 
-exports[`e2e > image 2`] = `
-"This is
-."
-`;
+exports[`e2e > image 2`] = `"This is ."`;
 
 exports[`e2e > latex 2`] = `
 "https://mathjax.github.io/MathJax-demos-web/page/tex-chtml.html
@@ -232,10 +229,9 @@ Maxwell's Equations
 \\nabla \\cdot \\vec{\\mathbf{B}} & = 0
 \\end{align}
 In-line Mathematics
-Finally, while display equations look good for a page of samples, theability to mix math and text
-in a paragraph is also important. This
-expression
-\\sqrt{3x-1}+(1+x)^2 is an example of an inline equation. As
+Finally, while display equations look good for a page of samples, the
+ability to mix math and text in a paragraph is also important. This
+expression \\sqrt{3x-1}+(1+x)^2 is an example of an inline equation. As
 you see, MathJax equations can be used this way as well, without unduly
 disturbing the spacing between lines."
 `;
@@ -328,11 +324,11 @@ Another separate list:
 `;
 
 exports[`e2e > lorem 2`] = `
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labo
+re et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris ni
+si ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit es
+se cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in c
+ulpa qui officia deserunt mollit anim id est laborum."
 `;
 
 exports[`e2e > makurano 2`] = `
@@ -351,28 +347,28 @@ i hbar \\frac{partial psi}{partial t} = H psi(x,t)
 \\frac{a+b}{c+d}
 \\sqrt[30]{a+\\sqrt{b+c}}
 \\sum_{k=1}^{n} k=\\frac{n(n+1)}{2}
-\\alpha\\beta\\gamma\\delta\\epsilon\\zeta\\eta\\theta\\iota\\kappa\\lambda\\mu\\nu\\xi
-o\\pi\\rho\\sigma\\tau\\upsilon\\phi\\chi\\psi\\omega
+\\alpha\\beta\\gamma\\delta\\epsilon\\zeta\\eta\\theta\\iota\\kappa\\lambda\\mu\\nu\\xi o\\pi\\rho\\sigma\\tau\\u
+psilon\\phi\\chi\\psi\\omega
 \\varepsilon\\vartheta\\varrho\\varsigma\\varphi
 \\Gamma\\Delta\\Theta\\Lambda\\Xi\\Pi\\Sigma\\Upsilon\\Phi\\Psi\\Omega"
 `;
 
 exports[`e2e > paragraph 2`] = `
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labo
+re et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris ni
+si ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit es
+se cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in c
+ulpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labo
+re et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris ni
+si ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit es
+se cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in c
+ulpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labo
+re et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris ni
+si ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit es
+se cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in c
+ulpa qui officia deserunt mollit anim id est laborum."
 `;
 
 exports[`e2e > tag 2`] = `

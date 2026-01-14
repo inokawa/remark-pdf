@@ -461,25 +461,69 @@ export async function mdastToPdf(
     opts?: { width?: number; align?: Alignment; indent?: number },
     block?: { x: number; y: number },
   ) => {
-    const texts = nodes.filter((n) => n.type === "text" || n.type === "image");
-    for (let i = 0; i < texts.length; i++) {
-      const node = texts[i]!;
+    const items = nodes.filter((n) => n.type === "text" || n.type === "image");
+    const startX =
+      block?.x ??
+      (typeof opts?.indent === "number"
+        ? doc.page.margins.left + opts.indent
+        : doc.x);
+    const startY = block?.y ?? doc.y;
+    let x = startX;
+    let y = startY;
+    let line: {
+      node: PdfText | PdfImage;
+      width: number;
+      height: number;
+      font?: string;
+      text?: string;
+      style?: TextStyle;
+    }[] = [];
+
+    const flushLine = () => {
+      let cursorX = startX;
+      let maxHeight = 0;
+      if (line.length === 0) {
+        maxHeight = doc.currentLineHeight();
+      } else {
+        for (const item of line) {
+          if (item.height > maxHeight) maxHeight = item.height;
+        }
+      }
+      for (const item of line) {
+        if (item.node.type === "image") {
+          doc.image(item.node.data.data, cursorX, y, {
+            width: item.width,
+            height: item.height,
+          });
+          cursorX += item.width;
+        } else {
+          const style = item.style!;
+          doc.font(item.font!).fontSize(style.fontSize).fillColor(style.color);
+          doc.text(item.text!, cursorX, y, {
+            strike: style.strike,
+            underline: style.underline,
+            link: item.node.link ?? null,
+            continued: false,
+          });
+          cursorX += item.width;
+        }
+      }
+      y += maxHeight;
+      x = startX;
+      line = [];
+    };
+
+    for (const node of items) {
       if (node.type === "image") {
-        const { data, width, height } = node.data;
-        doc.image(data, {
-          width,
-          height,
-        });
+        const { width, height } = node.data;
+        if (x + width > doc.page.width - doc.page.margins.right) {
+          flushLine();
+        }
+        line.push({ node, width, height });
+        x += width;
         continue;
       }
       const style = node.style;
-      const options: PDFKit.Mixins.TextOptions = {
-        strike: style.strike,
-        underline: style.underline,
-        link: node.link ?? null,
-        continued: i < texts.length - 1,
-      };
-
       let targetFont = fontMap.get(style.font);
       if (!targetFont) {
         targetFont = fontMap.get(defaultFontName)!;
@@ -492,31 +536,60 @@ export async function mdastToPdf(
       } else if (style.italic && targetFont.italic) {
         font = targetFont.italic;
       }
-
       doc.font(font).fontSize(style.fontSize).fillColor(style.color);
 
-      if (opts) {
-        options.width = opts.width;
-        options.align = opts.align;
-        options.indent = opts.indent;
-      }
-      if (block) {
-        doc.text(node.text, block.x, block.y, options);
-      } else {
-        const lines = node.text.split("\n");
-        if (lines.length <= 1 || lines.every((t) => !t)) {
-          doc.text(node.text, options);
-        } else {
-          for (let i = 0; i < lines.length; i++) {
-            const text = lines[i]!;
-            let op = options;
-            if (i !== 0) {
-              op = { ...op, continued: false };
-            }
-            doc.text(text || "\n", op);
+      let buffer = "";
+      for (const char of Array.from(node.text)) {
+        const isNewline = char === "\n";
+        const testStr = buffer + char;
+        const w = doc.widthOfString(testStr);
+        const h = doc.currentLineHeight();
+        if (!isNewline && x + w > doc.page.width - doc.page.margins.right) {
+          if (buffer) {
+            line.push({
+              node,
+              width: doc.widthOfString(buffer),
+              height: h,
+              font,
+              text: buffer,
+              style,
+            });
+            x += doc.widthOfString(buffer);
+            buffer = "";
           }
+          flushLine();
+        }
+        if (isNewline) {
+          if (buffer) {
+            line.push({
+              node,
+              width: doc.widthOfString(buffer),
+              height: h,
+              font,
+              text: buffer,
+              style,
+            });
+            x += doc.widthOfString(buffer);
+            buffer = "";
+          }
+          flushLine();
+        } else {
+          buffer += char;
         }
       }
+      if (buffer) {
+        const w = doc.widthOfString(buffer);
+        const h = doc.currentLineHeight();
+        line.push({ node, width: w, height: h, font, text: buffer, style });
+        x += w;
+      }
+    }
+    if (line.length > 0) {
+      flushLine();
+    }
+    if (!block) {
+      doc.x = x;
+      doc.y = y;
     }
   };
 
