@@ -591,6 +591,10 @@ export async function mdastToPdf(
         }
         case "text": {
           const style = node.style;
+          if (!style.fontSize) {
+            continue;
+          }
+
           let targetFont = fontMap.get(style.font);
           if (!targetFont) {
             targetFont = fontMap.get(defaultFontName)!;
