@@ -380,3 +380,14 @@ exports[`e2e > tag 2`] = `
 mailto:foobarbaz
 aaaaaa"
 `;
+
+exports[`e2e > text-emojis 2`] = `
+"Document with emojis! Ø = Þ
+A bold emoji: Ø < ß , an emphatic one: Ø > Ý , a deleted one: Ø = Ý , in inline code: Ø < ß •
+• bold emoji: Ø < ß
+• emphatic emoji: Ø > Ý
+• deleted emoji: Ø = Ý
+• inline code emoji: Ø < ß •
+• not checked: &
+• checked: ' & Ø = Ý ÷ Ø = Ý õ Ø = Ý ù"
+`;

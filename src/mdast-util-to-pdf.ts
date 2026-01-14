@@ -45,6 +45,8 @@ export interface CustomFont {
 
 type Alignment = "left" | "right" | "center";
 
+export type TextStyleMatcher = [pattern: RegExp, style: Partial<TextStyle>];
+
 interface PdfParagraph {
   type: "paragraph";
   list?: ListContext;
@@ -123,6 +125,10 @@ type Context = Readonly<{
    * @internal
    */
   style: TextStyle;
+  /**
+   * @internal
+   */
+  textStyle: TextStyleMatcher[];
   /**
    * @internal
    */
@@ -218,6 +224,10 @@ export interface PdfOptions {
    */
   styles?: Partial<StyleOption> & { default?: Partial<TextStyle> };
   /**
+   * An option to find text and apply style (e.g. font to emoji)
+   */
+  textStyle?: TextStyleMatcher[];
+  /**
    * A function to resolve image data from url.
    * @default {@link loadWithFetch}
    */
@@ -235,6 +245,7 @@ export async function mdastToPdf(
     spacing,
     styles: { default: defaultStyle, ...style } = {},
     loadImage = loadWithFetch,
+    textStyle: textStyle = [],
     // preventOrphans,
   }: PdfOptions = {},
 ): Promise<ArrayBuffer> {
@@ -345,6 +356,7 @@ export async function mdastToPdf(
       strike: false,
       ...defaultStyle,
     },
+    textStyle,
     config: deepmerge<StyleOption>(
       {
         head1: {
@@ -773,37 +785,47 @@ const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
 };
 
 const buildText: NodeBuilder<"text"> = ({ value: text }, ctx) => {
-  const content: PdfText = {
-    type: "text",
-    text,
-    style: ctx.style,
-    link: ctx.link,
+  const segments: PdfText[] = [];
+
+  const matches: Match[] = [];
+  type Match = { start: number; end: number; style: Partial<TextStyle> };
+  for (const [re, style] of ctx.textStyle) {
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      matches.push({
+        start: m.index,
+        end: m.index + m[0].length,
+        style,
+      });
+    }
+  }
+  matches.sort((a, b) => a.start - b.start);
+
+  const createText = (
+    style: TextStyle,
+    start: number,
+    end?: number,
+  ): PdfText => {
+    return {
+      type: "text",
+      text: text.slice(start, end),
+      style: style,
+      link: ctx.link,
+    };
   };
-  // const matches = text.match(/\p{Extended_Pictographic}/gu);
-  // if (matches) {
-  //   let segments: PdfText[] = [];
-  //   let lastIndex = 0;
-  //   matches.forEach((emoji: string) => {
-  //     // Add text before emoji
-  //     const textBefore = text.slice(lastIndex, text.indexOf(emoji, lastIndex));
-  //     if (textBefore) {
-  //       segments.push({ ...content, text: textBefore });
-  //     }
-  //     // Add emoji
-  //     segments.push({ ...content, text: emoji, style: EMOJI });
-  //     lastIndex = text.indexOf(emoji, lastIndex) + emoji.length;
-  //   });
-  //   // Add remaining text
-  //   if (lastIndex < text.length) {
-  //     const textAfter = text.slice(lastIndex);
-  //     if (textAfter) {
-  //       segments.push({ ...content, text: textAfter });
-  //     }
-  //   }
-  //   // console.error(content, segments);
-  //   return segments;
-  // }
-  return content;
+
+  let i = 0;
+  for (const { start, end, style } of matches) {
+    if (i < start) {
+      segments.push(createText(ctx.style, i, start));
+    }
+    segments.push(createText({ ...ctx.style, ...style }, start, end));
+    i = end;
+  }
+  if (i < text.length) {
+    segments.push(createText(ctx.style, i));
+  }
+  return segments;
 };
 
 const buildEmphasis: NodeBuilder<"emphasis"> = (node, ctx) => {
