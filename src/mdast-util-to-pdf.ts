@@ -106,13 +106,16 @@ interface TextStyle {
 }
 
 interface StyleOption {
-  link: Partial<TextStyle>;
   head1: Partial<TextStyle>;
   head2: Partial<TextStyle>;
   head3: Partial<TextStyle>;
   head4: Partial<TextStyle>;
   head5: Partial<TextStyle>;
   head6: Partial<TextStyle>;
+  link: Partial<TextStyle>;
+  inlineCode: Partial<TextStyle>;
+  code: Partial<TextStyle>;
+  blockquote: Partial<TextStyle>;
 }
 
 export type PdfImageData = Readonly<
@@ -334,14 +337,14 @@ export async function mdastToPdf(
     tableRow: noop,
     tableCell: noop,
     html: fallbackText,
-    code: fallbackText,
+    code: buildCode,
     definition: noop,
     // footnoteDefinition: buildFootnoteDefinition,
     text: buildText,
     emphasis: buildEmphasis,
     strong: buildStrong,
     delete: buildDelete,
-    inlineCode: fallbackText,
+    inlineCode: buildInlineCode,
     break: buildBreak,
     link: buildLink,
     linkReference: buildLinkReference,
@@ -385,28 +388,15 @@ export async function mdastToPdf(
     textStyle,
     config: deepmerge<StyleOption>(
       {
-        head1: {
-          fontSize: 24,
-        },
-        head2: {
-          fontSize: 22,
-        },
-        head3: {
-          fontSize: 20,
-        },
-        head4: {
-          fontSize: 18,
-        },
-        head5: {
-          fontSize: 16,
-        },
-        head6: {
-          fontSize: 14,
-        },
-        link: {
-          color: "#0000FF",
-          underline: true,
-        },
+        head1: { fontSize: 24 },
+        head2: { fontSize: 22 },
+        head3: { fontSize: 20 },
+        head4: { fontSize: 18 },
+        head5: { fontSize: 16 },
+        head6: { fontSize: 14 },
+        link: { color: "#0000FF", underline: true },
+        inlineCode: { color: "#333" },
+        code: { color: "#333" },
       },
       style,
     ),
@@ -792,8 +782,10 @@ const buildThematicBreak: NodeBuilder<"thematicBreak"> = () => {
 };
 
 const buildBlockquote: NodeBuilder<"blockquote"> = ({ children }, ctx) => {
-  // FIXME: do nothing for now
-  return ctx.render(children);
+  return ctx.render(children, {
+    ...ctx,
+    style: { ...ctx.style, ...ctx.config.blockquote },
+  });
 };
 
 const buildList: NodeBuilder<"list"> = ({ children, ordered }, ctx) => {
@@ -901,6 +893,23 @@ const buildDelete: NodeBuilder<"delete"> = (node, ctx) => {
     ...ctx,
     style: { ...ctx.style, strike: true },
   });
+};
+
+const buildInlineCode: NodeBuilder<"inlineCode"> = (node, ctx) => {
+  return ctx.render([{ type: "text", value: node.value }], {
+    ...ctx,
+    style: { ...ctx.style, ...ctx.config.inlineCode },
+  });
+};
+
+const buildCode: NodeBuilder<"code"> = (node, ctx) => {
+  return {
+    type: "paragraph",
+    children: ctx.render([{ type: "text", value: node.value }], {
+      ...ctx,
+      style: { ...ctx.style, ...ctx.config.code },
+    }),
+  };
 };
 
 const buildBreak: NodeBuilder<"break"> = ({}, ctx) => {

@@ -7,16 +7,14 @@
 - Uses [pdfkit](https://github.com/foliojs/pdfkit) for compilation, to avoid issues with puppeteer or headless chromium.
 - Works in any environment (e.g. browser, Node.js).
 
-### 🚧 WIP 🚧
+### Supported [mdast](https://github.com/syntax-tree/mdast) nodes
 
-This project is aiming to support all nodes in [mdast](https://github.com/syntax-tree/mdast) syntax tree, but currently transformation and stylings may not be well.
-
-If you have some feature requests or improvements, please create a [issue](https://github.com/inokawa/remark-pdf/issues) or [PR](https://github.com/inokawa/remark-pdf/pulls).
+Currently, some of the default styles may not be nice. If you have some feature requests or improvements, please create a [issue](https://github.com/inokawa/remark-pdf/issues) or [PR](https://github.com/inokawa/remark-pdf/pulls).
 
 - [x] paragraph
 - [x] heading
 - [x] thematicBreak
-- [ ] blockquote
+- [x] blockquote
 - [x] list / listItem
 - [x] table / tableRow / tableCell
 - [x] definition
@@ -24,13 +22,13 @@ If you have some feature requests or improvements, please create a [issue](https
 - [x] emphasis
 - [x] strong
 - [x] delete
-- [ ] inlineCode
+- [x] inlineCode
 - [x] break
 - [x] link / linkReference
 - [ ] footnoteReference / footnoteDefinition
 - [x] image / imageReference
 - [ ] html
-- [ ] code
+- [x] code
 - [ ] math / inlineMath
 
 ## Demo
