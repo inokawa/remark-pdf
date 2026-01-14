@@ -163,6 +163,13 @@ type Context = Readonly<{
   definition: GetDefinition;
 }>;
 
+type RegisteredFont = {
+  normal: string;
+  bold?: string;
+  italic?: string;
+  bolditalic?: string;
+};
+
 type LoadImageFn = (url: string) => Promise<ArrayBuffer>;
 const loadWithFetch: LoadImageFn = async (url) => {
   const res = await fetch(url);
@@ -425,12 +432,6 @@ export async function mdastToPdf(
     subset: "PDF/A-3a",
   });
 
-  type RegisteredFont = {
-    normal: string;
-    bold?: string;
-    italic?: string;
-    bolditalic?: string;
-  };
   const fontMap = new Map<string, RegisteredFont>();
   for (const font of fonts) {
     if (typeof font !== "string") {
@@ -491,18 +492,13 @@ export async function mdastToPdf(
   const getPageWidth = (): number =>
     doc.page.width - doc.page.margins.left - doc.page.margins.right;
 
-  const renderInlines = (
+  const paintInlines = (
     nodes: readonly PdfLayout[],
-    opts?: { width?: number; align?: Alignment; indent?: number },
-    block?: { x: number; y: number },
+    block?: { x?: number; y?: number; align?: Alignment; width?: number },
   ) => {
     const items = nodes.filter((n) => n.type === "text" || n.type === "image");
-    const startX =
-      block?.x ??
-      (typeof opts?.indent === "number"
-        ? doc.page.margins.left + opts.indent
-        : doc.x);
-    const startY = block?.y ?? doc.y;
+    const startX = typeof block?.x === "number" ? block.x : doc.x;
+    const startY = typeof block?.y === "number" ? block.y : doc.y;
     let x = startX;
     let y = startY;
     let line: {
@@ -511,11 +507,25 @@ export async function mdastToPdf(
       height: number;
       font?: string;
       text?: string;
-      style?: TextStyle;
     }[] = [];
 
+    const textWidth = (text: string): number => {
+      return doc.widthOfString(text);
+    };
+
+    const wrapWidth = block?.width ?? getPageMaxX() - startX;
+
     const flushLine = () => {
+      let totalWidth = 0;
+      for (const item of line) {
+        totalWidth += item.width;
+      }
       let cursorX = startX;
+      if (block?.align === "center") {
+        cursorX = startX + ((block.width ?? 0) - totalWidth) / 2;
+      } else if (block?.align === "right") {
+        cursorX = startX + ((block.width ?? 0) - totalWidth);
+      }
       let maxHeight = 0;
       if (line.length === 0) {
         maxHeight = doc.currentLineHeight();
@@ -539,7 +549,7 @@ export async function mdastToPdf(
           }
           cursorX += item.width;
         } else {
-          const style = item.style!;
+          const style = item.node.style!;
           doc.font(item.font!).fontSize(style.fontSize).fillColor(style.color);
           doc.text(item.text!, cursorX, y, {
             strike: style.strike,
@@ -556,81 +566,92 @@ export async function mdastToPdf(
     };
 
     for (const node of items) {
-      if (node.type === "image") {
-        let { width, height } = node.data;
+      switch (node.type) {
+        case "image": {
+          let { width, height } = node.data;
 
-        const pageWidth = getPageWidth();
-        if (width > pageWidth) {
-          const scale = pageWidth / width;
-          width *= scale;
-          height *= scale;
+          const pageWidth = getPageWidth();
+          if (width > pageWidth) {
+            const scale = pageWidth / width;
+            width *= scale;
+            height *= scale;
+          }
+          if (width >= wrapWidth || x + width > startX + wrapWidth) {
+            if (line.length > 0) flushLine();
+            line.push({ node, width, height });
+            flushLine();
+          } else {
+            if (x + width > startX + wrapWidth) {
+              flushLine();
+            }
+            line.push({ node, width, height });
+            x += width;
+          }
+          break;
         }
-        if (x + width > pageWidth) {
-          flushLine();
-        }
-        line.push({ node, width, height });
-        x += width;
-        continue;
-      }
-      const style = node.style;
-      let targetFont = fontMap.get(style.font);
-      if (!targetFont) {
-        targetFont = fontMap.get(defaultFontName)!;
-      }
-      let font = targetFont.normal;
-      if (style.bold && style.italic && targetFont.bolditalic) {
-        font = targetFont.bolditalic;
-      } else if (style.bold && targetFont.bold) {
-        font = targetFont.bold;
-      } else if (style.italic && targetFont.italic) {
-        font = targetFont.italic;
-      }
-      doc.font(font).fontSize(style.fontSize).fillColor(style.color);
+        case "text": {
+          const style = node.style;
+          let targetFont = fontMap.get(style.font);
+          if (!targetFont) {
+            targetFont = fontMap.get(defaultFontName)!;
+          }
+          let font = targetFont.normal;
+          if (style.bold && style.italic && targetFont.bolditalic) {
+            font = targetFont.bolditalic;
+          } else if (style.bold && targetFont.bold) {
+            font = targetFont.bold;
+          } else if (style.italic && targetFont.italic) {
+            font = targetFont.italic;
+          }
+          doc.font(font).fontSize(style.fontSize);
 
-      let buffer = "";
-      for (const char of Array.from(node.text)) {
-        const isNewline = char === "\n";
-        const testStr = buffer + char;
-        const w = doc.widthOfString(testStr);
-        const h = doc.currentLineHeight();
-        if (!isNewline && x + w > getPageMaxX()) {
-          if (buffer) {
-            line.push({
-              node,
-              width: doc.widthOfString(buffer),
-              height: h,
-              font,
-              text: buffer,
-              style,
-            });
-            x += doc.widthOfString(buffer);
-            buffer = "";
+          let buffer = "";
+          let w = 0;
+          for (const char of Array.from(node.text)) {
+            const isNewline = char === "\n";
+            const charWidth = textWidth(char);
+            const h = doc.currentLineHeight();
+            if (!isNewline && w + charWidth > wrapWidth) {
+              if (buffer) {
+                line.push({
+                  node,
+                  width: w,
+                  height: h,
+                  font,
+                  text: buffer,
+                });
+                x += w;
+                buffer = "";
+                w = 0;
+              }
+              flushLine();
+            }
+            if (isNewline) {
+              if (buffer) {
+                line.push({
+                  node,
+                  width: w,
+                  height: h,
+                  font,
+                  text: buffer,
+                });
+                x += w;
+                buffer = "";
+                w = 0;
+              }
+              flushLine();
+            } else {
+              buffer += char;
+              w += charWidth;
+            }
           }
-          flushLine();
-        }
-        if (isNewline) {
           if (buffer) {
-            line.push({
-              node,
-              width: doc.widthOfString(buffer),
-              height: h,
-              font,
-              text: buffer,
-              style,
-            });
-            x += doc.widthOfString(buffer);
-            buffer = "";
+            const h = doc.currentLineHeight();
+            line.push({ node, width: w, height: h, font, text: buffer });
+            x += w;
           }
-          flushLine();
-        } else {
-          buffer += char;
+          break;
         }
-      }
-      if (buffer) {
-        const w = doc.widthOfString(buffer);
-        const h = doc.currentLineHeight();
-        line.push({ node, width: w, height: h, font, text: buffer, style });
-        x += w;
       }
     }
     if (line.length > 0) {
@@ -643,9 +664,7 @@ export async function mdastToPdf(
   };
 
   const listStack: number[] = [];
-  for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i]!;
-
+  for (const node of nodes) {
     switch (node.type) {
       case "paragraph": {
         if (node.list) {
@@ -661,23 +680,23 @@ export async function mdastToPdf(
           }
           const num = listStack[level]!;
 
-          renderInlines(
-            [
-              {
-                type: "text",
-                text:
-                  meta.type === "ordered"
-                    ? Decimal.renderMarker(num)
-                    : Disc.renderMarker(num),
-                style: (node.children[0]! as PdfText).style,
-              },
-              ...node.children,
-            ],
-            { indent: 10 * level },
-          );
+          const prevX = doc.x;
+          doc.x = doc.page.margins.left + 10 * level;
+          paintInlines([
+            {
+              type: "text",
+              text:
+                meta.type === "ordered"
+                  ? Decimal.renderMarker(num)
+                  : Disc.renderMarker(num),
+              style: (node.children[0]! as PdfText).style,
+            },
+            ...node.children,
+          ]);
+          doc.x = prevX;
         } else {
           listStack.splice(0);
-          renderInlines(node.children);
+          paintInlines(node.children);
         }
         if (spacing) {
           doc.moveDown(spacing);
@@ -687,7 +706,7 @@ export async function mdastToPdf(
       case "text":
       case "image": {
         // fallback to block
-        renderInlines([node]);
+        paintInlines([node]);
         break;
       }
       case "table": {
@@ -700,17 +719,12 @@ export async function mdastToPdf(
           let cellHeight = 0;
           for (let j = 0, x = startX; j < row.length; j++, x += cellWidth) {
             const cell = row[j]!;
-            renderInlines(
-              cell.children,
-              {
-                width: cellWidth - cellPadding * 2,
-                align: node.align?.[j] ?? "left",
-              },
-              {
-                x: x + cellPadding,
-                y: y + cellPadding * 2,
-              },
-            );
+            paintInlines(cell.children, {
+              x: x + cellPadding,
+              y: y + cellPadding * 2,
+              align: node.align?.[j] ?? "left",
+              width: cellWidth - cellPadding * 2,
+            });
             cellHeight = Math.max(cellHeight, doc.y - y);
           }
 
