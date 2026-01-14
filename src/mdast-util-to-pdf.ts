@@ -355,6 +355,17 @@ export async function mdastToPdf(
     inlineMath: fallbackText,
   };
 
+  const mergedDefaultStyle: TextStyle = {
+    font: defaultFontName,
+    fontSize: 12,
+    color: "black",
+    bold: false,
+    italic: false,
+    underline: false,
+    strike: false,
+    ...defaultStyle,
+  };
+
   const context: Context = {
     render(nodes, c) {
       const results: PdfLayout[] = [];
@@ -375,16 +386,7 @@ export async function mdastToPdf(
       }
       return results;
     },
-    style: {
-      font: defaultFontName,
-      fontSize: 12,
-      color: "black",
-      bold: false,
-      italic: false,
-      underline: false,
-      strike: false,
-      ...defaultStyle,
-    },
+    style: mergedDefaultStyle,
     textStyle,
     config: deepmerge<StyleOption>(
       {
@@ -479,16 +481,18 @@ export async function mdastToPdf(
   });
 
   const getPageMaxX = (): number => doc.page.width - doc.page.margins.right;
-  const getPageWidth = (): number =>
+  const getContentWidth = (): number =>
     doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  const getContentHeight = (): number =>
+    doc.page.height - doc.page.margins.top - doc.page.margins.bottom;
 
   const paintInlines = (
     nodes: readonly PdfLayout[],
     block?: { x?: number; y?: number; align?: Alignment; width?: number },
   ) => {
     const items = nodes.filter((n) => n.type === "text" || n.type === "image");
-    const startX = typeof block?.x === "number" ? block.x : doc.x;
-    const startY = typeof block?.y === "number" ? block.y : doc.y;
+    const startX = block?.x ?? doc.x;
+    const startY = block?.y ?? doc.y;
     let x = startX;
     let y = startY;
     let line: {
@@ -521,7 +525,7 @@ export async function mdastToPdf(
         maxHeight = doc.currentLineHeight();
       } else {
         for (const item of line) {
-          if (item.height > maxHeight) maxHeight = item.height;
+          maxHeight = Math.max(maxHeight, item.height);
         }
       }
       for (const item of line) {
@@ -551,6 +555,10 @@ export async function mdastToPdf(
         }
       }
       y += maxHeight;
+      if (y > getContentHeight()) {
+        y = doc.page.margins.top;
+        doc.addPage();
+      }
       x = startX;
       line = [];
     };
@@ -560,9 +568,9 @@ export async function mdastToPdf(
         case "image": {
           let { width, height } = node.data;
 
-          const pageWidth = getPageWidth();
-          if (width > pageWidth) {
-            const scale = pageWidth / width;
+          const contentWidth = getContentWidth();
+          if (width > contentWidth) {
+            const scale = contentWidth / width;
             width *= scale;
             height *= scale;
           }
@@ -604,13 +612,12 @@ export async function mdastToPdf(
           for (const char of Array.from(node.text)) {
             const isNewline = char === "\n";
             const charWidth = textWidth(char);
-            const h = doc.currentLineHeight();
-            if (!isNewline && w + charWidth > wrapWidth) {
+            if (isNewline || w + charWidth > wrapWidth) {
               if (buffer) {
                 line.push({
                   node,
                   width: w,
-                  height: h,
+                  height: doc.currentLineHeight(),
                   font,
                   text: buffer,
                 });
@@ -620,28 +627,19 @@ export async function mdastToPdf(
               }
               flushLine();
             }
-            if (isNewline) {
-              if (buffer) {
-                line.push({
-                  node,
-                  width: w,
-                  height: h,
-                  font,
-                  text: buffer,
-                });
-                x += w;
-                buffer = "";
-                w = 0;
-              }
-              flushLine();
-            } else {
+            if (!isNewline) {
               buffer += char;
               w += charWidth;
             }
           }
           if (buffer) {
-            const h = doc.currentLineHeight();
-            line.push({ node, width: w, height: h, font, text: buffer });
+            line.push({
+              node,
+              width: w,
+              height: doc.currentLineHeight(),
+              font,
+              text: buffer,
+            });
             x += w;
           }
           break;
@@ -676,6 +674,8 @@ export async function mdastToPdf(
 
           const prevX = doc.x;
           doc.x = doc.page.margins.left + 10 * level;
+          // TODO inherit from parent block
+          const bulletStyle = (node.children[0]! as PdfText).style;
           paintInlines([
             {
               type: "text",
@@ -683,7 +683,10 @@ export async function mdastToPdf(
                 meta.type === "ordered"
                   ? Decimal.renderMarker(num)
                   : Disc.renderMarker(num),
-              style: (node.children[0]! as PdfText).style,
+              style: {
+                ...mergedDefaultStyle,
+                fontSize: bulletStyle.fontSize,
+              },
             },
             ...node.children,
           ]);
@@ -704,8 +707,8 @@ export async function mdastToPdf(
         break;
       }
       case "table": {
-        const pageWidth = getPageWidth();
-        const cellWidth = pageWidth / node.cells[0]!.length;
+        const contentWidth = getContentWidth();
+        const cellWidth = contentWidth / node.cells[0]!.length;
         const cellPadding = 2;
         const startX = doc.x;
         let y = doc.y;
