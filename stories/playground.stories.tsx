@@ -67,6 +67,7 @@ const toPdfProcessor = unified()
   .use(gfm)
   .use(frontmatter)
   .use(pdf, {
+    spacing: 0.25,
     styles: {
       head1: {
         fontSize: 25,
