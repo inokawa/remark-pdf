@@ -1,5 +1,7 @@
 import type * as mdast from "mdast";
 import PDFDocument from "pdfkit";
+// @ts-expect-error
+import SVGtoPDF from "svg-to-pdfkit";
 import Decimal from "@jsamr/counter-style/presets/decimal";
 import Disc from "@jsamr/counter-style/presets/disc";
 import { definitions, type GetDefinition } from "mdast-util-definitions";
@@ -113,11 +115,21 @@ interface StyleOption {
   head6: Partial<TextStyle>;
 }
 
-export type PdfImageData = Readonly<{
-  data: ArrayBuffer;
-  width: number;
-  height: number;
-}>;
+export type PdfImageData = Readonly<
+  {
+    width: number;
+    height: number;
+  } & (
+    | {
+        type: "png" | "jpg";
+        data: ArrayBuffer;
+      }
+    | {
+        type: "svg";
+        data: string;
+      }
+  )
+>;
 
 type Context = Readonly<{
   render: (node: readonly mdast.RootContent[], ctx?: Context) => PdfLayout[];
@@ -282,7 +294,14 @@ export async function mdastToPdf(
 
             const { type, width, height } = imageSize(new Uint8Array(data));
             if (type === "png" || type === "jpg") {
-              images.set(url, { data, width, height });
+              images.set(url, { type, data, width, height });
+            } else if (type === "svg") {
+              images.set(url, {
+                type,
+                data: new TextDecoder().decode(data),
+                width,
+                height,
+              });
             } else {
               warnOnce(`Not supported image type: ${type}`);
             }
@@ -468,6 +487,10 @@ export async function mdastToPdf(
     chunks.push(chunk);
   });
 
+  const getPageMaxX = (): number => doc.page.width - doc.page.margins.right;
+  const getPageWidth = (): number =>
+    doc.page.width - doc.page.margins.left - doc.page.margins.right;
+
   const renderInlines = (
     nodes: readonly PdfLayout[],
     opts?: { width?: number; align?: Alignment; indent?: number },
@@ -503,10 +526,17 @@ export async function mdastToPdf(
       }
       for (const item of line) {
         if (item.node.type === "image") {
-          doc.image(item.node.data.data, cursorX, y, {
-            width: item.width,
-            height: item.height,
-          });
+          if (item.node.data.type === "svg") {
+            SVGtoPDF(doc, item.node.data.data, cursorX, y, {
+              width: item.width,
+              height: item.height,
+            });
+          } else {
+            doc.image(item.node.data.data, cursorX, y, {
+              width: item.width,
+              height: item.height,
+            });
+          }
           cursorX += item.width;
         } else {
           const style = item.style!;
@@ -527,8 +557,15 @@ export async function mdastToPdf(
 
     for (const node of items) {
       if (node.type === "image") {
-        const { width, height } = node.data;
-        if (x + width > doc.page.width - doc.page.margins.right) {
+        let { width, height } = node.data;
+
+        const pageWidth = getPageWidth();
+        if (width > pageWidth) {
+          const scale = pageWidth / width;
+          width *= scale;
+          height *= scale;
+        }
+        if (x + width > pageWidth) {
           flushLine();
         }
         line.push({ node, width, height });
@@ -556,7 +593,7 @@ export async function mdastToPdf(
         const testStr = buffer + char;
         const w = doc.widthOfString(testStr);
         const h = doc.currentLineHeight();
-        if (!isNewline && x + w > doc.page.width - doc.page.margins.right) {
+        if (!isNewline && x + w > getPageMaxX()) {
           if (buffer) {
             line.push({
               node,
@@ -654,8 +691,7 @@ export async function mdastToPdf(
         break;
       }
       case "table": {
-        const pageWidth =
-          doc.page.width - doc.page.margins.left - doc.page.margins.right;
+        const pageWidth = getPageWidth();
         const cellWidth = pageWidth / node.cells[0]!.length;
         const cellPadding = 2;
         const startX = doc.x;

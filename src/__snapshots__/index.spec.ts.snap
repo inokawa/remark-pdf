@@ -377,6 +377,11 @@ se cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 ulpa qui officia deserunt mollit anim id est laborum."
 `;
 
+exports[`e2e > svg 2`] = `
+"svg
+test"
+`;
+
 exports[`e2e > tag 2`] = `
 "<div>
 <span>This is <b>html</b></span> inside <u>docx</u>.
