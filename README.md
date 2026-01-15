@@ -6,6 +6,8 @@
 
 - Uses [pdfkit](https://github.com/foliojs/pdfkit) for compilation, to avoid issues with puppeteer or headless chromium.
 - Works in any environment (e.g. browser, Node.js).
+- Generates [PDF/A-3A](https://en.wikipedia.org/wiki/PDF/A) compliant document for accessibility.
+- Supports configuration of page layout, fonts and styles.
 
 ### Supported [mdast](https://github.com/syntax-tree/mdast) nodes
 
@@ -83,7 +85,7 @@ const text = "# hello world";
 
 #### Example: Custom fonts
 
-Use custom fonts in Node by providing a `fonts` object to configuration. Use the fonts by name in your `styles` configurations; the font file will be autoselected based on the chosen `bold` and `italic` style specifications.
+Use custom fonts by providing a `fonts` option. Use the fonts by name in your `styles` configurations; the font file will be autoselected based on the chosen `bold` and `italic` style specifications.
 
 Note that variable-width fonts are supported, but the path to the same font file must be supplied for all four font variant styles.
 
