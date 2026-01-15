@@ -9,6 +9,8 @@ import deepmerge from "deepmerge";
 import { warnOnce } from "./utils";
 import imageSize from "image-size";
 import { visit } from "unist-util-visit";
+// @ts-expect-error
+import LineBreaker from "linebreak";
 
 type KnownNodeType = mdast.RootContent["type"];
 
@@ -567,7 +569,6 @@ export async function mdastToPdf(
       switch (node.type) {
         case "image": {
           let { width, height } = node.data;
-
           const contentWidth = getContentWidth();
           if (width > contentWidth) {
             const scale = contentWidth / width;
@@ -588,11 +589,10 @@ export async function mdastToPdf(
           break;
         }
         case "text": {
-          const style = node.style;
+          const { style, text } = node;
           if (!style.fontSize) {
             continue;
           }
-
           let targetFont = fontMap.get(style.font);
           if (!targetFont) {
             targetFont = fontMap.get(defaultFontName)!;
@@ -606,18 +606,97 @@ export async function mdastToPdf(
             font = targetFont.italic;
           }
           doc.font(font).fontSize(style.fontSize);
-
+          const lineHeight = doc.currentLineHeight();
+          const breaker = new LineBreaker(text);
+          const words: { word: string; required: boolean }[] = [];
+          let last = 0;
+          let bk;
+          while ((bk = breaker.nextBreak())) {
+            words.push({
+              word: text.slice(last, bk.position),
+              required: bk.required,
+            });
+            last = bk.position;
+          }
           let buffer = "";
           let w = 0;
-          for (const char of Array.from(node.text)) {
-            const isNewline = char === "\n";
-            const charWidth = textWidth(char);
-            if (isNewline || w + charWidth > wrapWidth) {
+          for (const { word, required } of words) {
+            if (word === "\n") {
               if (buffer) {
                 line.push({
                   node,
                   width: w,
-                  height: doc.currentLineHeight(),
+                  height: lineHeight,
+                  font,
+                  text: buffer,
+                });
+                x += w;
+                buffer = "";
+                w = 0;
+              }
+              flushLine();
+              continue;
+            }
+            const wordWidth = textWidth(word);
+            if (wordWidth > wrapWidth) {
+              let i = 0;
+              while (i < word.length) {
+                let l = 1;
+                let chunk = word[i]!;
+                while (
+                  i + l <= word.length &&
+                  textWidth(word.slice(i, i + l)) <= wrapWidth
+                ) {
+                  chunk = word.slice(i, i + l);
+                  l++;
+                }
+                if (buffer) {
+                  line.push({
+                    node,
+                    width: w,
+                    height: lineHeight,
+                    font,
+                    text: buffer,
+                  });
+                  x += w;
+                  buffer = "";
+                  w = 0;
+                  flushLine();
+                }
+                line.push({
+                  node,
+                  width: textWidth(chunk),
+                  height: lineHeight,
+                  font,
+                  text: chunk,
+                });
+                x += textWidth(chunk);
+                flushLine();
+                i += chunk.length;
+              }
+              continue;
+            }
+            if (x + w + wordWidth > startX + wrapWidth && buffer) {
+              line.push({
+                node,
+                width: w,
+                height: lineHeight,
+                font,
+                text: buffer,
+              });
+              x += w;
+              buffer = "";
+              w = 0;
+              flushLine();
+            }
+            buffer += word;
+            w += wordWidth;
+            if (required) {
+              if (buffer) {
+                line.push({
+                  node,
+                  width: w,
+                  height: lineHeight,
                   font,
                   text: buffer,
                 });
@@ -627,16 +706,12 @@ export async function mdastToPdf(
               }
               flushLine();
             }
-            if (!isNewline) {
-              buffer += char;
-              w += charWidth;
-            }
           }
           if (buffer) {
             line.push({
               node,
               width: w,
-              height: doc.currentLineHeight(),
+              height: lineHeight,
               font,
               text: buffer,
             });

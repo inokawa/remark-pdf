@@ -186,8 +186,8 @@ exports[`e2e > image 2`] = `"This is ."`;
 
 exports[`e2e > latex 2`] = `
 "https://mathjax.github.io/MathJax-demos-web/page/tex-chtml.html
-When a \\ne 0, there are two solutions to ax^2 + bx + c = 0 and they are
-x = {-b \\pm \\sqrt{b^2-4ac} \\over 2a}.
+When a \\ne 0, there are two solutions to ax^2 + bx + c = 0 and they arex = {-b \\pm \\sqrt{b^2-4ac}
+\\over 2a}.
 The Lorenz Equations
 \\begin{align}
 \\dot{x} & = \\sigma(y-x) \\\\
@@ -324,11 +324,11 @@ Another separate list:
 `;
 
 exports[`e2e > lorem 2`] = `
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labo
-re et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris ni
-si ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit es
-se cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in c
-ulpa qui officia deserunt mollit anim id est laborum."
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 `;
 
 exports[`e2e > makurano 2`] = `
@@ -336,9 +336,9 @@ exports[`e2e > makurano 2`] = `
 なびきたる。
 夏は、夜。月のころはさらなり。闇もなほ、蛍の多く飛びちがひたる。また、ただ一つ二つな
 ど、ほのかにうち光りて行くも、をかし。雨など降るも、をかし。
-秋は、夕暮。夕日のさして、山の端いと近うなりたるに、烏の寝どころへ行くとて、三つ四つ
-、二つ三つなど、飛びいそぐさへあはれなり。まいて、雁などのつらねたるが、いと小さく見
-ゆるは、いとをかし。日入りはてて、風の音、虫の音など、はた、言ふべきにあらず。
+秋は、夕暮。夕日のさして、山の端いと近うなりたるに、烏の寝どころへ行くとて、三つ四
+つ、二つ三つなど、飛びいそぐさへあはれなり。まいて、雁などのつらねたるが、いと小さく
+見ゆるは、いとをかし。日入りはてて、風の音、虫の音など、はた、言ふべきにあらず。
 冬は、つとめて。雪の降りたるは、言ふべきにもあらず。霜のいと白きも。またさらでも、い
 と寒きに、火など急ぎおこして、炭持てわたるも、いとつきづきし。昼になりて、ぬるくゆる
 びもていけば、火桶の火も、白き灰がちになりて、わろし。"
@@ -353,28 +353,28 @@ i hbar \\frac{partial psi}{partial t} = H psi(x,t)
 \\frac{a+b}{c+d}
 \\sqrt[30]{a+\\sqrt{b+c}}
 \\sum_{k=1}^{n} k=\\frac{n(n+1)}{2}
-\\alpha\\beta\\gamma\\delta\\epsilon\\zeta\\eta\\theta\\iota\\kappa\\lambda\\mu\\nu\\xi o\\pi\\rho\\sigma\\tau\\u
-psilon\\phi\\chi\\psi\\omega
+\\alpha\\beta\\gamma\\delta\\epsilon\\zeta\\eta\\theta\\iota\\kappa\\lambda\\mu\\nu\\xi
+o\\pi\\rho\\sigma\\tau\\upsilon\\phi\\chi\\psi\\omega
 \\varepsilon\\vartheta\\varrho\\varsigma\\varphi
 \\Gamma\\Delta\\Theta\\Lambda\\Xi\\Pi\\Sigma\\Upsilon\\Phi\\Psi\\Omega"
 `;
 
 exports[`e2e > paragraph 2`] = `
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labo
-re et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris ni
-si ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit es
-se cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in c
-ulpa qui officia deserunt mollit anim id est laborum.
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labo
-re et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris ni
-si ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit es
-se cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in c
-ulpa qui officia deserunt mollit anim id est laborum.
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labo
-re et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris ni
-si ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit es
-se cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in c
-ulpa qui officia deserunt mollit anim id est laborum."
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 `;
 
 exports[`e2e > svg 2`] = `
