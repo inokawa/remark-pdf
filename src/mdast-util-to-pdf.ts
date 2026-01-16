@@ -482,10 +482,12 @@ export async function mdastToPdf(
     chunks.push(chunk);
   });
 
-  const getContentWidth = (): number =>
+  const contentWidth =
     doc.page.width - doc.page.margins.left - doc.page.margins.right;
-  const getContentHeight = (): number =>
+  const contentHeight =
     doc.page.height - doc.page.margins.top - doc.page.margins.bottom;
+  const contentTop = doc.page.margins.top;
+  const contentLeft = doc.page.margins.left;
 
   const paintInlines = (
     nodes: readonly PdfLayout[],
@@ -563,8 +565,8 @@ export async function mdastToPdf(
         }
       }
       y += maxHeight;
-      if (y > getContentHeight()) {
-        y = doc.page.margins.top;
+      if (y > contentHeight) {
+        y = contentTop;
         doc.addPage();
       }
       x = startX;
@@ -719,7 +721,7 @@ export async function mdastToPdf(
           const num = listStack[level]!;
 
           const prevX = doc.x;
-          doc.x = doc.page.margins.left + 10 * level;
+          doc.x = contentLeft + 10 * level;
           // TODO inherit from parent block
           const bulletStyle = (node.children[0]! as PdfText).style;
           paintInlines(
@@ -737,7 +739,7 @@ export async function mdastToPdf(
               },
               ...node.children,
             ],
-            { x: doc.x, y: doc.y, width: getContentWidth() },
+            { x: doc.x, y: doc.y, width: contentWidth },
           );
           doc.x = prevX;
         } else {
@@ -745,7 +747,7 @@ export async function mdastToPdf(
           paintInlines(node.children, {
             x: doc.x,
             y: doc.y,
-            width: getContentWidth(),
+            width: contentWidth,
           });
         }
         if (spacing) {
@@ -756,11 +758,10 @@ export async function mdastToPdf(
       case "text":
       case "image": {
         // fallback to block
-        paintInlines([node], { x: doc.x, y: doc.y, width: getContentWidth() });
+        paintInlines([node], { x: doc.x, y: doc.y, width: contentWidth });
         break;
       }
       case "table": {
-        const contentWidth = getContentWidth();
         const cellWidth = contentWidth / node.cells[0]!.length;
         const cellPadding = 2;
         const startX = doc.x;
