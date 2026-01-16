@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import fs from "fs/promises";
+import * as fs from "fs/promises";
 import path from "path";
 import { unified } from "unified";
 import markdown from "remark-parse";
@@ -12,6 +12,7 @@ import { toMatchImageSnapshot } from "jest-image-snapshot";
 import * as pdfjsLib from "pdfjs-dist";
 
 const FIXTURE_PATH = "../fixtures";
+const fixturesDir = path.join(__dirname, FIXTURE_PATH);
 
 expect.extend({ toMatchImageSnapshot });
 
@@ -43,6 +44,17 @@ const getPdfText = async (buffer: ArrayBuffer): Promise<string> => {
   ).join("\n");
 };
 
+const loaded = new Map<string, ArrayBuffer>();
+const dummyImage = async (url: string): Promise<ArrayBuffer> => {
+  if (loaded.has(url)) {
+    return loaded.get(url)!;
+  }
+
+  const img = await fs.readFile(path.join(fixturesDir, "images/img.png"));
+
+  return img.buffer;
+};
+
 describe("e2e", () => {
   const processor = (options: PdfOptions = {}) => {
     return unified()
@@ -50,10 +62,8 @@ describe("e2e", () => {
       .use(gfm)
       .use(frontmatter, ["yaml", "toml"])
       .use(math)
-      .use(pdf, options);
+      .use(pdf, { loadImage: dummyImage, ...options });
   };
-
-  const fixturesDir = path.join(__dirname, FIXTURE_PATH);
 
   it("article", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "article.md"));
@@ -76,8 +86,13 @@ describe("e2e", () => {
   });
 
   it("makurano", async () => {
+    const font = await fs.readFile(
+      path.join(fixturesDir, "fonts/ipaexg00401/ipaexg.ttf"),
+    );
     const md = await fs.readFile(path.join(fixturesDir, "makurano.md"));
-    const doc = await processor().process(md);
+    const doc = await processor({
+      fonts: [{ name: "ipa", normal: font }],
+    }).process(md);
     const generated = await doc.result;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
@@ -148,6 +163,22 @@ describe("e2e", () => {
   it("image", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "image.md"));
     const doc = await processor().process(md);
+    const generated = await doc.result;
+    for await (const page of await pdfToImage(Buffer.from(generated))) {
+      expect(page).toMatchImageSnapshot();
+    }
+    expect(await getPdfText(generated)).toMatchSnapshot();
+  });
+
+  it("svg", async () => {
+    const doc = await processor({
+      loadImage: async () => {
+        const img = await fs.readFile(
+          path.join(fixturesDir, "images/tiger.svg"),
+        );
+        return img.buffer;
+      },
+    }).process(`svg ![tiger](image.svg) test`);
     const generated = await doc.result;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
@@ -237,9 +268,9 @@ describe("e2e", () => {
 
   it("text-emojis", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "text-emojis.md"));
-    const doc = await processor({ styles: { emoji: { fontSize: 0 } } }).process(
-      md,
-    );
+    const doc = await processor({
+      textStyle: [[/\p{Extended_Pictographic}/gu, { fontSize: 0 }]],
+    }).process(md);
     const generated = await doc.result;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();

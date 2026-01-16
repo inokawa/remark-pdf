@@ -14,6 +14,28 @@
       "default": "./lib/index.js"
     }
   },
+  "imports": {
+    "#buffer": {
+      "node": "./lib/shim/buffer/node.js",
+      "default": "./lib/shim/buffer/browser.js"
+    },
+    "#events": {
+      "node": "./lib/shim/events/node.js",
+      "default": "./lib/shim/events/browser.js"
+    },
+    "#fs": {
+      "node": "./lib/shim/fs/node.js",
+      "default": "./lib/shim/fs/browser.js"
+    },
+    "#stream": {
+      "node": "./lib/shim/stream/node.js",
+      "default": "./lib/shim/stream/browser.js"
+    },
+    "#zlib": {
+      "node": "./lib/shim/zlib/node.js",
+      "default": "./lib/shim/zlib/browser.js"
+    }
+  },
   "files": [
     "lib"
   ],
@@ -27,18 +49,36 @@
     "prepublishOnly": "npm run typedoc && rimraf lib && npm run build"
   },
   "dependencies": {
-    "@types/pdfmake": "^0.2.12",
+    "@jsamr/counter-style": "^2.0.2",
+    "buffer": "^6.0.3",
+    "crypto-js": "^4.2.0",
+    "deepmerge": "^4.3.1",
+    "events": "^3.3.0",
+    "fontkit": "^2.0.4",
+    "image-size": "^2.0.2",
+    "jpeg-exif": "^1.1.4",
+    "linebreak": "^1.1.0",
     "mdast-util-definitions": "^6.0.0",
-    "pdfmake": "^0.2.20",
+    "pako": "^2.1.0",
+    "png-js": "^1.0.0",
+    "readable-stream": "^4.7.0",
+    "svg-to-pdfkit": "^0.1.8",
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
+    "@rollup/plugin-alias": "^6.0.0",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-typescript": "^12.0.0",
     "@storybook/react-vite": "10.1.11",
+    "@types/deepmerge": "^2.1.0",
     "@types/file-saver": "^2.0.7",
     "@types/jest-image-snapshot": "^6.4.0",
     "@types/lodash.debounce": "^4.0.9",
     "@types/mdast": "^4.0.3",
+    "@types/node": "^25.0.6",
+    "@types/pdfkit": "^0.17.4",
     "@types/react": "^19.2.7",
     "@types/unist": "^3.0.0",
     "file-saver": "^2.0.5",
@@ -47,6 +87,7 @@
     "lodash.debounce": "^4.0.8",
     "pdf-to-img": "^5.0.0",
     "pdfjs-dist": "^5.4.296",
+    "pdfkit": "0.17.2",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-is": "^19.2.1",
