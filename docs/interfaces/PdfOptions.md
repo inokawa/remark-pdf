@@ -4,207 +4,125 @@
 
 # Interface: PdfOptions
 
-Defined in: [src/mdast-util-to-pdf.ts:71](https://github.com/inokawa/remark-pdf/blob/9bbda8ce019f1389f0ea48090834d799b653c423/src/mdast-util-to-pdf.ts#L71)
-
-## Extends
-
-- `Pick`\<`TDocumentDefinitions`, `"defaultStyle"` \| `"pageMargins"` \| `"pageOrientation"` \| `"pageSize"` \| `"userPassword"` \| `"ownerPassword"` \| `"permissions"` \| `"version"` \| `"styles"` \| `"watermark"`\>
+Defined in: [mdast-util-to-pdf.ts:184](https://github.com/inokawa/remark-pdf/blob/01dbabfabfa967a3a1e956bb133f1e1224ed503d/src/mdast-util-to-pdf.ts#L184)
 
 ## Properties
 
-### info?
-
-> `optional` **info**: `TDocumentInformation`
-
-Defined in: [src/mdast-util-to-pdf.ts:84](https://github.com/inokawa/remark-pdf/blob/9bbda8ce019f1389f0ea48090834d799b653c423/src/mdast-util-to-pdf.ts#L84)
-
-***
-
 ### fonts?
 
-> `optional` **fonts**: `TFontDictionary`
+> `optional` **fonts**: (`StandardFontType` \| `CustomFont`)[]
 
-Defined in: [src/mdast-util-to-pdf.ts:85](https://github.com/inokawa/remark-pdf/blob/9bbda8ce019f1389f0ea48090834d799b653c423/src/mdast-util-to-pdf.ts#L85)
+Defined in: [mdast-util-to-pdf.ts:189](https://github.com/inokawa/remark-pdf/blob/01dbabfabfa967a3a1e956bb133f1e1224ed503d/src/mdast-util-to-pdf.ts#L189)
 
-***
+Standard fonts or privided custom fonts.
 
-### preventOrphans?
+#### Default
 
-> `optional` **preventOrphans**: `boolean`
-
-Defined in: [src/mdast-util-to-pdf.ts:86](https://github.com/inokawa/remark-pdf/blob/9bbda8ce019f1389f0ea48090834d799b653c423/src/mdast-util-to-pdf.ts#L86)
-
-***
-
-### defaultStyle?
-
-> `optional` **defaultStyle**: `Style`
-
-Defined in: node\_modules/@types/pdfmake/interfaces.d.ts:2025
-
-Default styles that apply to the complete document.
-
-#### Inherited from
-
-`Pick.defaultStyle`
+```ts
+"Helvetica"
+```
 
 ***
 
-### pageMargins?
+### size?
 
-> `optional` **pageMargins**: `Margins`
+> `optional` **size**: `"A0"` \| `"A1"` \| `"A2"` \| `"A3"` \| `"A4"` \| `"A5"` \| `"A6"` \| `"A7"` \| `"A8"` \| `"A9"` \| `"A10"` \| `"B0"` \| `"B1"` \| `"B2"` \| `"B3"` \| `"B4"` \| `"B5"` \| `"B6"` \| `"B7"` \| `"B8"` \| `"B9"` \| `"B10"` \| `"C0"` \| `"C1"` \| `"C2"` \| `"C3"` \| `"C4"` \| `"C5"` \| `"C6"` \| `"C7"` \| `"C8"` \| `"C9"` \| `"C10"`
 
-Defined in: node\_modules/@types/pdfmake/interfaces.d.ts:2094
+Defined in: [mdast-util-to-pdf.ts:195](https://github.com/inokawa/remark-pdf/blob/01dbabfabfa967a3a1e956bb133f1e1224ed503d/src/mdast-util-to-pdf.ts#L195)
 
-Margins around the content on each page.
+Page size.
+https://pdfkit.org/docs/paper_sizes.html
 
-If a header or footer is specified, the page margins must
-leave sufficient room for it to be rendered at all.
+#### Default
 
-Defaults to `40`.
-
-#### Inherited from
-
-`Pick.pageMargins`
+```ts
+A4
+```
 
 ***
 
-### pageOrientation?
+### margin?
 
-> `optional` **pageOrientation**: `PageOrientation`
+> `optional` **margin**: `number` \| \{ `top?`: `number`; `left?`: `number`; `bottom?`: `number`; `right?`: `number`; \}
 
-Defined in: node\_modules/@types/pdfmake/interfaces.d.ts:2102
+Defined in: [mdast-util-to-pdf.ts:233](https://github.com/inokawa/remark-pdf/blob/01dbabfabfa967a3a1e956bb133f1e1224ed503d/src/mdast-util-to-pdf.ts#L233)
 
-Orientation of the document's pages.
+Page margin.
 
-Defaults to `portrait` for standard page sizes; if a custom [pageSize](#pagesize) is given,
-it defaults to the orientation set through its width and height.
+#### Default
 
-#### Inherited from
-
-`Pick.pageOrientation`
-
-***
-
-### pageSize?
-
-> `optional` **pageSize**: `PageSize`
-
-Defined in: node\_modules/@types/pdfmake/interfaces.d.ts:2109
-
-Size of the document's pages.
-
-Defaults to `A4`.
-
-#### Inherited from
-
-`Pick.pageSize`
+```ts
+40
+```
 
 ***
 
-### userPassword?
+### orientation?
 
-> `optional` **userPassword**: `string`
+> `optional` **orientation**: `"portrait"` \| `"landscape"`
 
-Defined in: node\_modules/@types/pdfmake/interfaces.d.ts:2126
+Defined in: [mdast-util-to-pdf.ts:240](https://github.com/inokawa/remark-pdf/blob/01dbabfabfa967a3a1e956bb133f1e1224ed503d/src/mdast-util-to-pdf.ts#L240)
 
-Password required to open the document.
+Page orientation.
 
-If set, the document is encrypted.
-Setting the [version](#version) influences the encryption method used.
+#### Default
 
-An empty string is treated as "no password".
-
-#### Inherited from
-
-`Pick.userPassword`
+```ts
+"portrait"
+```
 
 ***
 
-### ownerPassword?
+### spacing?
 
-> `optional` **ownerPassword**: `string`
+> `optional` **spacing**: `number`
 
-Defined in: node\_modules/@types/pdfmake/interfaces.d.ts:2137
+Defined in: [mdast-util-to-pdf.ts:245](https://github.com/inokawa/remark-pdf/blob/01dbabfabfa967a3a1e956bb133f1e1224ed503d/src/mdast-util-to-pdf.ts#L245)
 
-Password required to get full access to the document.
+Spacing after Paragraphs.
 
-Use in combination with [permissions](#permissions).
+#### Default
 
-An empty string is treated as "no password".
-
-Does not encrypt the document; use [userPassword](#userpassword) for that.
-
-#### Inherited from
-
-`Pick.ownerPassword`
-
-***
-
-### permissions?
-
-> `optional` **permissions**: `DocumentPermissions`
-
-Defined in: node\_modules/@types/pdfmake/interfaces.d.ts:2149
-
-Permissions for accessing or modifying the document in different ways.
-
-The PDF file cannot enforce these permissions by itself.
-It relies on PDF viewer applications to respect them.
-
-Only relevant if [ownerPassword](#ownerpassword) is set.
-
-Defaults to `{}` (everything is forbidden)
-
-#### Inherited from
-
-`Pick.permissions`
-
-***
-
-### version?
-
-> `optional` **version**: `PDFVersion`
-
-Defined in: node\_modules/@types/pdfmake/interfaces.d.ts:2159
-
-Version of the PDF specification the document is created with.
-
-Influences the encryption method used in combination with [userPassword](#userpassword).
-The PDF content is always created with version 1.3.
-
-Defaults to `1.3`.
-
-#### Inherited from
-
-`Pick.version`
+```ts
+undefined
+```
 
 ***
 
 ### styles?
 
-> `optional` **styles**: `StyleDictionary`
+> `optional` **styles**: `Partial`\<`StyleOption`\> & `object`
 
-Defined in: node\_modules/@types/pdfmake/interfaces.d.ts:2116
+Defined in: [mdast-util-to-pdf.ts:249](https://github.com/inokawa/remark-pdf/blob/01dbabfabfa967a3a1e956bb133f1e1224ed503d/src/mdast-util-to-pdf.ts#L249)
 
-Dictionary for reusable styles to be referenced by their key throughout the document.
+Styles that override the defaults.
 
-To define styles that should apply by default, use defaultStyles instead.
+#### Type Declaration
 
-#### Inherited from
+##### default?
 
-`Pick.styles`
+> `optional` **default**: `Partial`\<`TextStyle`\>
 
 ***
 
-### watermark?
+### textStyle?
 
-> `optional` **watermark**: `string` \| `Watermark`
+> `optional` **textStyle**: `TextStyleMatcher`[]
 
-Defined in: node\_modules/@types/pdfmake/interfaces.d.ts:2183
+Defined in: [mdast-util-to-pdf.ts:253](https://github.com/inokawa/remark-pdf/blob/01dbabfabfa967a3a1e956bb133f1e1224ed503d/src/mdast-util-to-pdf.ts#L253)
 
-Watermark that is rendered on top of each page.
+An option to find text and apply style (e.g. font to emoji)
 
-#### Inherited from
+***
 
-`Pick.watermark`
+### loadImage?
+
+> `optional` **loadImage**: `LoadImageFn`
+
+Defined in: [mdast-util-to-pdf.ts:258](https://github.com/inokawa/remark-pdf/blob/01dbabfabfa967a3a1e956bb133f1e1224ed503d/src/mdast-util-to-pdf.ts#L258)
+
+A function to resolve image data from url.
+
+#### Default
+
+loadWithFetch

@@ -6,4 +6,4 @@
 
 > `const` **default**: `Plugin`\<\[[`PdfOptions`](../interfaces/PdfOptions.md)?\], `Root`, `Promise`\<`ArrayBuffer`\>\>
 
-Defined in: [src/plugin.ts:15](https://github.com/inokawa/remark-pdf/blob/9bbda8ce019f1389f0ea48090834d799b653c423/src/plugin.ts#L15)
+Defined in: [plugin.ts:14](https://github.com/inokawa/remark-pdf/blob/01dbabfabfa967a3a1e956bb133f1e1224ed503d/src/plugin.ts#L14)

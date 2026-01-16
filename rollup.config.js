@@ -113,12 +113,12 @@ export default [
         ]),
     ),
     output: [
-      {
-        dir: publishDir,
-        format: "cjs",
-        sourcemap: true,
-        entryFileNames: '[name].cjs',
-      },
+      // {
+      //   dir: publishDir,
+      //   format: "cjs",
+      //   sourcemap: true,
+      //   entryFileNames: '[name].cjs',
+      // },
       {
         dir: publishDir,
         format: "es",
