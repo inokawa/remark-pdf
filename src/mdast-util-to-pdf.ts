@@ -579,14 +579,11 @@ export async function mdastToPdf(
             width *= scale;
             height *= scale;
           }
-          if (width >= wrapWidth || x + width > startX + wrapWidth) {
-            if (line.length > 0) flushLine();
+          if (x + width > startX + wrapWidth) {
+            if (line.length) flushLine();
             line.push({ node, width, height });
             flushLine();
           } else {
-            if (x + width > startX + wrapWidth) {
-              flushLine();
-            }
             line.push({ node, width, height });
             x += width;
           }
