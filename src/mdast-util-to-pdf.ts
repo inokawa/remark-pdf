@@ -522,21 +522,18 @@ export async function mdastToPdf(
 
     const flushLine = () => {
       const lineWidth = line.reduce((acc, i) => acc + i.width, 0);
+      const maxHeight =
+        line.length === 0
+          ? doc.currentLineHeight()
+          : line.reduce((acc, i) => Math.max(acc, i.height), 0);
 
       let cursorX = startX;
       if (align === "center") {
-        cursorX = startX + (wrapWidth - lineWidth) / 2;
+        cursorX += (wrapWidth - lineWidth) / 2;
       } else if (align === "right") {
-        cursorX = startX + (wrapWidth - lineWidth);
+        cursorX += wrapWidth - lineWidth;
       }
-      let maxHeight = 0;
-      if (line.length === 0) {
-        maxHeight = doc.currentLineHeight();
-      } else {
-        for (const item of line) {
-          maxHeight = Math.max(maxHeight, item.height);
-        }
-      }
+
       for (const item of line) {
         if ("text" in item) {
           const style = item.node.style;
