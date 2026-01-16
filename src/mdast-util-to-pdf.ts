@@ -51,8 +51,8 @@ type Alignment = "left" | "right" | "center";
 
 export type TextStyleMatcher = [pattern: RegExp, style: Partial<TextStyle>];
 
-interface PdfParagraph {
-  type: "paragraph";
+interface PdfBlock {
+  type: "block";
   list?: ListContext;
   children: PdfLayout[];
 }
@@ -79,7 +79,7 @@ interface PdfImage {
   data: PdfImageData;
 }
 
-type PdfLayout = PdfParagraph | PdfPageBreak | PdfTable | PdfText | PdfImage;
+type PdfLayout = PdfBlock | PdfPageBreak | PdfTable | PdfText | PdfImage;
 
 type ListContext = Readonly<{
   level: number;
@@ -697,7 +697,7 @@ export async function mdastToPdf(
   const listStack: number[] = [];
   for (const node of nodes) {
     switch (node.type) {
-      case "paragraph": {
+      case "block": {
         if (node.list) {
           const { level, meta } = node.list;
           while (listStack.length > level + 1) {
@@ -801,7 +801,7 @@ export async function mdastToPdf(
 
 const buildParagraph: NodeBuilder<"paragraph"> = ({ children }, ctx) => {
   return {
-    type: "paragraph",
+    type: "block",
     children: ctx.render(children),
     list: ctx.list,
   };
@@ -811,7 +811,7 @@ const buildHeading: NodeBuilder<"heading"> = ({ children, depth }, ctx) => {
   const style = ctx.config[`head${depth}`];
 
   return {
-    type: "paragraph",
+    type: "block",
     list: ctx.list,
     children: ctx.render(children, {
       ...ctx,
@@ -952,7 +952,7 @@ const buildInlineCode: NodeBuilder<"inlineCode"> = (node, ctx) => {
 
 const buildCode: NodeBuilder<"code"> = (node, ctx) => {
   return {
-    type: "paragraph",
+    type: "block",
     children: ctx.render([{ type: "text", value: node.value }], {
       ...ctx,
       style: { ...ctx.style, ...ctx.config.code },
