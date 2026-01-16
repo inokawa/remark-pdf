@@ -631,14 +631,26 @@ export async function mdastToPdf(
             });
             x += w;
           };
+          const pushBuffer = () => {
+            pushText(buffer, w);
+            buffer = "";
+            w = 0;
+          };
+          const flushBuffer = () => {
+            if (buffer) {
+              pushBuffer();
+              flushLine();
+            }
+          };
+          const flushBufferAndLine = () => {
+            if (buffer) {
+              pushBuffer();
+            }
+            flushLine();
+          };
           for (const { word, required } of words) {
             if (word === "\n") {
-              if (buffer) {
-                pushText(buffer, w);
-                buffer = "";
-                w = 0;
-              }
-              flushLine();
+              flushBufferAndLine();
               continue;
             }
             const wordWidth = textWidth(word);
@@ -652,33 +664,20 @@ export async function mdastToPdf(
                   }
                   chunk = slice;
                 }
-                if (buffer) {
-                  pushText(buffer, w);
-                  buffer = "";
-                  w = 0;
-                  flushLine();
-                }
+                flushBuffer();
                 pushText(chunk, textWidth(chunk));
                 flushLine();
                 i += chunk.length;
               }
               continue;
             }
-            if (x + w + wordWidth > startX + wrapWidth && buffer) {
-              pushText(buffer, w);
-              buffer = "";
-              w = 0;
-              flushLine();
+            if (x + w + wordWidth > startX + wrapWidth) {
+              flushBuffer();
             }
             buffer += word;
             w += wordWidth;
             if (required) {
-              if (buffer) {
-                pushText(buffer, w);
-                buffer = "";
-                w = 0;
-              }
-              flushLine();
+              flushBufferAndLine();
             }
           }
           if (buffer) {
