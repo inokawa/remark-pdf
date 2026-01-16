@@ -482,7 +482,6 @@ export async function mdastToPdf(
     chunks.push(chunk);
   });
 
-  const getPageMaxX = (): number => doc.page.width - doc.page.margins.right;
   const getContentWidth = (): number =>
     doc.page.width - doc.page.margins.left - doc.page.margins.right;
   const getContentHeight = (): number =>
@@ -490,11 +489,14 @@ export async function mdastToPdf(
 
   const paintInlines = (
     nodes: readonly PdfLayout[],
-    block?: { x?: number; y?: number; align?: Alignment; width?: number },
+    {
+      x: startX,
+      y: startY,
+      width: wrapWidth,
+      align = "left",
+    }: { x: number; y: number; width: number; align?: Alignment },
   ) => {
     const items = nodes.filter((n) => n.type === "text" || n.type === "image");
-    const startX = block?.x ?? doc.x;
-    const startY = block?.y ?? doc.y;
     let x = startX;
     let y = startY;
     let line: {
@@ -509,18 +511,16 @@ export async function mdastToPdf(
       return doc.widthOfString(text);
     };
 
-    const wrapWidth = block?.width ?? getPageMaxX() - startX;
-
     const flushLine = () => {
       let totalWidth = 0;
       for (const item of line) {
         totalWidth += item.width;
       }
       let cursorX = startX;
-      if (block?.align === "center") {
-        cursorX = startX + ((block.width ?? 0) - totalWidth) / 2;
-      } else if (block?.align === "right") {
-        cursorX = startX + ((block.width ?? 0) - totalWidth);
+      if (align === "center") {
+        cursorX = startX + (wrapWidth - totalWidth) / 2;
+      } else if (align === "right") {
+        cursorX = startX + (wrapWidth - totalWidth);
       }
       let maxHeight = 0;
       if (line.length === 0) {
@@ -724,10 +724,8 @@ export async function mdastToPdf(
     if (line.length > 0) {
       flushLine();
     }
-    if (!block) {
-      doc.x = x;
-      doc.y = y;
-    }
+    doc.x = x;
+    doc.y = y;
   };
 
   const listStack: number[] = [];
@@ -751,24 +749,31 @@ export async function mdastToPdf(
           doc.x = doc.page.margins.left + 10 * level;
           // TODO inherit from parent block
           const bulletStyle = (node.children[0]! as PdfText).style;
-          paintInlines([
-            {
-              type: "text",
-              text:
-                meta.type === "ordered"
-                  ? Decimal.renderMarker(num)
-                  : Disc.renderMarker(num),
-              style: {
-                ...mergedDefaultStyle,
-                fontSize: bulletStyle.fontSize,
+          paintInlines(
+            [
+              {
+                type: "text",
+                text:
+                  meta.type === "ordered"
+                    ? Decimal.renderMarker(num)
+                    : Disc.renderMarker(num),
+                style: {
+                  ...mergedDefaultStyle,
+                  fontSize: bulletStyle.fontSize,
+                },
               },
-            },
-            ...node.children,
-          ]);
+              ...node.children,
+            ],
+            { x: doc.x, y: doc.y, width: getContentWidth() },
+          );
           doc.x = prevX;
         } else {
           listStack.splice(0);
-          paintInlines(node.children);
+          paintInlines(node.children, {
+            x: doc.x,
+            y: doc.y,
+            width: getContentWidth(),
+          });
         }
         if (spacing) {
           doc.moveDown(spacing);
@@ -778,7 +783,7 @@ export async function mdastToPdf(
       case "text":
       case "image": {
         // fallback to block
-        paintInlines([node]);
+        paintInlines([node], { x: doc.x, y: doc.y, width: getContentWidth() });
         break;
       }
       case "table": {
@@ -794,7 +799,7 @@ export async function mdastToPdf(
             paintInlines(cell.children, {
               x: x + cellPadding,
               y: y + cellPadding * 2,
-              align: node.align?.[j] ?? "left",
+              align: node.align?.[j],
               width: cellWidth - cellPadding * 2,
             });
             cellHeight = Math.max(cellHeight, doc.y - y);
