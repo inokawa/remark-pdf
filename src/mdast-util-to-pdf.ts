@@ -619,17 +619,20 @@ export async function mdastToPdf(
           }
           let buffer = "";
           let w = 0;
+          const pushText = (t: string, w: number) => {
+            line.push({
+              node,
+              width: w,
+              height: lineHeight,
+              font,
+              text: t,
+            });
+            x += w;
+          };
           for (const { word, required } of words) {
             if (word === "\n") {
               if (buffer) {
-                line.push({
-                  node,
-                  width: w,
-                  height: lineHeight,
-                  font,
-                  text: buffer,
-                });
-                x += w;
+                pushText(buffer, w);
                 buffer = "";
                 w = 0;
               }
@@ -650,40 +653,19 @@ export async function mdastToPdf(
                   l++;
                 }
                 if (buffer) {
-                  line.push({
-                    node,
-                    width: w,
-                    height: lineHeight,
-                    font,
-                    text: buffer,
-                  });
-                  x += w;
+                  pushText(buffer, w);
                   buffer = "";
                   w = 0;
                   flushLine();
                 }
-                line.push({
-                  node,
-                  width: textWidth(chunk),
-                  height: lineHeight,
-                  font,
-                  text: chunk,
-                });
-                x += textWidth(chunk);
+                pushText(chunk, textWidth(chunk));
                 flushLine();
                 i += chunk.length;
               }
               continue;
             }
             if (x + w + wordWidth > startX + wrapWidth && buffer) {
-              line.push({
-                node,
-                width: w,
-                height: lineHeight,
-                font,
-                text: buffer,
-              });
-              x += w;
+              pushText(buffer, w);
               buffer = "";
               w = 0;
               flushLine();
@@ -692,14 +674,7 @@ export async function mdastToPdf(
             w += wordWidth;
             if (required) {
               if (buffer) {
-                line.push({
-                  node,
-                  width: w,
-                  height: lineHeight,
-                  font,
-                  text: buffer,
-                });
-                x += w;
+                pushText(buffer, w);
                 buffer = "";
                 w = 0;
               }
@@ -707,14 +682,7 @@ export async function mdastToPdf(
             }
           }
           if (buffer) {
-            line.push({
-              node,
-              width: w,
-              height: lineHeight,
-              font,
-              text: buffer,
-            });
-            x += w;
+            pushText(buffer, w);
           }
           break;
         }
