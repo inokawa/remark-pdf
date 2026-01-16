@@ -13,10 +13,5 @@ export const Preview = ({ data }: { data: Blob }) => {
     prev.current = url;
   }, [url]);
 
-  return (
-    <iframe
-      src={`${url}#toolbar=0`}
-      style={{ width: "100%", height: "100%" }}
-    />
-  );
+  return <iframe src={`${url}#toolbar=0`} style={{ flex: 1 }} />;
 };

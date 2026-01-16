@@ -21,23 +21,6 @@ export default {
   title: "Playground",
 };
 
-const Wrapper = ({ children }: { children: React.ReactNode }) => (
-  <div
-    style={useMemo(
-      () => ({
-        width: "100vw",
-        height: "100vh",
-        display: "flex",
-        flexDirection: "row",
-        fontSize: "10.5pt",
-      }),
-      [],
-    )}
-  >
-    {children}
-  </div>
-);
-
 const Section = ({
   title,
   children,
@@ -45,7 +28,9 @@ const Section = ({
   title: string;
   children: React.ReactNode;
 }) => (
-  <div style={{ flex: 1, width: "48vh" }}>
+  <div
+    style={{ flex: 1, width: "48vh", display: "flex", flexDirection: "column" }}
+  >
     <h3
       style={{
         fontFamily: "Nunito Sans, -apple-system, sans-serif",
@@ -88,7 +73,15 @@ const Component = ({ text }: { text: string }) => {
     makePdf(text);
   }, []);
   return (
-    <Wrapper>
+    <div
+      style={{
+        width: "100vw",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "row",
+        fontSize: "10.5pt",
+      }}
+    >
       <div style={{ position: "absolute", right: 0, top: 0 }}>
         <button
           disabled={!data}
@@ -111,7 +104,7 @@ const Component = ({ text }: { text: string }) => {
           <Preview data={data} />
         )}
       </Section>
-    </Wrapper>
+    </div>
   );
 };
 
