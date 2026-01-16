@@ -499,28 +499,33 @@ export async function mdastToPdf(
     const items = nodes.filter((n) => n.type === "text" || n.type === "image");
     let x = startX;
     let y = startY;
-    let line: {
-      node: PdfText | PdfImage;
-      width: number;
-      height: number;
-      font?: string;
-      text?: string;
-    }[] = [];
+    let line: (
+      | {
+          node: PdfText;
+          width: number;
+          height: number;
+          font: string;
+          text: string;
+        }
+      | {
+          node: PdfImage;
+          width: number;
+          height: number;
+        }
+    )[] = [];
 
     const textWidth = (text: string): number => {
       return doc.widthOfString(text);
     };
 
     const flushLine = () => {
-      let totalWidth = 0;
-      for (const item of line) {
-        totalWidth += item.width;
-      }
+      const lineWidth = line.reduce((acc, i) => acc + i.width, 0);
+
       let cursorX = startX;
       if (align === "center") {
-        cursorX = startX + (wrapWidth - totalWidth) / 2;
+        cursorX = startX + (wrapWidth - lineWidth) / 2;
       } else if (align === "right") {
-        cursorX = startX + (wrapWidth - totalWidth);
+        cursorX = startX + (wrapWidth - lineWidth);
       }
       let maxHeight = 0;
       if (line.length === 0) {
@@ -531,28 +536,29 @@ export async function mdastToPdf(
         }
       }
       for (const item of line) {
-        if (item.node.type === "image") {
-          if (item.node.data.type === "svg") {
-            SVGtoPDF(doc, item.node.data.data, cursorX, y, {
-              width: item.width,
-              height: item.height,
-            });
-          } else {
-            doc.image(item.node.data.data, cursorX, y, {
-              width: item.width,
-              height: item.height,
-            });
-          }
-          cursorX += item.width;
-        } else {
-          const style = item.node.style!;
-          doc.font(item.font!).fontSize(style.fontSize).fillColor(style.color);
-          doc.text(item.text!, cursorX, y, {
+        if ("text" in item) {
+          const style = item.node.style;
+          doc.font(item.font).fontSize(style.fontSize).fillColor(style.color);
+          doc.text(item.text, cursorX, y, {
             strike: style.strike,
             underline: style.underline,
             link: item.node.link ?? null,
             continued: false,
           });
+          cursorX += item.width;
+        } else {
+          const data = item.node.data;
+          if (data.type === "svg") {
+            SVGtoPDF(doc, data.data, cursorX, y, {
+              width: item.width,
+              height: item.height,
+            });
+          } else {
+            doc.image(data.data, cursorX, y, {
+              width: item.width,
+              height: item.height,
+            });
+          }
           cursorX += item.width;
         }
       }
