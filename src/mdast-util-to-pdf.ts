@@ -569,9 +569,8 @@ export async function mdastToPdf(
       switch (node.type) {
         case "image": {
           let { width, height } = node.data;
-          const contentWidth = getContentWidth();
-          if (width > contentWidth) {
-            const scale = contentWidth / width;
+          if (width > wrapWidth) {
+            const scale = wrapWidth / width;
             width *= scale;
             height *= scale;
           }
