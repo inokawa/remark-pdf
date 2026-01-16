@@ -643,16 +643,14 @@ export async function mdastToPdf(
             }
             const wordWidth = textWidth(word);
             if (wordWidth > wrapWidth) {
-              let i = 0;
-              while (i < word.length) {
-                let l = 1;
+              for (let i = 0; i < word.length; ) {
                 let chunk = word[i]!;
-                while (
-                  i + l <= word.length &&
-                  textWidth(word.slice(i, i + l)) <= wrapWidth
-                ) {
-                  chunk = word.slice(i, i + l);
-                  l++;
+                for (let l = 1; i + l <= word.length; l++) {
+                  const slice = word.slice(i, i + l);
+                  if (textWidth(slice) > wrapWidth) {
+                    break;
+                  }
+                  chunk = slice;
                 }
                 if (buffer) {
                   pushText(buffer, w);
