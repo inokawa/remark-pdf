@@ -734,37 +734,31 @@ export async function mdastToPdf(
     } else {
       const style = root.style;
       let startY = doc.y;
-      let boxes = measureInlines(inlines, {
+      const boxes = measureInlines(inlines, {
         x: contentLeft + (style.indent ?? 0),
         y: startY,
         width: contentWidth,
       });
 
       const lines: Writeable<InlineBox>[][] = [];
-      let currentLine: InlineBox[] = [];
-      let lastY: number | undefined;
-      for (const box of boxes) {
-        if (lastY == null || box.y !== lastY) {
-          if (currentLine.length > 0) lines.push(currentLine);
-          currentLine = [box];
-          lastY = box.y;
+      boxes.forEach((box, i) => {
+        if (i === 0 || box.y !== boxes[i - 1]!.y) {
+          lines.push([box]);
         } else {
-          currentLine.push(box);
+          lines[lines.length - 1]!.push(box);
         }
-      }
-      if (currentLine.length > 0) lines.push(currentLine);
+      });
 
-      let lineIdx = 0;
-      while (lineIdx < lines.length) {
-        const pageLines: InlineBox[][] = [];
+      for (let lineIdx = 0; lineIdx < lines.length; ) {
         let pageBottom = startY;
+        const pageLines: Writeable<InlineBox>[][] = [];
         for (; lineIdx < lines.length; lineIdx++) {
           const line = lines[lineIdx]!;
           const lineHeight = line.reduce(
             (acc, b) => Math.max(acc, b.height),
             0,
           );
-          if (pageBottom + lineHeight > contentHeight && pageLines.length > 0) {
+          if (pageLines.length > 0 && pageBottom + lineHeight > contentHeight) {
             break;
           }
           pageLines.push(line);
