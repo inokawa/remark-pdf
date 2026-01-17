@@ -605,16 +605,13 @@ export async function mdastToPdf(
               pushText(buffer, w);
               buffer = "";
               w = 0;
-              if (alsoLine) {
-                flushLine();
-              }
-            } else if (alsoLine) {
+            }
+            if (alsoLine) {
               flushLine();
             }
           };
           for (const { word, required } of words) {
             if (word === "\n") {
-              flush(false);
               flush(true);
               continue;
             }
@@ -629,7 +626,6 @@ export async function mdastToPdf(
                   }
                   chunk = slice;
                 }
-                flush(false);
                 pushText(chunk, textWidth(chunk));
                 flush(true);
                 i += chunk.length;
