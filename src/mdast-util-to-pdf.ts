@@ -663,77 +663,63 @@ export async function mdastToPdf(
 
   const paintNode = (node: PdfLayout) => {
     if (node.type === "block") {
-      const style = node.style;
-      const startY = doc.y;
-      const boxes = measureInlines(node.children, {
-        x: contentLeft + (style.indent ?? 0),
-        y: startY,
-        width: contentWidth,
-      });
-      paintInlines(boxes, doc);
-      doc.y = boxes.reduce((acc, b) => Math.max(acc, b.y + b.height), startY);
-      if (spacing) {
-        doc.y += spacing;
-      }
-    } else if (node.type === "text" || node.type === "image") {
-      const startY = doc.y;
-      const boxes = measureInlines([node], {
-        x: contentLeft,
-        y: startY,
-        width: contentWidth,
-      });
-      paintInlines(boxes, doc);
-      doc.y = boxes.reduce((acc, b) => Math.max(acc, b.y + b.height), startY);
-      if (spacing) {
-        doc.y += spacing;
+      if (node.style.display === "table") {
+        const rows = node.children.filter((c) => c.type === "block");
+        const colCount = rows[0]!.children.length;
+        const cellWidth = contentWidth / colCount;
+        const cellPadding = 2;
+        const startX = doc.x;
+        let y = doc.y;
+        for (const row of rows) {
+          const cells = row.children.filter((c) => c.type === "block");
+          let cellHeight = 0;
+          let x = startX;
+          for (const cell of cells) {
+            const boxes = measureInlines(cell.children, {
+              x: x + cellPadding,
+              y: y + cellPadding * 2,
+              align: cell.style.textAlign,
+              width: cellWidth - cellPadding * 2,
+            });
+            paintInlines(boxes, doc);
+            const maxCellBottom = boxes.reduce(
+              (acc, b) => Math.max(acc, b.y + b.height),
+              y,
+            );
+            cellHeight = Math.max(cellHeight, maxCellBottom - y);
+            x += cellWidth;
+          }
+          x = startX;
+          for (const _ of cells) {
+            paintBlock({ x, y, width: cellWidth, height: cellHeight }, doc);
+            x += cellWidth;
+          }
+          y += cellHeight;
+          doc.x = startX;
+          doc.y = y;
+        }
+      } else {
+        const style = node.style;
+        const startY = doc.y;
+        const boxes = measureInlines(node.children, {
+          x: contentLeft + (style.indent ?? 0),
+          y: startY,
+          width: contentWidth,
+        });
+        paintInlines(boxes, doc);
+        doc.y = boxes.reduce((acc, b) => Math.max(acc, b.y + b.height), startY);
+        if (spacing) {
+          doc.y += spacing;
+        }
       }
     } else if (node.type === "pagebreak") {
       doc.addPage();
     } else {
-      node satisfies never;
+      warnOnce(`unreachable ${node.type}`);
     }
   };
 
-  for (const node of nodes) {
-    if (node.type === "block" && node.style.display === "table") {
-      const rows = node.children.filter((c) => c.type === "block");
-      const colCount = rows[0]!.children.length;
-      const cellWidth = contentWidth / colCount;
-      const cellPadding = 2;
-      const startX = doc.x;
-      let y = doc.y;
-      for (const row of rows) {
-        const cells = row.children.filter((c) => c.type === "block");
-        let cellHeight = 0;
-        let x = startX;
-        for (const cell of cells) {
-          const boxes = measureInlines(cell.children, {
-            x: x + cellPadding,
-            y: y + cellPadding * 2,
-            align: cell.style.textAlign,
-            width: cellWidth - cellPadding * 2,
-          });
-          paintInlines(boxes, doc);
-          const maxCellBottom = boxes.reduce(
-            (acc, b) => Math.max(acc, b.y + b.height),
-            y,
-          );
-          cellHeight = Math.max(cellHeight, maxCellBottom - y);
-          x += cellWidth;
-        }
-        x = startX;
-        for (const _ of cells) {
-          paintBlock({ x, y, width: cellWidth, height: cellHeight }, doc);
-          x += cellWidth;
-        }
-        y += cellHeight;
-        doc.x = startX;
-        doc.y = y;
-      }
-    } else {
-      paintNode(node);
-    }
-  }
+  paintNode({ type: "block", style: { display: "block" }, children: nodes });
 
   doc.end();
   return new Promise<ArrayBuffer>((resolve) => {
