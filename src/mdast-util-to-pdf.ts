@@ -661,84 +661,77 @@ export async function mdastToPdf(
     return boxes;
   };
 
+  const paintNode = (node: PdfLayout) => {
+    if (node.type === "block") {
+      const style = node.style;
+      const startY = doc.y;
+      const boxes = measureInlines(node.children, {
+        x: contentLeft + (style.indent ?? 0),
+        y: startY,
+        width: contentWidth,
+      });
+      paintInlines(boxes, doc);
+      doc.y = boxes.reduce((acc, b) => Math.max(acc, b.y + b.height), startY);
+      if (spacing) {
+        doc.y += spacing;
+      }
+    } else if (node.type === "text" || node.type === "image") {
+      const startY = doc.y;
+      const boxes = measureInlines([node], {
+        x: contentLeft,
+        y: startY,
+        width: contentWidth,
+      });
+      paintInlines(boxes, doc);
+      doc.y = boxes.reduce((acc, b) => Math.max(acc, b.y + b.height), startY);
+      if (spacing) {
+        doc.y += spacing;
+      }
+    } else if (node.type === "pagebreak") {
+      doc.addPage();
+    } else {
+      node satisfies never;
+    }
+  };
+
   for (const node of nodes) {
-    switch (node.type) {
-      case "block": {
-        const style = node.style;
-        if (style.display === "table") {
-          const rows = node.children.filter((c) => c.type === "block");
-          const colCount = rows[0]!.children.length;
-          const cellWidth = contentWidth / colCount;
-          const cellPadding = 2;
-          const startX = doc.x;
-          let y = doc.y;
-          for (const row of rows) {
-            const cells = row.children.filter((c) => c.type === "block");
-            let cellHeight = 0;
-            let x = startX;
-            for (const cell of cells) {
-              const boxes = measureInlines(cell.children, {
-                x: x + cellPadding,
-                y: y + cellPadding * 2,
-                align: cell.style.textAlign,
-                width: cellWidth - cellPadding * 2,
-              });
-              paintInlines(boxes, doc);
-              const maxCellBottom = boxes.reduce(
-                (acc, b) => Math.max(acc, b.y + b.height),
-                y,
-              );
-              cellHeight = Math.max(cellHeight, maxCellBottom - y);
-              x += cellWidth;
-            }
-
-            x = startX;
-            for (const _ of cells) {
-              paintBlock({ x, y, width: cellWidth, height: cellHeight }, doc);
-              x += cellWidth;
-            }
-
-            y += cellHeight;
-            doc.x = startX;
-            doc.y = y;
-          }
-        } else {
-          const startY = doc.y;
-          const boxes = measureInlines(node.children, {
-            x: contentLeft + (style.indent ?? 0),
-            y: startY,
-            width: contentWidth,
+    if (node.type === "block" && node.style.display === "table") {
+      const rows = node.children.filter((c) => c.type === "block");
+      const colCount = rows[0]!.children.length;
+      const cellWidth = contentWidth / colCount;
+      const cellPadding = 2;
+      const startX = doc.x;
+      let y = doc.y;
+      for (const row of rows) {
+        const cells = row.children.filter((c) => c.type === "block");
+        let cellHeight = 0;
+        let x = startX;
+        for (const cell of cells) {
+          const boxes = measureInlines(cell.children, {
+            x: x + cellPadding,
+            y: y + cellPadding * 2,
+            align: cell.style.textAlign,
+            width: cellWidth - cellPadding * 2,
           });
           paintInlines(boxes, doc);
-          doc.y = boxes.reduce(
+          const maxCellBottom = boxes.reduce(
             (acc, b) => Math.max(acc, b.y + b.height),
-            startY,
+            y,
           );
-          if (spacing) {
-            doc.y += spacing;
-          }
+          cellHeight = Math.max(cellHeight, maxCellBottom - y);
+          x += cellWidth;
         }
-        break;
+        x = startX;
+        for (const _ of cells) {
+          paintBlock({ x, y, width: cellWidth, height: cellHeight }, doc);
+          x += cellWidth;
+        }
+        y += cellHeight;
+        doc.x = startX;
+        doc.y = y;
       }
-      case "text":
-      case "image": {
-        // fallback to block
-        const boxes = measureInlines([node], {
-          x: doc.x,
-          y: doc.y,
-          width: contentWidth,
-        });
-        paintInlines(boxes, doc);
-        break;
-      }
-      case "pagebreak": {
-        doc.addPage();
-        break;
-      }
-      default: {
-        node satisfies never;
-        break;
-      }
+    } else {
+      paintNode(node);
     }
   }
 
