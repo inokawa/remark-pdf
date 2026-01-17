@@ -506,6 +506,11 @@ export async function mdastToPdf(
     const textWidth = (text: string): number => doc.widthOfString(text);
 
     const flushLine = () => {
+      if (line.length === 0) {
+        y += doc.currentLineHeight();
+        x = startX;
+        return;
+      }
       const lineWidth = line.reduce((acc, i) => acc + i.width, 0);
       const lineHeight = line.reduce(
         (acc, i) => Math.max(acc, i.height),
@@ -595,26 +600,22 @@ export async function mdastToPdf(
             });
             x += w;
           };
-          const pushBuffer = () => {
-            pushText(buffer, w);
-            buffer = "";
-            w = 0;
-          };
-          const flushBuffer = () => {
+          const flush = (alsoLine: boolean) => {
             if (buffer) {
-              pushBuffer();
+              pushText(buffer, w);
+              buffer = "";
+              w = 0;
+              if (alsoLine) {
+                flushLine();
+              }
+            } else if (alsoLine) {
               flushLine();
             }
           };
-          const flushBufferAndLine = () => {
-            if (buffer) {
-              pushBuffer();
-            }
-            flushLine();
-          };
           for (const { word, required } of words) {
             if (word === "\n") {
-              flushBufferAndLine();
+              flush(false);
+              flush(true);
               continue;
             }
             const wordWidth = textWidth(word);
@@ -628,25 +629,23 @@ export async function mdastToPdf(
                   }
                   chunk = slice;
                 }
-                flushBuffer();
+                flush(false);
                 pushText(chunk, textWidth(chunk));
-                flushLine();
+                flush(true);
                 i += chunk.length;
               }
               continue;
             }
             if (x + w + wordWidth > startX + wrapWidth) {
-              flushBuffer();
+              flush(true);
             }
             buffer += word;
             w += wordWidth;
-            if (required) {
-              flushBufferAndLine();
+            if (required && buffer) {
+              flush(true);
             }
           }
-          if (buffer) {
-            pushText(buffer, w);
-          }
+          flush(false);
           break;
         }
       }
