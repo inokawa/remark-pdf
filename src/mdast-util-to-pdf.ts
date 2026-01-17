@@ -751,25 +751,21 @@ export async function mdastToPdf(
 
       for (let lineIdx = 0; lineIdx < lines.length; ) {
         let pageBottom = startY;
-        const pageLines: Writeable<InlineBox>[][] = [];
-        for (; lineIdx < lines.length; lineIdx++) {
-          const line = lines[lineIdx]!;
-          const lineHeight = line.reduce(
-            (acc, b) => Math.max(acc, b.height),
-            0,
-          );
-          if (pageLines.length > 0 && pageBottom + lineHeight > contentHeight) {
-            break;
-          }
-          pageLines.push(line);
+        let first = true;
+        let endIdx = lineIdx;
+        while (endIdx < lines.length) {
+          const line = lines[endIdx]!;
+          const lineHeight = line.reduce((acc, b) => Math.max(acc, b.height), 0);
+          if (!first && pageBottom + lineHeight > contentHeight) break;
           pageBottom += lineHeight;
+          endIdx++;
+          first = false;
         }
-        const pageBoxes = pageLines.flat();
+        if (endIdx === lineIdx) endIdx++;
+        const pageBoxes = lines.slice(lineIdx, endIdx).flat();
         paintInlines(pageBoxes, doc);
-        doc.y = pageBoxes.reduce(
-          (acc, b) => Math.max(acc, b.y + b.height),
-          startY,
-        );
+        doc.y = pageBoxes.reduce((acc, b) => Math.max(acc, b.y + b.height), startY);
+        lineIdx = endIdx;
         if (lineIdx < lines.length) {
           doc.addPage();
           startY = contentTop;
