@@ -657,7 +657,7 @@ export async function mdastToPdf(
     return boxes;
   };
 
-  const paintBlock = (root: PdfBlock) => {
+  const printBlock = (root: PdfBlock) => {
     const inlines = root.children.filter(
       (c) => c.type === "text" || c.type === "image",
     );
@@ -666,7 +666,7 @@ export async function mdastToPdf(
         switch (node.type) {
           case "text":
           case "image": {
-            paintBlock({
+            printBlock({
               type: "block",
               style: { display: "block" },
               children: [node],
@@ -697,7 +697,7 @@ export async function mdastToPdf(
                       width: cellWidth - cellPadding * 2,
                     },
                   );
-                  paintInlines(boxes, doc);
+                  printInlines(boxes, doc);
                   const maxCellBottom = boxes.reduce(
                     (acc, b) => Math.max(acc, b.y + b.height),
                     y,
@@ -707,7 +707,7 @@ export async function mdastToPdf(
                 }
                 x = startX;
                 for (const _ of cells) {
-                  paintCell(
+                  printCell(
                     { x, y, width: cellWidth, height: cellHeight },
                     doc,
                   );
@@ -718,7 +718,7 @@ export async function mdastToPdf(
                 doc.y = y;
               }
             } else {
-              paintBlock(node);
+              printBlock(node);
             }
             break;
           }
@@ -754,7 +754,7 @@ export async function mdastToPdf(
           pageEnd = pageStart + 1;
         }
         const pageBoxes = boxes.slice(pageStart, pageEnd);
-        paintInlines(pageBoxes, doc);
+        printInlines(pageBoxes, doc);
         doc.y = pageBoxes.reduce(
           (acc, b) => Math.max(acc, b.y + b.height),
           startY,
@@ -776,7 +776,7 @@ export async function mdastToPdf(
     }
   };
 
-  paintBlock({ type: "block", style: { display: "block" }, children: nodes });
+  printBlock({ type: "block", style: { display: "block" }, children: nodes });
 
   doc.end();
   return new Promise<ArrayBuffer>((resolve) => {
@@ -807,11 +807,11 @@ interface ImageBox extends Box {
 
 type InlineBox = TextBox | ImageBox;
 
-const paintCell = (box: BlockBox, doc: PDFKit.PDFDocument) => {
+const printCell = (box: BlockBox, doc: PDFKit.PDFDocument) => {
   doc.rect(box.x, box.y, box.width, box.height).stroke();
 };
 
-const paintInlines = (boxes: readonly InlineBox[], doc: PDFKit.PDFDocument) => {
+const printInlines = (boxes: readonly InlineBox[], doc: PDFKit.PDFDocument) => {
   for (const box of boxes) {
     if (box.type === "text") {
       const style = box.node.style;
