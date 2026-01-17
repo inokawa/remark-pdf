@@ -527,9 +527,6 @@ export async function mdastToPdf(
         cursorX += item.width;
       }
       y += lineHeight;
-      if (y > contentHeight) {
-        y = contentTop;
-      }
       x = startX;
       line = [];
     };
@@ -736,14 +733,43 @@ export async function mdastToPdf(
       }
     } else {
       const style = root.style;
-      const startY = doc.y;
-      const boxes = measureInlines(inlines, {
+      let startY = doc.y;
+      let boxes = measureInlines(inlines, {
         x: contentLeft + (style.indent ?? 0),
         y: startY,
         width: contentWidth,
       });
-      paintInlines(boxes, doc);
-      doc.y = boxes.reduce((acc, b) => Math.max(acc, b.y + b.height), startY);
+      let pageStart = 0;
+      while (pageStart < boxes.length) {
+        let pageEnd = pageStart;
+        while (pageEnd < boxes.length) {
+          const box = boxes[pageEnd]!;
+          if (box.y + box.height <= contentHeight) {
+            pageEnd++;
+          } else {
+            break;
+          }
+        }
+        if (pageEnd === pageStart) {
+          pageEnd = pageStart + 1;
+        }
+        const pageBoxes = boxes.slice(pageStart, pageEnd);
+        paintInlines(pageBoxes, doc);
+        doc.y = pageBoxes.reduce(
+          (acc, b) => Math.max(acc, b.y + b.height),
+          startY,
+        );
+        pageStart = pageEnd;
+        if (pageStart < boxes.length) {
+          doc.addPage();
+          startY = contentTop;
+          const yOffset = contentTop - boxes[pageStart]!.y;
+          for (let i = pageStart; i < boxes.length; i++) {
+            const box = boxes[i]!;
+            boxes[i] = { ...box, y: box.y + yOffset };
+          }
+        }
+      }
       if (spacing) {
         doc.y += spacing;
       }
