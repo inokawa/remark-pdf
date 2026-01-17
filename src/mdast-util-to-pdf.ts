@@ -793,14 +793,9 @@ const buildParagraph: NodeBuilder<"paragraph"> = ({ children }, ctx) => {
 };
 
 const buildHeading: NodeBuilder<"heading"> = ({ children, depth }, ctx) => {
-  const style = ctx.config[`head${depth}`];
-
   return ctx.render([{ type: "paragraph", children }], {
     ...ctx,
-    style: {
-      ...ctx.style,
-      ...style,
-    },
+    style: { ...ctx.style, ...ctx.config[`head${depth}`] },
   });
 };
 
