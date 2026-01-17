@@ -490,7 +490,7 @@ export async function mdastToPdf(
   const contentLeft = doc.page.margins.left;
 
   const measureInlines = (
-    nodes: readonly PdfLayout[],
+    items: readonly (PdfText | PdfImage)[],
     {
       x: startX,
       y: startY,
@@ -498,7 +498,6 @@ export async function mdastToPdf(
       align = "left",
     }: { x: number; y: number; width: number; align?: Alignment },
   ): InlineBox[] => {
-    const items = nodes.filter((n) => n.type === "text" || n.type === "image");
     let x = startX;
     let y = startY;
     let line: Writeable<InlineBox>[] = [];
@@ -661,65 +660,99 @@ export async function mdastToPdf(
     return boxes;
   };
 
-  const paintNode = (node: PdfLayout) => {
-    if (node.type === "block") {
-      if (node.style.display === "table") {
-        const rows = node.children.filter((c) => c.type === "block");
-        const colCount = rows[0]!.children.length;
-        const cellWidth = contentWidth / colCount;
-        const cellPadding = 2;
-        const startX = doc.x;
-        let y = doc.y;
-        for (const row of rows) {
-          const cells = row.children.filter((c) => c.type === "block");
-          let cellHeight = 0;
-          let x = startX;
-          for (const cell of cells) {
-            const boxes = measureInlines(cell.children, {
-              x: x + cellPadding,
-              y: y + cellPadding * 2,
-              align: cell.style.textAlign,
-              width: cellWidth - cellPadding * 2,
+  const paintLayout = (root: PdfBlock) => {
+    const inlines = root.children.filter(
+      (c) => c.type === "text" || c.type === "image",
+    );
+    if (root.children.length !== inlines.length) {
+      for (const node of root.children) {
+        switch (node.type) {
+          case "text":
+          case "image": {
+            paintLayout({
+              type: "block",
+              style: { display: "block" },
+              children: [node],
             });
-            paintInlines(boxes, doc);
-            const maxCellBottom = boxes.reduce(
-              (acc, b) => Math.max(acc, b.y + b.height),
-              y,
-            );
-            cellHeight = Math.max(cellHeight, maxCellBottom - y);
-            x += cellWidth;
+            break;
           }
-          x = startX;
-          for (const _ of cells) {
-            paintBlock({ x, y, width: cellWidth, height: cellHeight }, doc);
-            x += cellWidth;
+          case "block": {
+            if (node.style.display === "table") {
+              const rows = node.children.filter((c) => c.type === "block");
+              const colCount = rows[0]!.children.length;
+              const cellWidth = contentWidth / colCount;
+              const cellPadding = 2;
+              const startX = doc.x;
+              let y = doc.y;
+              for (const row of rows) {
+                const cells = row.children.filter((c) => c.type === "block");
+                let cellHeight = 0;
+                let x = startX;
+                for (const cell of cells) {
+                  const boxes = measureInlines(
+                    cell.children.filter(
+                      (n) => n.type === "text" || n.type === "image",
+                    ),
+                    {
+                      x: x + cellPadding,
+                      y: y + cellPadding * 2,
+                      align: cell.style.textAlign,
+                      width: cellWidth - cellPadding * 2,
+                    },
+                  );
+                  paintInlines(boxes, doc);
+                  const maxCellBottom = boxes.reduce(
+                    (acc, b) => Math.max(acc, b.y + b.height),
+                    y,
+                  );
+                  cellHeight = Math.max(cellHeight, maxCellBottom - y);
+                  x += cellWidth;
+                }
+                x = startX;
+                for (const _ of cells) {
+                  paintBlock(
+                    { x, y, width: cellWidth, height: cellHeight },
+                    doc,
+                  );
+                  x += cellWidth;
+                }
+                y += cellHeight;
+                doc.x = startX;
+                doc.y = y;
+              }
+            } else {
+              paintLayout(node);
+            }
+            break;
           }
-          y += cellHeight;
-          doc.x = startX;
-          doc.y = y;
-        }
-      } else {
-        const style = node.style;
-        const startY = doc.y;
-        const boxes = measureInlines(node.children, {
-          x: contentLeft + (style.indent ?? 0),
-          y: startY,
-          width: contentWidth,
-        });
-        paintInlines(boxes, doc);
-        doc.y = boxes.reduce((acc, b) => Math.max(acc, b.y + b.height), startY);
-        if (spacing) {
-          doc.y += spacing;
+          case "pagebreak": {
+            doc.addPage();
+            break;
+          }
+          default: {
+            node satisfies never;
+          }
         }
       }
-    } else if (node.type === "pagebreak") {
-      doc.addPage();
     } else {
-      warnOnce(`unreachable ${node.type}`);
+      const style = root.style;
+      const startY = doc.y;
+      const boxes = measureInlines(inlines, {
+        x: contentLeft + (style.indent ?? 0),
+        y: startY,
+        width: contentWidth,
+      });
+      paintInlines(boxes, doc);
+      doc.y = boxes.reduce((acc, b) => Math.max(acc, b.y + b.height), startY);
+      if (spacing) {
+        doc.y += spacing;
+      }
+
+      inlines.splice(0);
     }
   };
 
-  paintNode({ type: "block", style: { display: "block" }, children: nodes });
+  paintLayout({ type: "block", style: { display: "block" }, children: nodes });
 
   doc.end();
   return new Promise<ArrayBuffer>((resolve) => {
