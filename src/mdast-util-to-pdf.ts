@@ -51,9 +51,12 @@ type Alignment = "left" | "right" | "center";
 
 export type TextStyleMatcher = [pattern: RegExp, style: Partial<TextStyle>];
 
+interface BlockStyle {
+  indent?: number;
+}
 interface PdfBlock {
   type: "block";
-  list?: ListContext;
+  style: BlockStyle;
   children: PdfLayout[];
 }
 
@@ -89,6 +92,7 @@ type ListContext = Readonly<{
       }
     | {
         type: "ordered";
+        number: number;
       }
     | {
         type: "task";
@@ -334,7 +338,7 @@ export async function mdastToPdf(
     thematicBreak: buildThematicBreak,
     blockquote: buildBlockquote,
     list: buildList,
-    listItem: buildListItem,
+    listItem: noop,
     table: buildTable,
     tableRow: noop,
     tableCell: noop,
@@ -694,53 +698,19 @@ export async function mdastToPdf(
     doc.y = y;
   };
 
-  const listStack: number[] = [];
   for (const node of nodes) {
     switch (node.type) {
       case "block": {
-        if (node.list) {
-          const { level, meta } = node.list;
-          while (listStack.length > level + 1) {
-            listStack.pop();
-          }
-          while (listStack.length <= level) {
-            listStack.push(0);
-          }
-          if (meta.type === "ordered") {
-            listStack[level]!++;
-          }
-          const num = listStack[level]!;
+        const style = node.style;
+        const prevX = doc.x;
+        doc.x = contentLeft + (style.indent ?? 0);
+        paintInlines(node.children, {
+          x: doc.x,
+          y: doc.y,
+          width: contentWidth,
+        });
+        doc.x = prevX;
 
-          const prevX = doc.x;
-          doc.x = contentLeft + 10 * level;
-          // TODO inherit from parent block
-          const bulletStyle = (node.children[0]! as PdfText).style;
-          paintInlines(
-            [
-              {
-                type: "text",
-                text:
-                  meta.type === "ordered"
-                    ? Decimal.renderMarker(num)
-                    : Disc.renderMarker(num),
-                style: {
-                  ...mergedDefaultStyle,
-                  fontSize: bulletStyle.fontSize,
-                },
-              },
-              ...node.children,
-            ],
-            { x: doc.x, y: doc.y, width: contentWidth },
-          );
-          doc.x = prevX;
-        } else {
-          listStack.splice(0);
-          paintInlines(node.children, {
-            x: doc.x,
-            y: doc.y,
-            width: contentWidth,
-          });
-        }
         if (spacing) {
           doc.moveDown(spacing);
         }
@@ -800,27 +770,38 @@ export async function mdastToPdf(
 }
 
 const buildParagraph: NodeBuilder<"paragraph"> = ({ children }, ctx) => {
+  const style: BlockStyle = {};
+  const list = ctx.list;
+  if (list) {
+    const { meta, level } = list;
+    const bulletText =
+      meta.type === "task"
+        ? meta.checked
+          ? "[x] "
+          : "[ ] "
+        : meta.type === "ordered"
+          ? Decimal.renderMarker(meta.number)
+          : Disc.renderMarker(1);
+    style.indent = level * 10;
+    children = [{ type: "text", value: bulletText }, ...children];
+  }
   return {
     type: "block",
+    style,
     children: ctx.render(children),
-    list: ctx.list,
   };
 };
 
 const buildHeading: NodeBuilder<"heading"> = ({ children, depth }, ctx) => {
   const style = ctx.config[`head${depth}`];
 
-  return {
-    type: "block",
-    list: ctx.list,
-    children: ctx.render(children, {
-      ...ctx,
-      style: {
-        ...ctx.style,
-        ...style,
-      },
-    }),
-  };
+  return ctx.render([{ type: "paragraph", children }], {
+    ...ctx,
+    style: {
+      ...ctx.style,
+      ...style,
+    },
+  });
 };
 
 const buildThematicBreak: NodeBuilder<"thematicBreak"> = () => {
@@ -838,30 +819,31 @@ const buildBlockquote: NodeBuilder<"blockquote"> = ({ children }, ctx) => {
 
 const buildList: NodeBuilder<"list"> = ({ children, ordered }, ctx) => {
   const parentList = ctx.list;
-  return ctx.render(children, {
-    ...ctx,
-    list: {
-      level: !parentList ? 0 : parentList.level + 1,
-      meta: { type: ordered ? "ordered" : "bullet" },
-    },
-  });
-};
+  const nextLevel = !parentList ? 0 : parentList.level + 1;
 
-const buildListItem: NodeBuilder<"listItem"> = ({ children, checked }, ctx) => {
-  let list = ctx.list;
-  if (list) {
-    // listItem must be the child of list
+  return children.flatMap(({ children, checked }, i) => {
+    let meta: ListContext["meta"];
     if (checked != null) {
-      list = {
-        level: list.level,
-        meta: {
-          type: "task",
-          checked,
-        },
+      meta = {
+        type: "task",
+        checked,
       };
+    } else {
+      if (ordered) {
+        meta = { type: "ordered", number: i + 1 };
+      } else {
+        meta = { type: "bullet" };
+      }
     }
-  }
-  return ctx.render(children, { ...ctx, list });
+
+    return ctx.render(children, {
+      ...ctx,
+      list: {
+        level: nextLevel,
+        meta,
+      },
+    });
+  });
 };
 
 const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
@@ -953,6 +935,7 @@ const buildInlineCode: NodeBuilder<"inlineCode"> = (node, ctx) => {
 const buildCode: NodeBuilder<"code"> = (node, ctx) => {
   return {
     type: "block",
+    style: {},
     children: ctx.render([{ type: "text", value: node.value }], {
       ...ctx,
       style: { ...ctx.style, ...ctx.config.code },

@@ -16,8 +16,8 @@ aaaaaaaaboldemphasisdeleteinline code
 • list
 • list
 • list
-• not checked
-• checked
+[ ] not checked
+[x] checked
 1. ordered list
 2. ordered list
 3. ordered list
@@ -302,25 +302,25 @@ exports[`e2e > list-task 2`] = `
 This is a test for task list.
 First List
 Items in first list:
-• Apple
-• Banana
-• Cherry
+[ ] Apple
+[ ] Banana
+[x] Cherry
 Second List
-• Dog
-• Elephant
-• Fox
+[ ] Dog
+[x] Elephant
+[x] Fox
 Nested Lists
 Outer list:
-• First outer
-• First inner
-• Second inner
-• Third
-• Second outer
-• Third outer
+[ ] First outer
+[ ] First inner
+[x] Second inner
+[ ] Third
+[ ] Second outer
+[ ] Third outer
 Another separate list:
-• Alpha
-• Beta
-• Gamma"
+[ ] Alpha
+[x] Beta
+[ ] Gamma"
 `;
 
 exports[`e2e > lorem 2`] = `
@@ -399,6 +399,6 @@ A bold emoji: , an emphatic one: , a deleted one: , in inline code:
 • emphatic emoji:
 • deleted emoji:
 • inline code emoji:
-• not checked:
-• checked:"
+[ ] not checked:
+[x] checked:"
 `;
