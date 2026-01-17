@@ -731,14 +731,11 @@ export async function mdastToPdf(
             doc.y = y;
           }
         } else {
-          const prevX = doc.x;
-          doc.x = contentLeft + (style.indent ?? 0);
           paintInlines(node.children, {
-            x: doc.x,
+            x: contentLeft + (style.indent ?? 0),
             y: doc.y,
             width: contentWidth,
           });
-          doc.x = prevX;
           if (spacing) {
             doc.moveDown(spacing);
           }
