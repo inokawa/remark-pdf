@@ -53,17 +53,13 @@ export type TextStyleMatcher = [pattern: RegExp, style: Partial<TextStyle>];
 
 interface BlockStyle {
   indent?: number;
+  display: "block" | "table" | "table-row" | "table-cell";
+  textAlign?: Alignment;
 }
 interface PdfBlock {
   type: "block";
   style: BlockStyle;
   children: PdfLayout[];
-}
-
-interface PdfTable {
-  type: "table";
-  align?: Alignment[];
-  cells: { children: PdfLayout[] }[][];
 }
 
 interface PdfPageBreak {
@@ -82,7 +78,7 @@ interface PdfImage {
   data: PdfImageData;
 }
 
-type PdfLayout = PdfBlock | PdfPageBreak | PdfTable | PdfText | PdfImage;
+type PdfLayout = PdfBlock | PdfPageBreak | PdfText | PdfImage;
 
 type ListContext = Readonly<{
   level: number;
@@ -702,17 +698,50 @@ export async function mdastToPdf(
     switch (node.type) {
       case "block": {
         const style = node.style;
-        const prevX = doc.x;
-        doc.x = contentLeft + (style.indent ?? 0);
-        paintInlines(node.children, {
-          x: doc.x,
-          y: doc.y,
-          width: contentWidth,
-        });
-        doc.x = prevX;
+        if (style.display === "table") {
+          const rows = node.children.filter((c) => c.type === "block");
+          const colCount = rows[0]!.children.length;
+          const cellWidth = contentWidth / colCount;
+          const cellPadding = 2;
+          const startX = doc.x;
+          let y = doc.y;
+          for (const row of rows) {
+            const cells = row.children.filter((c) => c.type === "block");
+            let cellHeight = 0;
+            let x = startX;
+            for (const cell of cells) {
+              paintInlines(cell.children, {
+                x: x + cellPadding,
+                y: y + cellPadding * 2,
+                align: cell.style.textAlign,
+                width: cellWidth - cellPadding * 2,
+              });
+              cellHeight = Math.max(cellHeight, doc.y - y);
+              x += cellWidth;
+            }
 
-        if (spacing) {
-          doc.moveDown(spacing);
+            x = startX;
+            for (const _ of cells) {
+              doc.rect(x, y, cellWidth, cellHeight).stroke();
+              x += cellWidth;
+            }
+
+            y += cellHeight;
+            doc.x = startX;
+            doc.y = y;
+          }
+        } else {
+          const prevX = doc.x;
+          doc.x = contentLeft + (style.indent ?? 0);
+          paintInlines(node.children, {
+            x: doc.x,
+            y: doc.y,
+            width: contentWidth,
+          });
+          doc.x = prevX;
+          if (spacing) {
+            doc.moveDown(spacing);
+          }
         }
         break;
       }
@@ -720,34 +749,6 @@ export async function mdastToPdf(
       case "image": {
         // fallback to block
         paintInlines([node], { x: doc.x, y: doc.y, width: contentWidth });
-        break;
-      }
-      case "table": {
-        const cellWidth = contentWidth / node.cells[0]!.length;
-        const cellPadding = 2;
-        const startX = doc.x;
-        let y = doc.y;
-        for (const row of node.cells) {
-          let cellHeight = 0;
-          for (let j = 0, x = startX; j < row.length; j++, x += cellWidth) {
-            const cell = row[j]!;
-            paintInlines(cell.children, {
-              x: x + cellPadding,
-              y: y + cellPadding * 2,
-              align: node.align?.[j],
-              width: cellWidth - cellPadding * 2,
-            });
-            cellHeight = Math.max(cellHeight, doc.y - y);
-          }
-
-          for (let j = 0, x = startX; j < row.length; j++, x += cellWidth) {
-            doc.rect(x, y, cellWidth, cellHeight).stroke();
-          }
-
-          y += cellHeight;
-          doc.x = startX;
-          doc.y = y;
-        }
         break;
       }
       case "pagebreak": {
@@ -770,7 +771,7 @@ export async function mdastToPdf(
 }
 
 const buildParagraph: NodeBuilder<"paragraph"> = ({ children }, ctx) => {
-  const style: BlockStyle = {};
+  const style: BlockStyle = { display: "block" };
   const list = ctx.list;
   if (list) {
     const { meta, level } = list;
@@ -843,15 +844,21 @@ const buildList: NodeBuilder<"list"> = ({ children, ordered }, ctx) => {
 
 const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
   const cellAligns: Alignment[] | undefined = align?.map((a) => a ?? "left");
-
   return {
-    type: "table",
-    align: cellAligns,
-    cells: children.map((r) => {
-      return r.children.map((c) => {
-        return { children: ctx.render(c.children) };
-      });
-    }),
+    type: "block",
+    style: { display: "table" },
+    children: children.map((row) => ({
+      type: "block",
+      style: { display: "table-row" },
+      children: row.children.map((cell, colIdx) => ({
+        type: "block",
+        style: {
+          display: "table-cell",
+          textAlign: cellAligns?.[colIdx],
+        },
+        children: ctx.render(cell.children),
+      })),
+    })),
   };
 };
 
@@ -930,7 +937,7 @@ const buildInlineCode: NodeBuilder<"inlineCode"> = (node, ctx) => {
 const buildCode: NodeBuilder<"code"> = (node, ctx) => {
   return {
     type: "block",
-    style: {},
+    style: { display: "block" },
     children: ctx.render([{ type: "text", value: node.value }], {
       ...ctx,
       style: { ...ctx.style, ...ctx.config.code },
