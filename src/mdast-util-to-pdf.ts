@@ -660,7 +660,7 @@ export async function mdastToPdf(
     return boxes;
   };
 
-  const paintBlock = (root: PdfBlock) => {
+  const paintLayout = (root: PdfBlock) => {
     const inlines = root.children.filter(
       (c) => c.type === "text" || c.type === "image",
     );
@@ -669,7 +669,7 @@ export async function mdastToPdf(
         switch (node.type) {
           case "text":
           case "image": {
-            paintBlock({
+            paintLayout({
               type: "block",
               style: { display: "block" },
               children: [node],
@@ -710,7 +710,7 @@ export async function mdastToPdf(
                 }
                 x = startX;
                 for (const _ of cells) {
-                  paintCell(
+                  paintBlock(
                     { x, y, width: cellWidth, height: cellHeight },
                     doc,
                   );
@@ -721,7 +721,7 @@ export async function mdastToPdf(
                 doc.y = y;
               }
             } else {
-              paintBlock(node);
+              paintLayout(node);
             }
             break;
           }
@@ -747,10 +747,12 @@ export async function mdastToPdf(
       if (spacing) {
         doc.y += spacing;
       }
+
+      inlines.splice(0);
     }
   };
 
-  paintBlock({ type: "block", style: { display: "block" }, children: nodes });
+  paintLayout({ type: "block", style: { display: "block" }, children: nodes });
 
   doc.end();
   return new Promise<ArrayBuffer>((resolve) => {
@@ -781,7 +783,7 @@ interface ImageBox extends Box {
 
 type InlineBox = TextBox | ImageBox;
 
-const paintCell = (box: BlockBox, doc: PDFKit.PDFDocument) => {
+const paintBlock = (box: BlockBox, doc: PDFKit.PDFDocument) => {
   doc.rect(box.x, box.y, box.width, box.height).stroke();
 };
 
