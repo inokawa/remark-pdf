@@ -694,7 +694,7 @@ export async function mdastToPdf(
 
             x = startX;
             for (const _ of cells) {
-              doc.rect(x, y, cellWidth, cellHeight).stroke();
+              paintBlock({ x, y, width: cellWidth, height: cellHeight }, doc);
               x += cellWidth;
             }
 
@@ -750,26 +750,30 @@ export async function mdastToPdf(
   });
 }
 
-type InlineBox = Readonly<
-  | {
-      type: "text";
-      node: PdfText;
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-      font: string;
-      text: string;
-    }
-  | {
-      type: "image";
-      node: PdfImage;
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-    }
->;
+interface Box {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+interface BlockBox extends Box {}
+interface TextBox extends Box {
+  readonly type: "text";
+  readonly node: PdfText;
+  readonly font: string;
+  readonly text: string;
+}
+interface ImageBox extends Box {
+  readonly type: "image";
+  readonly node: PdfImage;
+}
+
+type InlineBox = TextBox | ImageBox;
+
+const paintBlock = (box: BlockBox, doc: PDFKit.PDFDocument) => {
+  doc.rect(box.x, box.y, box.width, box.height).stroke();
+};
 
 const paintInlines = (boxes: readonly InlineBox[], doc: PDFKit.PDFDocument) => {
   for (const box of boxes) {
