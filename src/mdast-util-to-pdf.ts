@@ -6,7 +6,7 @@ import Decimal from "@jsamr/counter-style/presets/decimal";
 import Disc from "@jsamr/counter-style/presets/disc";
 import { definitions, type GetDefinition } from "mdast-util-definitions";
 import deepmerge from "deepmerge";
-import { warnOnce } from "./utils";
+import { warnOnce, type Writeable } from "./utils";
 import imageSize from "image-size";
 import { visit } from "unist-util-visit";
 // @ts-expect-error
@@ -489,7 +489,7 @@ export async function mdastToPdf(
   const contentTop = doc.page.margins.top;
   const contentLeft = doc.page.margins.left;
 
-  const paintInlines = (
+  const measureInlines = (
     nodes: readonly PdfLayout[],
     {
       x: startX,
@@ -497,74 +497,39 @@ export async function mdastToPdf(
       width: wrapWidth,
       align = "left",
     }: { x: number; y: number; width: number; align?: Alignment },
-  ) => {
+  ): InlineBox[] => {
     const items = nodes.filter((n) => n.type === "text" || n.type === "image");
     let x = startX;
     let y = startY;
-    let line: (
-      | {
-          node: PdfText;
-          width: number;
-          height: number;
-          font: string;
-          text: string;
-        }
-      | {
-          node: PdfImage;
-          width: number;
-          height: number;
-        }
-    )[] = [];
+    let line: Writeable<InlineBox>[] = [];
+    const boxes: InlineBox[] = [];
 
-    const textWidth = (text: string): number => {
-      return doc.widthOfString(text);
-    };
+    const textWidth = (text: string): number => doc.widthOfString(text);
 
     const flushLine = () => {
       const lineWidth = line.reduce((acc, i) => acc + i.width, 0);
-      const maxHeight =
-        line.length === 0
-          ? doc.currentLineHeight()
-          : line.reduce((acc, i) => Math.max(acc, i.height), 0);
+      const lineHeight = line.reduce(
+        (acc, i) => Math.max(acc, i.height),
+        doc.currentLineHeight(),
+      );
 
+      const baselineY = y + lineHeight;
       let cursorX = startX;
       if (align === "center") {
         cursorX += (wrapWidth - lineWidth) / 2;
       } else if (align === "right") {
         cursorX += wrapWidth - lineWidth;
       }
-
       for (const item of line) {
-        if ("text" in item) {
-          const style = item.node.style;
-          doc.font(item.font).fontSize(style.fontSize).fillColor(style.color);
-          doc.text(item.text, cursorX, y, {
-            strike: style.strike,
-            underline: style.underline,
-            link: item.node.link ?? null,
-            continued: false,
-          });
-          cursorX += item.width;
-        } else {
-          const data = item.node.data;
-          if (data.type === "svg") {
-            SVGtoPDF(doc, data.data, cursorX, y, {
-              width: item.width,
-              height: item.height,
-            });
-          } else {
-            doc.image(data.data, cursorX, y, {
-              width: item.width,
-              height: item.height,
-            });
-          }
-          cursorX += item.width;
-        }
+        item.x = cursorX;
+        item.y = baselineY - item.height;
+
+        boxes.push(item);
+        cursorX += item.width;
       }
-      y += maxHeight;
+      y += lineHeight;
       if (y > contentHeight) {
         y = contentTop;
-        doc.addPage();
       }
       x = startX;
       line = [];
@@ -581,10 +546,10 @@ export async function mdastToPdf(
           }
           if (x + width > startX + wrapWidth) {
             if (line.length) flushLine();
-            line.push({ node, width, height });
+            line.push({ type: "image", node, x: 0, y: 0, width, height });
             flushLine();
           } else {
-            line.push({ node, width, height });
+            line.push({ type: "image", node, x: 0, y: 0, width, height });
             x += width;
           }
           break;
@@ -623,7 +588,10 @@ export async function mdastToPdf(
           let w = 0;
           const pushText = (t: string, w: number) => {
             line.push({
+              type: "text",
               node,
+              x: 0,
+              y: 0,
               width: w,
               height: lineHeight,
               font,
@@ -690,8 +658,7 @@ export async function mdastToPdf(
     if (line.length > 0) {
       flushLine();
     }
-    doc.x = x;
-    doc.y = y;
+    return boxes;
   };
 
   for (const node of nodes) {
@@ -710,13 +677,18 @@ export async function mdastToPdf(
             let cellHeight = 0;
             let x = startX;
             for (const cell of cells) {
-              paintInlines(cell.children, {
+              const boxes = measureInlines(cell.children, {
                 x: x + cellPadding,
                 y: y + cellPadding * 2,
                 align: cell.style.textAlign,
                 width: cellWidth - cellPadding * 2,
               });
-              cellHeight = Math.max(cellHeight, doc.y - y);
+              paintInlines(boxes, doc);
+              const maxCellBottom = boxes.reduce(
+                (acc, b) => Math.max(acc, b.y + b.height),
+                y,
+              );
+              cellHeight = Math.max(cellHeight, maxCellBottom - y);
               x += cellWidth;
             }
 
@@ -731,13 +703,19 @@ export async function mdastToPdf(
             doc.y = y;
           }
         } else {
-          paintInlines(node.children, {
+          const startY = doc.y;
+          const boxes = measureInlines(node.children, {
             x: contentLeft + (style.indent ?? 0),
-            y: doc.y,
+            y: startY,
             width: contentWidth,
           });
+          paintInlines(boxes, doc);
+          doc.y = boxes.reduce(
+            (acc, b) => Math.max(acc, b.y + b.height),
+            startY,
+          );
           if (spacing) {
-            doc.moveDown(spacing);
+            doc.y += spacing;
           }
         }
         break;
@@ -745,7 +723,12 @@ export async function mdastToPdf(
       case "text":
       case "image": {
         // fallback to block
-        paintInlines([node], { x: doc.x, y: doc.y, width: contentWidth });
+        const boxes = measureInlines([node], {
+          x: doc.x,
+          y: doc.y,
+          width: contentWidth,
+        });
+        paintInlines(boxes, doc);
         break;
       }
       case "pagebreak": {
@@ -766,6 +749,55 @@ export async function mdastToPdf(
     });
   });
 }
+
+type InlineBox = Readonly<
+  | {
+      type: "text";
+      node: PdfText;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      font: string;
+      text: string;
+    }
+  | {
+      type: "image";
+      node: PdfImage;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }
+>;
+
+const paintInlines = (boxes: readonly InlineBox[], doc: PDFKit.PDFDocument) => {
+  for (const box of boxes) {
+    if (box.type === "text") {
+      const style = box.node.style;
+      doc.font(box.font).fontSize(style.fontSize).fillColor(style.color);
+      doc.text(box.text, box.x, box.y, {
+        strike: style.strike,
+        underline: style.underline,
+        link: box.node.link ?? null,
+        continued: false,
+      });
+    } else {
+      const data = box.node.data;
+      if (data.type === "svg") {
+        SVGtoPDF(doc, data.data, box.x, box.y, {
+          width: box.width,
+          height: box.height,
+        });
+      } else {
+        doc.image(data.data, box.x, box.y, {
+          width: box.width,
+          height: box.height,
+        });
+      }
+    }
+  }
+};
 
 const buildParagraph: NodeBuilder<"paragraph"> = ({ children }, ctx) => {
   const style: BlockStyle = { display: "block" };
