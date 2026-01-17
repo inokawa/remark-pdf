@@ -734,46 +734,39 @@ export async function mdastToPdf(
     } else {
       const style = root.style;
       let startY = doc.y;
-      const boxes = measureInlines(inlines, {
+      let boxes = measureInlines(inlines, {
         x: contentLeft + (style.indent ?? 0),
         y: startY,
         width: contentWidth,
       });
-
-      const lines: Writeable<InlineBox>[][] = [];
-      boxes.forEach((box, i) => {
-        if (i === 0 || box.y !== boxes[i - 1]!.y) {
-          lines.push([box]);
-        } else {
-          lines[lines.length - 1]!.push(box);
+      let pageStart = 0;
+      while (pageStart < boxes.length) {
+        let pageEnd = pageStart;
+        while (pageEnd < boxes.length) {
+          const box = boxes[pageEnd]!;
+          if (box.y + box.height <= contentHeight) {
+            pageEnd++;
+          } else {
+            break;
+          }
         }
-      });
-
-      for (let lineIdx = 0; lineIdx < lines.length; ) {
-        let pageBottom = startY;
-        let first = true;
-        let endIdx = lineIdx;
-        while (endIdx < lines.length) {
-          const line = lines[endIdx]!;
-          const lineHeight = line.reduce((acc, b) => Math.max(acc, b.height), 0);
-          if (!first && pageBottom + lineHeight > contentHeight) break;
-          pageBottom += lineHeight;
-          endIdx++;
-          first = false;
+        if (pageEnd === pageStart) {
+          pageEnd = pageStart + 1;
         }
-        if (endIdx === lineIdx) endIdx++;
-        const pageBoxes = lines.slice(lineIdx, endIdx).flat();
+        const pageBoxes = boxes.slice(pageStart, pageEnd);
         paintInlines(pageBoxes, doc);
-        doc.y = pageBoxes.reduce((acc, b) => Math.max(acc, b.y + b.height), startY);
-        lineIdx = endIdx;
-        if (lineIdx < lines.length) {
+        doc.y = pageBoxes.reduce(
+          (acc, b) => Math.max(acc, b.y + b.height),
+          startY,
+        );
+        pageStart = pageEnd;
+        if (pageStart < boxes.length) {
           doc.addPage();
           startY = contentTop;
-          const yOffset = contentTop - lines[lineIdx]![0]!.y;
-          for (let l = lineIdx; l < lines.length; l++) {
-            for (const b of lines[l]!) {
-              b.y += yOffset;
-            }
+          const yOffset = contentTop - boxes[pageStart]!.y;
+          for (let i = pageStart; i < boxes.length; i++) {
+            const box = boxes[i]!;
+            boxes[i] = { ...box, y: box.y + yOffset };
           }
         }
       }
