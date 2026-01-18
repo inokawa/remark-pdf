@@ -489,167 +489,19 @@ export async function mdastToPdf(
   const contentTop = doc.page.margins.top;
   const contentLeft = doc.page.margins.left;
 
-  const measureInlines = (
-    items: readonly (PdfText | PdfImage)[],
-    {
-      x: startX,
-      y: startY,
-      width: wrapWidth,
-      align = "left",
-    }: { x: number; y: number; width: number; align?: Alignment },
-  ): InlineBox[] => {
-    let x = startX;
-    let y = startY;
-    let line: Writeable<InlineBox>[] = [];
-    const boxes: InlineBox[] = [];
-
-    const textWidth = (text: string): number => doc.widthOfString(text);
-
-    const flushLine = () => {
-      if (line.length === 0) {
-        y += doc.currentLineHeight();
-        x = startX;
-        return;
-      }
-      const lineWidth = line.reduce((acc, i) => acc + i.width, 0);
-      const lineHeight = line.reduce(
-        (acc, i) => Math.max(acc, i.height),
-        doc.currentLineHeight(),
-      );
-
-      const baselineY = y + lineHeight;
-      let cursorX = startX;
-      if (align === "center") {
-        cursorX += (wrapWidth - lineWidth) / 2;
-      } else if (align === "right") {
-        cursorX += wrapWidth - lineWidth;
-      }
-      for (const item of line) {
-        item.x = cursorX;
-        item.y = baselineY - item.height;
-
-        boxes.push(item);
-        cursorX += item.width;
-      }
-      y += lineHeight;
-      x = startX;
-      line = [];
-    };
-
-    for (const node of items) {
-      switch (node.type) {
-        case "image": {
-          let { width, height } = node.data;
-          if (width > wrapWidth) {
-            const scale = wrapWidth / width;
-            width *= scale;
-            height *= scale;
-          }
-          if (x + width > startX + wrapWidth) {
-            if (line.length) flushLine();
-            line.push({ type: "image", node, x: 0, y: 0, width, height });
-            flushLine();
-          } else {
-            line.push({ type: "image", node, x: 0, y: 0, width, height });
-            x += width;
-          }
-          break;
-        }
-        case "text": {
-          const { style, text } = node;
-          if (!style.fontSize) {
-            continue;
-          }
-          let targetFont = fontMap.get(style.font);
-          if (!targetFont) {
-            targetFont = fontMap.get(defaultFontName)!;
-          }
-          let font = targetFont.normal;
-          if (style.bold && style.italic && targetFont.bolditalic) {
-            font = targetFont.bolditalic;
-          } else if (style.bold && targetFont.bold) {
-            font = targetFont.bold;
-          } else if (style.italic && targetFont.italic) {
-            font = targetFont.italic;
-          }
-          doc.font(font).fontSize(style.fontSize);
-          const lineHeight = doc.currentLineHeight();
-          const breaker = new LineBreaker(text);
-          const words: { word: string; required: boolean }[] = [];
-          let last = 0;
-          let bk;
-          while ((bk = breaker.nextBreak())) {
-            words.push({
-              word: text.slice(last, bk.position),
-              required: bk.required,
-            });
-            last = bk.position;
-          }
-          let buffer = "";
-          let w = 0;
-          const pushText = (t: string, w: number) => {
-            line.push({
-              type: "text",
-              node,
-              x: 0,
-              y: 0,
-              width: w,
-              height: lineHeight,
-              font,
-              text: t,
-            });
-            x += w;
-          };
-          const flush = (alsoLine: boolean) => {
-            if (buffer) {
-              pushText(buffer, w);
-              buffer = "";
-              w = 0;
-            }
-            if (alsoLine) {
-              flushLine();
-            }
-          };
-          for (const { word, required } of words) {
-            if (word === "\n") {
-              flush(true);
-              continue;
-            }
-            const wordWidth = textWidth(word);
-            if (wordWidth > wrapWidth) {
-              for (let i = 0; i < word.length; ) {
-                let chunk = word[i]!;
-                for (let l = 1; i + l <= word.length; l++) {
-                  const slice = word.slice(i, i + l);
-                  if (textWidth(slice) > wrapWidth) {
-                    break;
-                  }
-                  chunk = slice;
-                }
-                pushText(chunk, textWidth(chunk));
-                flush(true);
-                i += chunk.length;
-              }
-              continue;
-            }
-            if (x + w + wordWidth > startX + wrapWidth) {
-              flush(true);
-            }
-            buffer += word;
-            w += wordWidth;
-            if (required && buffer) {
-              flush(true);
-            }
-          }
-          flush(false);
-          break;
-        }
-      }
+  const textWidth = (text: string): number => doc.widthOfString(text);
+  const textHeight = (font?: string, fontSize?: number): number => {
+    if (font != null && fontSize != null) {
+      doc.font(font).fontSize(fontSize);
     }
-    if (line.length > 0) {
-      flushLine();
+    return doc.currentLineHeight();
+  };
+  const resolveFont = (font: string): RegisteredFont => {
+    let targetFont = fontMap.get(font);
+    if (!targetFont) {
+      targetFont = fontMap.get(defaultFontName)!;
     }
-    return boxes;
+    return targetFont;
   };
 
   const printBlock = (root: PdfBlock) => {
@@ -691,6 +543,9 @@ export async function mdastToPdf(
                       align: cell.style.textAlign,
                       width: cellWidth - cellPadding * 2,
                     },
+                    textWidth,
+                    textHeight,
+                    resolveFont,
                   );
                   printInlines(boxes, doc);
                   const maxCellBottom = boxes.reduce(
@@ -729,11 +584,17 @@ export async function mdastToPdf(
     } else {
       const style = root.style;
       let startY = doc.y;
-      let boxes = measureInlines(inlines, {
-        x: contentLeft + (style.indent ?? 0),
-        y: startY,
-        width: contentWidth,
-      });
+      let boxes = measureInlines(
+        inlines,
+        {
+          x: contentLeft + (style.indent ?? 0),
+          y: startY,
+          width: contentWidth,
+        },
+        textWidth,
+        textHeight,
+        resolveFont,
+      );
       let pageStart = 0;
       while (pageStart < boxes.length) {
         let pageEnd = pageStart;
@@ -780,6 +641,166 @@ export async function mdastToPdf(
     });
   });
 }
+
+const measureInlines = (
+  items: readonly (PdfText | PdfImage)[],
+  {
+    x: startX,
+    y: startY,
+    width: wrapWidth,
+    align = "left",
+  }: { x: number; y: number; width: number; align?: Alignment },
+  textWidth: (str: string) => number,
+  textHeight: (font?: string, fontSize?: number) => number,
+  resolveFont: (font: string) => RegisteredFont,
+): InlineBox[] => {
+  let x = startX;
+  let y = startY;
+  let line: Writeable<InlineBox>[] = [];
+  const boxes: InlineBox[] = [];
+
+  const flushLine = () => {
+    if (line.length === 0) {
+      y += textHeight();
+      x = startX;
+      return;
+    }
+    const lineWidth = line.reduce((acc, i) => acc + i.width, 0);
+    const lineHeight = line.reduce(
+      (acc, i) => Math.max(acc, i.height),
+      textHeight(),
+    );
+
+    const baselineY = y + lineHeight;
+    let cursorX = startX;
+    if (align === "center") {
+      cursorX += (wrapWidth - lineWidth) / 2;
+    } else if (align === "right") {
+      cursorX += wrapWidth - lineWidth;
+    }
+    for (const item of line) {
+      item.x = cursorX;
+      item.y = baselineY - item.height;
+
+      boxes.push(item);
+      cursorX += item.width;
+    }
+    y += lineHeight;
+    x = startX;
+    line = [];
+  };
+
+  for (const node of items) {
+    switch (node.type) {
+      case "image": {
+        let { width, height } = node.data;
+        if (width > wrapWidth) {
+          const scale = wrapWidth / width;
+          width *= scale;
+          height *= scale;
+        }
+        if (x + width > startX + wrapWidth) {
+          if (line.length) flushLine();
+          line.push({ type: "image", node, x: 0, y: 0, width, height });
+          flushLine();
+        } else {
+          line.push({ type: "image", node, x: 0, y: 0, width, height });
+          x += width;
+        }
+        break;
+      }
+      case "text": {
+        const { style, text } = node;
+        if (!style.fontSize) {
+          continue;
+        }
+        const targetFont = resolveFont(style.font);
+        let font = targetFont.normal;
+        if (style.bold && style.italic && targetFont.bolditalic) {
+          font = targetFont.bolditalic;
+        } else if (style.bold && targetFont.bold) {
+          font = targetFont.bold;
+        } else if (style.italic && targetFont.italic) {
+          font = targetFont.italic;
+        }
+        const lineHeight = textHeight(font, style.fontSize);
+        const breaker = new LineBreaker(text);
+        const words: { word: string; required: boolean }[] = [];
+        let last = 0;
+        let bk;
+        while ((bk = breaker.nextBreak())) {
+          words.push({
+            word: text.slice(last, bk.position),
+            required: bk.required,
+          });
+          last = bk.position;
+        }
+        let buffer = "";
+        let w = 0;
+        const pushText = (t: string, w: number) => {
+          line.push({
+            type: "text",
+            node,
+            x: 0,
+            y: 0,
+            width: w,
+            height: lineHeight,
+            font,
+            text: t,
+          });
+          x += w;
+        };
+        const flush = (alsoLine: boolean) => {
+          if (buffer) {
+            pushText(buffer, w);
+            buffer = "";
+            w = 0;
+          }
+          if (alsoLine) {
+            flushLine();
+          }
+        };
+        for (const { word, required } of words) {
+          if (word === "\n") {
+            flush(true);
+            continue;
+          }
+          const wordWidth = textWidth(word);
+          if (wordWidth > wrapWidth) {
+            for (let i = 0; i < word.length; ) {
+              let chunk = word[i]!;
+              for (let l = 1; i + l <= word.length; l++) {
+                const slice = word.slice(i, i + l);
+                if (textWidth(slice) > wrapWidth) {
+                  break;
+                }
+                chunk = slice;
+              }
+              pushText(chunk, textWidth(chunk));
+              flush(true);
+              i += chunk.length;
+            }
+            continue;
+          }
+          if (x + w + wordWidth > startX + wrapWidth) {
+            flush(true);
+          }
+          buffer += word;
+          w += wordWidth;
+          if (required && buffer) {
+            flush(true);
+          }
+        }
+        flush(false);
+        break;
+      }
+    }
+  }
+  if (line.length > 0) {
+    flushLine();
+  }
+  return boxes;
+};
 
 interface Box {
   readonly x: number;
