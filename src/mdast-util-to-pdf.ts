@@ -15,6 +15,9 @@ import {
   type BlockBox,
   type InlineBox,
   type RegisteredFont,
+  type ResolveFont,
+  type TextHeight,
+  type TextWidth,
 } from "./layout";
 
 type KnownNodeType = mdast.RootContent["type"];
@@ -485,14 +488,14 @@ export async function mdastToPdf(
   const contentTop = doc.page.margins.top;
   const contentLeft = doc.page.margins.left;
 
-  const textWidth = (text: string): number => doc.widthOfString(text);
-  const textHeight = (font?: string, fontSize?: number): number => {
+  const textWidth: TextWidth = (text) => doc.widthOfString(text);
+  const textHeight: TextHeight = (font, fontSize) => {
     if (font != null && fontSize != null) {
       doc.font(font).fontSize(fontSize);
     }
     return doc.currentLineHeight();
   };
-  const resolveFont = (font: string): RegisteredFont => {
+  const resolveFont: ResolveFont = (font) => {
     let targetFont = fontMap.get(font);
     if (!targetFont) {
       targetFont = fontMap.get(defaultFontName)!;

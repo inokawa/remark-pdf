@@ -33,6 +33,10 @@ export interface ImageBox extends Box {
 
 export type InlineBox = TextBox | ImageBox;
 
+export type TextWidth = (str: string) => number;
+export type TextHeight = (font?: string, fontSize?: number) => number;
+export type ResolveFont = (font: string) => RegisteredFont;
+
 export const measureInlines = (
   items: readonly (PdfText | PdfImage)[],
   {
@@ -41,9 +45,9 @@ export const measureInlines = (
     width: wrapWidth,
     align = "left",
   }: { x: number; y: number; width: number; align?: Alignment },
-  textWidth: (str: string) => number,
-  textHeight: (font?: string, fontSize?: number) => number,
-  resolveFont: (font: string) => RegisteredFont,
+  textWidth: TextWidth,
+  textHeight: TextHeight,
+  resolveFont: ResolveFont,
 ): InlineBox[] => {
   let x = startX;
   let y = startY;
