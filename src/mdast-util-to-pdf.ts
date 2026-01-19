@@ -487,7 +487,7 @@ export async function mdastToPdf(
   const contentTop = doc.page.margins.top;
   const contentLeft = doc.page.margins.left;
 
-  const boxes = layoutBlock(
+  const box = layoutBlock(
     { type: "block", style: { display: "block" }, children: nodes },
     contentLeft,
     contentTop,
@@ -520,7 +520,7 @@ export async function mdastToPdf(
     },
   );
 
-  paintBoxes(boxes, doc, contentHeight, contentTop, images);
+  paintBoxes(box, doc, contentHeight, contentTop, images);
 
   doc.end();
   return new Promise<ArrayBuffer>((resolve) => {
@@ -547,13 +547,13 @@ function flattenBoxes(boxes: readonly LayoutBox[]): LayoutBox[] {
 }
 
 const paintBoxes = (
-  boxes: readonly BlockBox[],
+  root: BlockBox,
   doc: PDFKit.PDFDocument,
   contentHeight: number,
   contentTop: number,
   images: ReadonlyMap<string, PdfImageData | null>,
 ): void => {
-  const flatBoxes = flattenBoxes(boxes);
+  const flatBoxes = flattenBoxes([root]);
   let i = 0;
   while (i < flatBoxes.length) {
     let pageBoxes: LayoutBox[] = [];

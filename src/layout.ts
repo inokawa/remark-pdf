@@ -64,7 +64,7 @@ export const layoutBlock = (
   startX: number,
   startY: number,
   options: Options,
-): BlockBox[] => {
+): BlockBox => {
   const {
     top,
     width,
@@ -75,34 +75,78 @@ export const layoutBlock = (
     resolveImageSize,
   } = options;
   let y = max(startY, top);
-  let height = 0;
-  let border = false;
-  const boxes: LayoutBox[] = [];
 
-  if (style.display === "table-cell") {
-    border = true;
-    const cellPadding = 2;
-    const inlineBoxes = measureInlines(
-      children.filter((c) => c.type === "text" || c.type === "void"),
-      {
-        x: startX + cellPadding,
-        y: y + cellPadding,
-        align: style.textAlign,
-        width: width - cellPadding * 2,
-      },
-      textWidth,
-      textHeight,
-      resolveFont,
-      resolveImageSize,
-    );
-    boxes.push(...inlineBoxes);
-    height =
-      inlineBoxes.reduce((acc, b) => max(acc, b.y + b.height - y), 0) +
-      cellPadding;
-  } else if (style.display === "table") {
-    const rows = children.filter((c) => c.type === "block");
-    if (rows[0]) {
-      const colCount = rows[0].children.length;
+  switch (style.display) {
+    case "block":
+    case "table-row": {
+      let afterPagebreak = false;
+      const boxes: LayoutBox[] = [];
+      const inlineBuffer: (TextNode | VoidNode)[] = [];
+
+      const flush = () => {
+        if (inlineBuffer.length > 0) {
+          const inlineBoxes = measureInlines(
+            inlineBuffer,
+            {
+              x: startX + (style.indent ?? 0),
+              y: y,
+              width,
+            },
+            textWidth,
+            textHeight,
+            resolveFont,
+            resolveImageSize,
+          );
+          boxes.push(...inlineBoxes);
+          if (inlineBoxes.length > 0) {
+            const lastBox = inlineBoxes[inlineBoxes.length - 1]!;
+            y = lastBox.y + lastBox.height;
+          }
+          inlineBuffer.splice(0);
+        }
+      };
+
+      for (const node of children) {
+        if (node.type === "pagebreak") {
+          flush();
+          boxes.push({ type: "pagebreak" });
+          afterPagebreak = true;
+          continue;
+        }
+        if (afterPagebreak) {
+          y = top;
+          afterPagebreak = false;
+        }
+        if (node.type === "block") {
+          flush();
+          const childBox = layoutBlock(node, startX, y, options);
+          boxes.push(childBox);
+          y = childBox.y + childBox.height;
+        } else if (node.type === "text" || node.type === "void") {
+          inlineBuffer.push(node);
+        }
+        if (spacing) {
+          if (node.type === "block") {
+            y += spacing;
+          }
+        }
+      }
+      flush();
+
+      return {
+        type: "block",
+        x: startX,
+        y: startY,
+        width,
+        height: y - startY,
+        border: false,
+        children: boxes,
+      };
+    }
+    case "table": {
+      const boxes: LayoutBox[] = [];
+      const rows = children.filter((c) => c.type === "block");
+      const colCount = rows[0]!.children.length;
       const cellWidth = width / colCount;
       let tableY = y;
       for (const row of rows) {
@@ -111,102 +155,69 @@ export const layoutBlock = (
         const rowChildren: BlockBox[] = [];
         for (let colIdx = 0; colIdx < cells.length; colIdx++) {
           const cell = cells[colIdx]!;
-          const cellBoxes = layoutBlock(
+          const cellBox = layoutBlock(
             cell,
             startX + colIdx * cellWidth,
             tableY,
             { ...options, width: cellWidth },
           );
-          rowChildren.push(...cellBoxes);
-          rowHeight = max(
-            rowHeight,
-            cellBoxes.reduce((acc, b) => max(acc, b.height), 0),
-          );
+          rowChildren.push(cellBox);
+          rowHeight = max(rowHeight, cellBox.height);
         }
         boxes.push({
           type: "block",
           x: startX,
           y: tableY,
-          width: width,
+          width,
           height: rowHeight,
           border: false,
           children: rowChildren,
         });
         tableY += rowHeight;
       }
-      height = tableY - y;
+
+      return {
+        type: "block",
+        x: startX,
+        y: startY,
+        width,
+        height: tableY - y,
+        border: false,
+        children: boxes,
+      };
     }
-  } else if (style.display === "block" || style.display === "table-row") {
-    let afterPagebreak = false;
-    const inlineBuffer: (TextNode | VoidNode)[] = [];
+    case "table-cell": {
+      const cellPadding = 2;
+      const inlineBoxes = measureInlines(
+        children.filter((c) => c.type === "text" || c.type === "void"),
+        {
+          x: startX + cellPadding,
+          y: y + cellPadding,
+          align: style.textAlign,
+          width: width - cellPadding * 2,
+        },
+        textWidth,
+        textHeight,
+        resolveFont,
+        resolveImageSize,
+      );
 
-    const flush = () => {
-      if (inlineBuffer.length > 0) {
-        const inlineBoxes = measureInlines(
-          inlineBuffer,
-          {
-            x: startX + (style.indent ?? 0),
-            y: y,
-            width: width,
-          },
-          textWidth,
-          textHeight,
-          resolveFont,
-          resolveImageSize,
-        );
-        boxes.push(...inlineBoxes);
-        if (inlineBoxes.length > 0) {
-          const lastBox = inlineBoxes[inlineBoxes.length - 1]!;
-          y = lastBox.y + lastBox.height;
-        }
-        inlineBuffer.splice(0);
-      }
-    };
-
-    for (const node of children) {
-      if (node.type === "pagebreak") {
-        flush();
-        boxes.push({ type: "pagebreak" });
-        afterPagebreak = true;
-        continue;
-      }
-      if (afterPagebreak) {
-        y = top;
-        afterPagebreak = false;
-      }
-      if (node.type === "block") {
-        flush();
-        const childBoxes = layoutBlock(node, startX, y, options);
-        boxes.push(...childBoxes);
-        if (childBoxes.length > 0) {
-          const lastBox = childBoxes[childBoxes.length - 1]!;
-          y = lastBox.y + lastBox.height;
-        }
-      } else if (node.type === "text" || node.type === "void") {
-        inlineBuffer.push(node);
-      }
-      if (spacing) {
-        if (node.type === "block") {
-          y += spacing;
-        }
-      }
+      return {
+        type: "block",
+        x: startX,
+        y: startY,
+        width,
+        height:
+          inlineBoxes.reduce((acc, b) => max(acc, b.y + b.height - y), 0) +
+          cellPadding,
+        border: true,
+        children: inlineBoxes,
+      };
     }
-    flush();
-
-    height = y - startY;
+    default: {
+      return style.display satisfies never;
+    }
   }
-
-  return [
-    {
-      type: "block",
-      x: startX,
-      y: startY,
-      width: width,
-      height,
-      border,
-      children: boxes,
-    },
-  ];
 };
 
 const measureInlines = (
