@@ -81,12 +81,12 @@ export const layoutBlock = (
     case "table-row": {
       let afterPagebreak = false;
       const boxes: LayoutBox[] = [];
-      const inlineBuffer: (TextNode | VoidNode)[] = [];
+      const inlines: (TextNode | VoidNode)[] = [];
 
       const flush = () => {
-        if (inlineBuffer.length > 0) {
+        if (inlines.length) {
           const inlineBoxes = measureInlines(
-            inlineBuffer,
+            inlines,
             {
               x: startX + (style.indent ?? 0),
               y: y,
@@ -98,11 +98,11 @@ export const layoutBlock = (
             resolveImageSize,
           );
           boxes.push(...inlineBoxes);
-          if (inlineBoxes.length > 0) {
+          if (inlineBoxes.length) {
             const lastBox = inlineBoxes[inlineBoxes.length - 1]!;
             y = lastBox.y + lastBox.height;
           }
-          inlineBuffer.splice(0);
+          inlines.splice(0);
         }
       };
 
@@ -123,7 +123,7 @@ export const layoutBlock = (
           boxes.push(childBox);
           y = childBox.y + childBox.height;
         } else if (node.type === "text" || node.type === "void") {
-          inlineBuffer.push(node);
+          inlines.push(node);
         }
         if (spacing) {
           if (node.type === "block") {
@@ -380,7 +380,7 @@ const measureInlines = (
       }
     }
   }
-  if (line.length > 0) {
+  if (line.length) {
     flushLine();
   }
   return boxes;

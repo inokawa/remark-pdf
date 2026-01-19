@@ -530,21 +530,14 @@ export async function mdastToPdf(
   });
 }
 
-function flattenBoxes(boxes: readonly LayoutBox[]): LayoutBox[] {
-  const result: LayoutBox[] = [];
-  for (const box of boxes) {
-    if (box.type === "block") {
-      if (box.border) {
-        result.push(box);
-      } else {
-        result.push(...flattenBoxes(box.children));
-      }
-    } else {
-      result.push(box);
+const flattenBoxes = (box: LayoutBox): LayoutBox[] => {
+  if (box.type === "block") {
+    if (!box.border) {
+      return box.children.flatMap(flattenBoxes);
     }
   }
-  return result;
-}
+  return [box];
+};
 
 const paintBoxes = (
   root: BlockBox,
@@ -553,15 +546,15 @@ const paintBoxes = (
   contentTop: number,
   images: ReadonlyMap<string, PdfImageData | null>,
 ): void => {
-  const flatBoxes = flattenBoxes([root]);
+  const boxes = flattenBoxes(root);
   let i = 0;
-  while (i < flatBoxes.length) {
+  while (i < boxes.length) {
     let pageBoxes: LayoutBox[] = [];
     let j = i;
     let pageBreak = false;
     let firstBoxY: number | null = null;
-    while (j < flatBoxes.length) {
-      const box = flatBoxes[j]!;
+    while (j < boxes.length) {
+      const box = boxes[j]!;
       if (box.type === "pagebreak") {
         pageBreak = true;
         break;
@@ -600,7 +593,7 @@ const paintBoxes = (
     if (pageBreak) {
       doc.addPage();
       i++;
-    } else if (hasContent && j < flatBoxes.length) {
+    } else if (hasContent && j < boxes.length) {
       doc.addPage();
     }
   }
