@@ -618,17 +618,19 @@ const paintImageBox = (
   offsetY: number,
   images: ReadonlyMap<string, PdfImageData | null>,
 ) => {
-  const data = images.get(box.node.attrs.src)!;
-  if (data.type === "svg") {
-    SVGtoPDF(doc, data.data, box.x, box.y - offsetY, {
-      width: box.width,
-      height: box.height,
-    });
-  } else {
-    doc.image(data.data, box.x, box.y - offsetY, {
-      width: box.width,
-      height: box.height,
-    });
+  const data = images.get(box.node.attrs.src);
+  if (data) {
+    if (data.type === "svg") {
+      SVGtoPDF(doc, data.data, box.x, box.y - offsetY, {
+        width: box.width,
+        height: box.height,
+      });
+    } else {
+      doc.image(data.data, box.x, box.y - offsetY, {
+        width: box.width,
+        height: box.height,
+      });
+    }
   }
 };
 
