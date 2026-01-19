@@ -3,6 +3,8 @@ import LineBreaker from "linebreak";
 import type { Writeable } from "./utils";
 import type { BlockNode, VoidNode, TextNode } from "./mdast-util-to-pdf";
 
+const max = Math.max;
+
 export type Alignment = "left" | "right" | "center";
 
 export type RegisteredFont = {
@@ -74,7 +76,7 @@ export const layoutBlock = (
   const inlines = children.filter(
     (c) => c.type === "text" || c.type === "void",
   );
-  let y = Math.max(startY, contentTop);
+  let y = max(startY, contentTop);
   if (children.length !== inlines.length) {
     let afterPagebreak = false;
     for (let i = 0; i < children.length; i++) {
@@ -141,10 +143,10 @@ export const layoutBlock = (
                 );
                 cellBoxes.push(boxes);
                 const maxCellBottom = boxes.reduce(
-                  (acc, b) => Math.max(acc, b.y + b.height),
+                  (acc, b) => max(acc, b.y + b.height),
                   tableY,
                 );
-                cellHeight = Math.max(cellHeight, maxCellBottom - tableY);
+                cellHeight = max(cellHeight, maxCellBottom - tableY);
               }
               for (const boxes of cellBoxes) {
                 childBoxes.push(...boxes);
@@ -230,7 +232,7 @@ const measureInlines = (
     }
     const lineWidth = line.reduce((acc, i) => acc + i.width, 0);
     const lineHeight = line.reduce(
-      (acc, i) => Math.max(acc, i.height),
+      (acc, i) => max(acc, i.height),
       textHeight(),
     );
 
