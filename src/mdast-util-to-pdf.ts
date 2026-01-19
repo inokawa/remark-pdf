@@ -492,8 +492,8 @@ export async function mdastToPdf(
     contentLeft,
     contentTop,
     {
-      contentTop,
-      contentWidth,
+      top: contentTop,
+      width: contentWidth,
       spacing,
       textHeight: (font, fontSize) => {
         if (font != null && fontSize != null) {
@@ -530,21 +530,38 @@ export async function mdastToPdf(
   });
 }
 
+function flattenBoxes(boxes: readonly LayoutBox[]): LayoutBox[] {
+  const result: LayoutBox[] = [];
+  for (const box of boxes) {
+    if (box.type === "block") {
+      if (box.border) {
+        result.push(box);
+      } else {
+        result.push(...flattenBoxes(box.children));
+      }
+    } else {
+      result.push(box);
+    }
+  }
+  return result;
+}
+
 const paintBoxes = (
-  boxes: readonly LayoutBox[],
+  boxes: readonly BlockBox[],
   doc: PDFKit.PDFDocument,
   contentHeight: number,
   contentTop: number,
   images: ReadonlyMap<string, PdfImageData | null>,
 ): void => {
+  const flatBoxes = flattenBoxes(boxes);
   let i = 0;
-  while (i < boxes.length) {
+  while (i < flatBoxes.length) {
     let pageBoxes: LayoutBox[] = [];
     let j = i;
     let pageBreak = false;
     let firstBoxY: number | null = null;
-    while (j < boxes.length) {
-      const box = boxes[j]!;
+    while (j < flatBoxes.length) {
+      const box = flatBoxes[j]!;
       if (box.type === "pagebreak") {
         pageBreak = true;
         break;
@@ -570,7 +587,7 @@ const paintBoxes = (
       const pageY0 = (firstBoxY ?? contentTop) - contentTop;
       for (const box of pageBoxes) {
         if (box.type === "block") {
-          paintBlockBox(box, doc, pageY0);
+          paintBlockBox(box, doc, pageY0, images);
         } else if (box.type === "text") {
           paintTextBox(box, doc, pageY0);
         } else if (box.type === "image") {
@@ -583,7 +600,7 @@ const paintBoxes = (
     if (pageBreak) {
       doc.addPage();
       i++;
-    } else if (hasContent && j < boxes.length) {
+    } else if (hasContent && j < flatBoxes.length) {
       doc.addPage();
     }
   }
@@ -593,8 +610,20 @@ const paintBlockBox = (
   box: BlockBox,
   doc: PDFKit.PDFDocument,
   offsetY: number,
+  images: ReadonlyMap<string, PdfImageData | null>,
 ) => {
-  doc.rect(box.x, box.y - offsetY, box.width, box.height).stroke();
+  for (const child of box.children) {
+    if (child.type === "block") {
+      paintBlockBox(child, doc, offsetY, images);
+    } else if (child.type === "text") {
+      paintTextBox(child, doc, offsetY);
+    } else if (child.type === "image") {
+      paintImageBox(child, doc, offsetY, images);
+    }
+  }
+  if (box.border) {
+    doc.rect(box.x, box.y - offsetY, box.width, box.height).stroke();
+  }
 };
 
 const paintTextBox = (
