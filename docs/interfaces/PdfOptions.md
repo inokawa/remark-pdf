@@ -4,7 +4,7 @@
 
 # Interface: PdfOptions
 
-Defined in: [mdast-util-to-pdf.ts:181](https://github.com/inokawa/remark-pdf/blob/a45a72731149816641481fb7a5d69ae1f1939cc3/src/mdast-util-to-pdf.ts#L181)
+Defined in: [mdast-util-to-pdf.ts:183](https://github.com/inokawa/remark-pdf/blob/bd187c9453d24ba281785c9e6e28f37e1baed824/src/mdast-util-to-pdf.ts#L183)
 
 ## Properties
 
@@ -12,7 +12,7 @@ Defined in: [mdast-util-to-pdf.ts:181](https://github.com/inokawa/remark-pdf/blo
 
 > `optional` **fonts**: (`StandardFontType` \| `CustomFont`)[]
 
-Defined in: [mdast-util-to-pdf.ts:186](https://github.com/inokawa/remark-pdf/blob/a45a72731149816641481fb7a5d69ae1f1939cc3/src/mdast-util-to-pdf.ts#L186)
+Defined in: [mdast-util-to-pdf.ts:188](https://github.com/inokawa/remark-pdf/blob/bd187c9453d24ba281785c9e6e28f37e1baed824/src/mdast-util-to-pdf.ts#L188)
 
 Standard fonts or privided custom fonts.
 
@@ -28,7 +28,7 @@ Standard fonts or privided custom fonts.
 
 > `optional` **size**: `"A0"` \| `"A1"` \| `"A2"` \| `"A3"` \| `"A4"` \| `"A5"` \| `"A6"` \| `"A7"` \| `"A8"` \| `"A9"` \| `"A10"` \| `"B0"` \| `"B1"` \| `"B2"` \| `"B3"` \| `"B4"` \| `"B5"` \| `"B6"` \| `"B7"` \| `"B8"` \| `"B9"` \| `"B10"` \| `"C0"` \| `"C1"` \| `"C2"` \| `"C3"` \| `"C4"` \| `"C5"` \| `"C6"` \| `"C7"` \| `"C8"` \| `"C9"` \| `"C10"`
 
-Defined in: [mdast-util-to-pdf.ts:192](https://github.com/inokawa/remark-pdf/blob/a45a72731149816641481fb7a5d69ae1f1939cc3/src/mdast-util-to-pdf.ts#L192)
+Defined in: [mdast-util-to-pdf.ts:194](https://github.com/inokawa/remark-pdf/blob/bd187c9453d24ba281785c9e6e28f37e1baed824/src/mdast-util-to-pdf.ts#L194)
 
 Page size.
 https://pdfkit.org/docs/paper_sizes.html
@@ -45,7 +45,7 @@ A4
 
 > `optional` **margin**: `number` \| \{ `top?`: `number`; `left?`: `number`; `bottom?`: `number`; `right?`: `number`; \}
 
-Defined in: [mdast-util-to-pdf.ts:230](https://github.com/inokawa/remark-pdf/blob/a45a72731149816641481fb7a5d69ae1f1939cc3/src/mdast-util-to-pdf.ts#L230)
+Defined in: [mdast-util-to-pdf.ts:232](https://github.com/inokawa/remark-pdf/blob/bd187c9453d24ba281785c9e6e28f37e1baed824/src/mdast-util-to-pdf.ts#L232)
 
 Page margin.
 
@@ -61,7 +61,7 @@ Page margin.
 
 > `optional` **orientation**: `"portrait"` \| `"landscape"`
 
-Defined in: [mdast-util-to-pdf.ts:237](https://github.com/inokawa/remark-pdf/blob/a45a72731149816641481fb7a5d69ae1f1939cc3/src/mdast-util-to-pdf.ts#L237)
+Defined in: [mdast-util-to-pdf.ts:239](https://github.com/inokawa/remark-pdf/blob/bd187c9453d24ba281785c9e6e28f37e1baed824/src/mdast-util-to-pdf.ts#L239)
 
 Page orientation.
 
@@ -77,7 +77,7 @@ Page orientation.
 
 > `optional` **spacing**: `number`
 
-Defined in: [mdast-util-to-pdf.ts:242](https://github.com/inokawa/remark-pdf/blob/a45a72731149816641481fb7a5d69ae1f1939cc3/src/mdast-util-to-pdf.ts#L242)
+Defined in: [mdast-util-to-pdf.ts:244](https://github.com/inokawa/remark-pdf/blob/bd187c9453d24ba281785c9e6e28f37e1baed824/src/mdast-util-to-pdf.ts#L244)
 
 Spacing after Paragraphs.
 
@@ -93,7 +93,7 @@ undefined
 
 > `optional` **styles**: `Partial`\<`StyleOption`\> & `object`
 
-Defined in: [mdast-util-to-pdf.ts:246](https://github.com/inokawa/remark-pdf/blob/a45a72731149816641481fb7a5d69ae1f1939cc3/src/mdast-util-to-pdf.ts#L246)
+Defined in: [mdast-util-to-pdf.ts:248](https://github.com/inokawa/remark-pdf/blob/bd187c9453d24ba281785c9e6e28f37e1baed824/src/mdast-util-to-pdf.ts#L248)
 
 Styles that override the defaults.
 
@@ -109,7 +109,7 @@ Styles that override the defaults.
 
 > `optional` **textStyle**: `TextStyleMatcher`[]
 
-Defined in: [mdast-util-to-pdf.ts:250](https://github.com/inokawa/remark-pdf/blob/a45a72731149816641481fb7a5d69ae1f1939cc3/src/mdast-util-to-pdf.ts#L250)
+Defined in: [mdast-util-to-pdf.ts:252](https://github.com/inokawa/remark-pdf/blob/bd187c9453d24ba281785c9e6e28f37e1baed824/src/mdast-util-to-pdf.ts#L252)
 
 An option to find text and apply style (e.g. font to emoji)
 
@@ -119,7 +119,7 @@ An option to find text and apply style (e.g. font to emoji)
 
 > `optional` **loadImage**: `LoadImageFn`
 
-Defined in: [mdast-util-to-pdf.ts:255](https://github.com/inokawa/remark-pdf/blob/a45a72731149816641481fb7a5d69ae1f1939cc3/src/mdast-util-to-pdf.ts#L255)
+Defined in: [mdast-util-to-pdf.ts:257](https://github.com/inokawa/remark-pdf/blob/bd187c9453d24ba281785c9e6e28f37e1baed824/src/mdast-util-to-pdf.ts#L257)
 
 A function to resolve image data from url.
 
