@@ -259,8 +259,11 @@ const measureInlines = (
     switch (node.type) {
       case "void": {
         const size = resolveImageSize(node.attrs.src);
-        let width = size?.width ?? 100; // TODO revisit
-        let height = size?.height ?? 100; // TODO revisit
+        if (!size) {
+          continue;
+        }
+        let width = size.width;
+        let height = size.height;
         if (width > wrapWidth) {
           const scale = wrapWidth / width;
           width *= scale;
