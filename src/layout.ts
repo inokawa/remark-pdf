@@ -96,16 +96,6 @@ export const layoutBlock = (
             if ("height" in lastBox) {
               y = lastBox.y + lastBox.height;
             }
-            if (spacing && i < children.length - 1 && !afterPagebreak) {
-              result.push({
-                type: "block",
-                x: startX,
-                y: y,
-                width: 0,
-                height: spacing,
-              });
-              y += spacing;
-            }
           }
           break;
         }
@@ -164,35 +154,18 @@ export const layoutBlock = (
               tableY += cellHeight;
             }
             y = tableY;
-            if (spacing && i < children.length - 1 && !afterPagebreak) {
-              childBoxes.push({
-                type: "block",
-                x: startX,
-                y: y,
-                width: 0,
-                height: spacing,
-              });
-              y += spacing;
-            }
           } else {
             childBoxes = layoutBlock(node, startX, y, options);
             const lastBox = childBoxes[childBoxes.length - 1]!;
             if ("height" in lastBox) {
               y = lastBox.y + lastBox.height;
             }
-            if (spacing && i < children.length - 1 && !afterPagebreak) {
-              childBoxes.push({
-                type: "block",
-                x: startX,
-                y: y,
-                width: 0,
-                height: spacing,
-              });
-              y += spacing;
-            }
           }
           if (childBoxes.length > 0) {
             result.push(...childBoxes);
+          }
+          if (spacing) {
+            y += spacing;
           }
           break;
         }

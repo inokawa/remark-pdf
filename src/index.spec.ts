@@ -85,6 +85,16 @@ describe("e2e", () => {
     expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
+  it("lorem spacing", async () => {
+    const md = await fs.readFile(path.join(fixturesDir, "lorem.md"));
+    const doc = await processor({ spacing: 1 }).process(md);
+    const generated = await doc.result;
+    for await (const page of await pdfToImage(Buffer.from(generated))) {
+      expect(page).toMatchImageSnapshot();
+    }
+    expect(await getPdfText(generated)).toMatchSnapshot();
+  });
+
   it("makurano", async () => {
     const font = await fs.readFile(
       path.join(fixturesDir, "fonts/ipaexg00401/ipaexg.ttf"),
