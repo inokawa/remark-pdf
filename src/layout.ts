@@ -1,7 +1,7 @@
 // @ts-expect-error
 import LineBreaker from "linebreak";
 import type { Writeable } from "./utils";
-import type { PdfImage, PdfText } from "./mdast-util-to-pdf";
+import type { PdfBlock, PdfImage, PdfText } from "./mdast-util-to-pdf";
 
 export type Alignment = "left" | "right" | "center";
 
@@ -19,7 +19,9 @@ interface Box {
   readonly height: number;
 }
 
-export interface BlockBox extends Box {}
+export interface BlockBox extends Box {
+  readonly type: "block";
+}
 export interface TextBox extends Box {
   readonly type: "text";
   readonly node: PdfText;
@@ -33,11 +35,195 @@ export interface ImageBox extends Box {
 
 export type InlineBox = TextBox | ImageBox;
 
+export type LayoutBox = InlineBox | BlockBox | { type: "pagebreak" };
+
 export type TextWidth = (str: string) => number;
 export type TextHeight = (font?: string, fontSize?: number) => number;
 export type ResolveFont = (font: string) => RegisteredFont;
 
-export const measureInlines = (
+interface Options {
+  readonly contentTop: number;
+  readonly contentWidth: number;
+  readonly spacing?: number;
+  readonly textWidth: TextWidth;
+  readonly textHeight: TextHeight;
+  readonly resolveFont: ResolveFont;
+}
+
+export const layoutBlock = (
+  { children, style }: PdfBlock,
+  startX: number,
+  startY: number,
+  options: Options,
+): LayoutBox[] => {
+  const {
+    contentTop,
+    contentWidth,
+    spacing,
+    textWidth,
+    textHeight,
+    resolveFont,
+  } = options;
+  const result: LayoutBox[] = [];
+  const inlines = children.filter(
+    (c) => c.type === "text" || c.type === "image",
+  );
+  let y = Math.max(startY, contentTop);
+  if (children.length !== inlines.length) {
+    let afterPagebreak = false;
+    for (let i = 0; i < children.length; i++) {
+      const node = children[i]!;
+      switch (node.type) {
+        case "text":
+        case "image": {
+          if (afterPagebreak) {
+            y = contentTop;
+            afterPagebreak = false;
+          }
+          const childBoxes = layoutBlock(
+            {
+              type: "block",
+              style: { display: "block" },
+              children: [node],
+            },
+            startX,
+            y,
+            options,
+          );
+          if (childBoxes.length > 0) {
+            result.push(...childBoxes);
+            const lastBox = childBoxes[childBoxes.length - 1]!;
+            if ("height" in lastBox) {
+              y = lastBox.y + lastBox.height;
+            }
+            if (spacing && i < children.length - 1 && !afterPagebreak) {
+              result.push({
+                type: "block",
+                x: startX,
+                y: y,
+                width: 0,
+                height: spacing,
+              });
+              y += spacing;
+            }
+          }
+          break;
+        }
+        case "block": {
+          if (afterPagebreak) {
+            y = contentTop;
+            afterPagebreak = false;
+          }
+          let childBoxes: LayoutBox[] = [];
+          if (node.style && node.style.display === "table") {
+            const rows = node.children.filter((c) => c.type === "block");
+            if (!rows[0]) break;
+            const colCount = rows[0].children.length;
+            const cellWidth = contentWidth / colCount;
+            const cellPadding = 2;
+            let tableY = y;
+            for (const row of rows) {
+              const cells = row.children.filter((c) => c.type === "block");
+              let cellHeight = 0;
+              const cellBoxes: LayoutBox[][] = [];
+              for (let colIdx = 0; colIdx < cells.length; colIdx++) {
+                const cell = cells[colIdx]!;
+                const boxes = measureInlines(
+                  cell.children.filter(
+                    (n) => n.type === "text" || n.type === "image",
+                  ),
+                  {
+                    x: startX + colIdx * cellWidth + cellPadding,
+                    y: tableY + cellPadding * 2,
+                    align: cell.style.textAlign,
+                    width: cellWidth - cellPadding * 2,
+                  },
+                  textWidth,
+                  textHeight,
+                  resolveFont,
+                );
+                cellBoxes.push(boxes);
+                const maxCellBottom = boxes.reduce(
+                  (acc, b) => Math.max(acc, b.y + b.height),
+                  tableY,
+                );
+                cellHeight = Math.max(cellHeight, maxCellBottom - tableY);
+              }
+              for (const boxes of cellBoxes) {
+                childBoxes.push(...boxes);
+              }
+              for (let colIdx = 0; colIdx < cells.length; colIdx++) {
+                childBoxes.push({
+                  type: "block",
+                  x: startX + colIdx * cellWidth,
+                  y: tableY,
+                  width: cellWidth,
+                  height: cellHeight,
+                });
+              }
+              tableY += cellHeight;
+            }
+            y = tableY;
+            if (spacing && i < children.length - 1 && !afterPagebreak) {
+              childBoxes.push({
+                type: "block",
+                x: startX,
+                y: y,
+                width: 0,
+                height: spacing,
+              });
+              y += spacing;
+            }
+          } else {
+            childBoxes = layoutBlock(node, startX, y, options);
+            const lastBox = childBoxes[childBoxes.length - 1]!;
+            if ("height" in lastBox) {
+              y = lastBox.y + lastBox.height;
+            }
+            if (spacing && i < children.length - 1 && !afterPagebreak) {
+              childBoxes.push({
+                type: "block",
+                x: startX,
+                y: y,
+                width: 0,
+                height: spacing,
+              });
+              y += spacing;
+            }
+          }
+          if (childBoxes.length > 0) {
+            result.push(...childBoxes);
+          }
+          break;
+        }
+        case "pagebreak": {
+          result.push({ type: "pagebreak" });
+          afterPagebreak = true;
+          break;
+        }
+        default: {
+          node satisfies never;
+        }
+      }
+    }
+  } else {
+    const boxes = measureInlines(
+      inlines,
+      {
+        x: startX + (style.indent ?? 0),
+        y: y,
+        width: contentWidth,
+      },
+      textWidth,
+      textHeight,
+      resolveFont,
+    );
+    result.push(...boxes);
+  }
+  return result;
+};
+
+const measureInlines = (
   items: readonly (PdfText | PdfImage)[],
   {
     x: startX,
