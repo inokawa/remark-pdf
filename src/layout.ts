@@ -1,7 +1,7 @@
 // @ts-expect-error
 import LineBreaker from "linebreak";
 import type { Writeable } from "./utils";
-import type { PdfBlock, PdfImage, PdfText } from "./mdast-util-to-pdf";
+import type { BlockNode, VoidNode, TextNode } from "./mdast-util-to-pdf";
 
 export type Alignment = "left" | "right" | "center";
 
@@ -24,22 +24,26 @@ export interface BlockBox extends Box {
 }
 export interface TextBox extends Box {
   readonly type: "text";
-  readonly node: PdfText;
+  readonly node: TextNode;
   readonly font: string;
   readonly text: string;
 }
 export interface ImageBox extends Box {
   readonly type: "image";
-  readonly node: PdfImage;
+  readonly node: VoidNode;
 }
 
-export type InlineBox = TextBox | ImageBox;
+type InlineBox = TextBox | ImageBox;
 
 export type LayoutBox = InlineBox | BlockBox | { type: "pagebreak" };
 
 export type TextWidth = (str: string) => number;
 export type TextHeight = (font?: string, fontSize?: number) => number;
 export type ResolveFont = (font: string) => RegisteredFont;
+export type ResolveImageSize = (src: string) => {
+  width: number;
+  height: number;
+} | null;
 
 interface Options {
   readonly contentTop: number;
@@ -48,10 +52,11 @@ interface Options {
   readonly textWidth: TextWidth;
   readonly textHeight: TextHeight;
   readonly resolveFont: ResolveFont;
+  readonly resolveImageSize: ResolveImageSize;
 }
 
 export const layoutBlock = (
-  { children, style }: PdfBlock,
+  { children, style }: BlockNode,
   startX: number,
   startY: number,
   options: Options,
@@ -63,10 +68,11 @@ export const layoutBlock = (
     textWidth,
     textHeight,
     resolveFont,
+    resolveImageSize,
   } = options;
   const result: LayoutBox[] = [];
   const inlines = children.filter(
-    (c) => c.type === "text" || c.type === "image",
+    (c) => c.type === "text" || c.type === "void",
   );
   let y = Math.max(startY, contentTop);
   if (children.length !== inlines.length) {
@@ -75,7 +81,7 @@ export const layoutBlock = (
       const node = children[i]!;
       switch (node.type) {
         case "text":
-        case "image": {
+        case "void": {
           if (afterPagebreak) {
             y = contentTop;
             afterPagebreak = false;
@@ -120,7 +126,7 @@ export const layoutBlock = (
                 const cell = cells[colIdx]!;
                 const boxes = measureInlines(
                   cell.children.filter(
-                    (n) => n.type === "text" || n.type === "image",
+                    (n) => n.type === "text" || n.type === "void",
                   ),
                   {
                     x: startX + colIdx * cellWidth + cellPadding,
@@ -131,6 +137,7 @@ export const layoutBlock = (
                   textWidth,
                   textHeight,
                   resolveFont,
+                  resolveImageSize,
                 );
                 cellBoxes.push(boxes);
                 const maxCellBottom = boxes.reduce(
@@ -190,6 +197,7 @@ export const layoutBlock = (
       textWidth,
       textHeight,
       resolveFont,
+      resolveImageSize,
     );
     result.push(...boxes);
   }
@@ -197,7 +205,7 @@ export const layoutBlock = (
 };
 
 const measureInlines = (
-  items: readonly (PdfText | PdfImage)[],
+  items: readonly (TextNode | VoidNode)[],
   {
     x: startX,
     y: startY,
@@ -207,6 +215,7 @@ const measureInlines = (
   textWidth: TextWidth,
   textHeight: TextHeight,
   resolveFont: ResolveFont,
+  resolveImageSize: ResolveImageSize,
 ): InlineBox[] => {
   let x = startX;
   let y = startY;
@@ -246,8 +255,10 @@ const measureInlines = (
 
   for (const node of items) {
     switch (node.type) {
-      case "image": {
-        let { width, height } = node.data;
+      case "void": {
+        const size = resolveImageSize(node.attrs.src);
+        let width = size?.width ?? 100; // TODO revisit
+        let height = size?.height ?? 100; // TODO revisit
         if (width > wrapWidth) {
           const scale = wrapWidth / width;
           width *= scale;

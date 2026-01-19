@@ -13,9 +13,10 @@ import {
   layoutBlock,
   type Alignment,
   type BlockBox,
-  type InlineBox,
+  type ImageBox,
   type LayoutBox,
   type RegisteredFont,
+  type TextBox,
 } from "./layout";
 
 type KnownNodeType = mdast.RootContent["type"];
@@ -60,29 +61,34 @@ interface BlockStyle {
   display: "block" | "table" | "table-row" | "table-cell";
   textAlign?: Alignment;
 }
-export interface PdfBlock {
+export interface BlockNode {
   type: "block";
   style: BlockStyle;
   children: PdfLayout[];
 }
 
-interface PdfPageBreak {
+interface PageBreakNode {
   type: "pagebreak";
 }
 
-export interface PdfText {
+export interface TextNode {
   type: "text";
   text: string;
-  link?: string;
   style: TextStyle;
+  attrs: {
+    link?: string;
+  };
 }
 
-export interface PdfImage {
-  type: "image";
-  data: PdfImageData;
+export interface VoidNode {
+  type: "void";
+  tag: "image";
+  attrs: {
+    src: string;
+  };
 }
 
-type PdfLayout = PdfBlock | PdfPageBreak | PdfText | PdfImage;
+type PdfLayout = BlockNode | PageBreakNode | TextNode | VoidNode;
 
 type ListContext = Readonly<{
   level: number;
@@ -154,10 +160,6 @@ type Context = Readonly<{
    * @internal
    */
   config: StyleOption;
-  /**
-   * @internal
-   */
-  images: ReadonlyMap<string, PdfImageData | null>;
   /**
    * @internal
    */
@@ -401,7 +403,6 @@ export async function mdastToPdf(
       },
       style,
     ),
-    images,
     definition,
   };
 
@@ -508,10 +509,18 @@ export async function mdastToPdf(
         }
         return targetFont;
       },
+      resolveImageSize: (src) => {
+        const data = images.get(src);
+        if (data) {
+          return { width: data.width, height: data.height };
+        } else {
+          return null;
+        }
+      },
     },
   );
 
-  paintBoxes(boxes, doc, contentHeight, contentTop);
+  paintBoxes(boxes, doc, contentHeight, contentTop, images);
 
   doc.end();
   return new Promise<ArrayBuffer>((resolve) => {
@@ -526,6 +535,7 @@ const paintBoxes = (
   doc: PDFKit.PDFDocument,
   contentHeight: number,
   contentTop: number,
+  images: ReadonlyMap<string, PdfImageData | null>,
 ): void => {
   let i = 0;
   while (i < boxes.length) {
@@ -559,10 +569,12 @@ const paintBoxes = (
     if (hasContent) {
       const pageY0 = (firstBoxY ?? contentTop) - contentTop;
       for (const box of pageBoxes) {
-        if (box.type === "text" || box.type === "image") {
-          paintInlineBox(box, doc, pageY0);
-        } else if (box.type === "block") {
+        if (box.type === "block") {
           paintBlockBox(box, doc, pageY0);
+        } else if (box.type === "text") {
+          paintTextBox(box, doc, pageY0);
+        } else if (box.type === "image") {
+          paintImageBox(box, doc, pageY0, images);
         }
       }
     }
@@ -585,33 +597,38 @@ const paintBlockBox = (
   doc.rect(box.x, box.y - offsetY, box.width, box.height).stroke();
 };
 
-const paintInlineBox = (
-  box: InlineBox,
+const paintTextBox = (
+  box: TextBox,
   doc: PDFKit.PDFDocument,
   offsetY: number,
 ) => {
-  if (box.type === "text") {
-    const style = box.node.style;
-    doc.font(box.font).fontSize(style.fontSize).fillColor(style.color);
-    doc.text(box.text, box.x, box.y - offsetY, {
-      strike: style.strike,
-      underline: style.underline,
-      link: box.node.link ?? null,
-      continued: false,
+  const style = box.node.style;
+  doc.font(box.font).fontSize(style.fontSize).fillColor(style.color);
+  doc.text(box.text, box.x, box.y - offsetY, {
+    strike: style.strike,
+    underline: style.underline,
+    link: box.node.attrs.link ?? null,
+    continued: false,
+  });
+};
+
+const paintImageBox = (
+  box: ImageBox,
+  doc: PDFKit.PDFDocument,
+  offsetY: number,
+  images: ReadonlyMap<string, PdfImageData | null>,
+) => {
+  const data = images.get(box.node.attrs.src)!;
+  if (data.type === "svg") {
+    SVGtoPDF(doc, data.data, box.x, box.y - offsetY, {
+      width: box.width,
+      height: box.height,
     });
   } else {
-    const data = box.node.data;
-    if (data.type === "svg") {
-      SVGtoPDF(doc, data.data, box.x, box.y - offsetY, {
-        width: box.width,
-        height: box.height,
-      });
-    } else {
-      doc.image(data.data, box.x, box.y - offsetY, {
-        width: box.width,
-        height: box.height,
-      });
-    }
+    doc.image(data.data, box.x, box.y - offsetY, {
+      width: box.width,
+      height: box.height,
+    });
   }
 };
 
@@ -708,7 +725,7 @@ const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
 };
 
 const buildText: NodeBuilder<"text"> = ({ value: text }, ctx) => {
-  const segments: PdfText[] = [];
+  const segments: TextNode[] = [];
 
   const matches: Match[] = [];
   type Match = { start: number; end: number; style: Partial<TextStyle> };
@@ -728,12 +745,12 @@ const buildText: NodeBuilder<"text"> = ({ value: text }, ctx) => {
     style: TextStyle,
     start: number,
     end?: number,
-  ): PdfText => {
+  ): TextNode => {
     return {
       type: "text",
       text: text.slice(start, end),
       style: style,
-      link: ctx.link,
+      attrs: { link: ctx.link },
     };
   };
 
@@ -820,12 +837,8 @@ const buildLinkReference: NodeBuilder<"linkReference"> = (
   return buildLink({ type: "link", children, url: def.url }, ctx);
 };
 
-const buildImage: NodeBuilder<"image"> = (node, ctx) => {
-  const image = ctx.images.get(node.url);
-  if (!image) {
-    return null;
-  }
-  return { type: "image", data: image };
+const buildImage: NodeBuilder<"image"> = (node) => {
+  return { type: "void", tag: "image", attrs: { src: node.url } };
 };
 
 const buildImageReference: NodeBuilder<"imageReference"> = (node, ctx) => {
