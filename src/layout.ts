@@ -7,13 +7,6 @@ const max = Math.max;
 
 export type Alignment = "left" | "right" | "center";
 
-export type RegisteredFont = {
-  normal: string;
-  bold?: string;
-  italic?: string;
-  bolditalic?: string;
-};
-
 interface Box {
   readonly x: number;
   readonly y: number;
@@ -43,7 +36,11 @@ export type LayoutBox = InlineBox | BlockBox | { type: "pagebreak" };
 
 export type TextWidth = (str: string) => number;
 export type TextHeight = (font?: string, fontSize?: number) => number;
-export type ResolveFont = (font: string) => RegisteredFont;
+export type ResolveFont = (
+  font: string,
+  bold: boolean,
+  italic: boolean,
+) => string;
 export type ResolveImageSize = (src: string) => {
   width: number;
   height: number;
@@ -298,15 +295,7 @@ const measureInlines = (
         if (!style.fontSize) {
           continue;
         }
-        const targetFont = resolveFont(style.font);
-        let font = targetFont.normal;
-        if (style.bold && style.italic && targetFont.bolditalic) {
-          font = targetFont.bolditalic;
-        } else if (style.bold && targetFont.bold) {
-          font = targetFont.bold;
-        } else if (style.italic && targetFont.italic) {
-          font = targetFont.italic;
-        }
+        const font = resolveFont(style.font, style.bold, style.italic);
         const lineHeight = textHeight(font, style.fontSize);
         const breaker = new LineBreaker(text);
         const words: { word: string; required: boolean }[] = [];

@@ -15,7 +15,6 @@ import {
   type BlockBox,
   type ImageBox,
   type LayoutBox,
-  type RegisteredFont,
   type TextBox,
 } from "./layout";
 
@@ -42,6 +41,13 @@ type StandardFontType =
   | "ZapfDingbats";
 
 type FontBuffer = ArrayBuffer | Uint8Array;
+
+type RegisteredFont = {
+  normal: string;
+  bold?: string;
+  italic?: string;
+  bolditalic?: string;
+};
 
 /**
  * Custom font definition.
@@ -502,12 +508,21 @@ export async function mdastToPdf(
         return doc.currentLineHeight();
       },
       textWidth: (text) => doc.widthOfString(text),
-      resolveFont: (font) => {
-        let targetFont = fontMap.get(font);
+      resolveFont: (fontName, bold, italic) => {
+        let targetFont = fontMap.get(fontName);
         if (!targetFont) {
           targetFont = fontMap.get(defaultFontName)!;
         }
-        return targetFont;
+
+        let font: string = targetFont.normal;
+        if (bold && italic && targetFont.bolditalic) {
+          font = targetFont.bolditalic;
+        } else if (bold && targetFont.bold) {
+          font = targetFont.bold;
+        } else if (italic && targetFont.italic) {
+          font = targetFont.italic;
+        }
+        return font;
       },
       resolveImageSize: (src) => {
         const data = images.get(src);
