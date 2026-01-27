@@ -23,7 +23,7 @@ const injectString = (fontPath, isBase64) => {
 
 const publishDir = dirname(pkg.module);
 
-for (const [k, v] of Object.entries(pdfkitPkg.dependencies)) {
+for (const [k, v] of Object.entries(pdfkitPkg.dependencies).filter(([p]) => p !== 'png-js')) {
   const dep = pkg.dependencies[k];
   if (!dep || dep !== v) {
     throw new Error(`${pkg.name} doesn't have ${k}@${v} in dependencies`)
@@ -35,7 +35,7 @@ const externals = [
   ...Object.keys(pkg.devDependencies),
   ...Object.keys(pkg.imports),
   ...Object.keys(pdfkitPkg.dependencies)
-].filter(d => !d.startsWith('pdfkit'));
+].filter(d => !d.startsWith('pdfkit') && !d.startsWith('png-js'));
 
 const hasBuffer = (id) => id === 'index';
 

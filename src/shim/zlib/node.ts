@@ -1,2 +1,2 @@
-import { deflateSync } from "node:zlib";
-export default { deflateSync };
+import { deflateSync, inflate } from "node:zlib";
+export default { deflateSync, inflate };
