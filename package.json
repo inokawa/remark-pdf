@@ -84,7 +84,7 @@
     "highlight.js": "^11.11.1",
     "jest-image-snapshot": "^6.5.1",
     "lodash.debounce": "^4.0.8",
-    "pdf-to-img": "^5.0.0",
+    "pdf-to-img": "^6.0.0",
     "pdfjs-dist": "^5.4.296",
     "pdfkit": "0.18.0",
     "png-js": "^1.0.0",
