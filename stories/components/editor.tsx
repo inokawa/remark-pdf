@@ -1,10 +1,16 @@
 import React, { useCallback, useState } from "react";
-import Editor from "react-simple-code-editor";
+import EditorImpl from "react-simple-code-editor";
 import debounce from "lodash.debounce";
 import hljs from "highlight.js/lib/core";
 import markdown from "highlight.js/lib/languages/markdown";
 import "highlight.js/styles/github.css";
 hljs.registerLanguage("markdown", markdown);
+
+// react-simple-code-editor is CJS with `exports.default`. The Storybook
+// production build (Vite 8 / Rolldown) applies Node's ESM -> CJS interop, so the
+// default import is the module object instead of the component. Accept both.
+const Editor = ((EditorImpl as unknown as { default?: typeof EditorImpl })
+  .default ?? EditorImpl) as typeof EditorImpl;
 
 interface MarkdownEditorProps {
   initialValue: string;
