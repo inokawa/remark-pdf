@@ -87,7 +87,7 @@
     "lodash.debounce": "^4.0.8",
     "pdf-to-img": "^6.0.0",
     "pdfjs-dist": "^5.4.296",
-    "pdfkit": "0.18.0",
+    "pdfkit": "0.19.1",
     "png-js": "^1.0.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
