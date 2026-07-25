@@ -15,6 +15,7 @@ import {
   type BlockBox,
   type ImageBox,
   type LayoutBox,
+  type RuleBox,
   type TextBox,
 } from "./layout";
 
@@ -77,6 +78,15 @@ interface PageBreakNode {
   type: "pagebreak";
 }
 
+export interface HorizontalRuleNode {
+  type: "hr";
+  style: {
+    color: string;
+    thickness: number;
+    margin: number;
+  };
+}
+
 export interface TextNode {
   type: "text";
   text: string;
@@ -94,7 +104,12 @@ export interface VoidNode {
   };
 }
 
-type PdfLayout = BlockNode | PageBreakNode | TextNode | VoidNode;
+type PdfLayout =
+  | BlockNode
+  | PageBreakNode
+  | HorizontalRuleNode
+  | TextNode
+  | VoidNode;
 
 type ListContext = Readonly<{
   level: number;
@@ -169,6 +184,10 @@ type Context = Readonly<{
   /**
    * @internal
    */
+  thematicBreak: ThematicBreakStyle;
+  /**
+   * @internal
+   */
   list?: ListContext;
   /**
    * @internal
@@ -179,6 +198,11 @@ type Context = Readonly<{
    */
   definition: GetDefinition;
 }>;
+
+/**
+ * How thematic break (`---`) is rendered.
+ */
+export type ThematicBreakStyle = "line" | "pagebreak";
 
 type LoadImageFn = (url: string) => Promise<ArrayBuffer>;
 const loadWithFetch: LoadImageFn = async (url) => {
@@ -249,6 +273,13 @@ export interface PdfOptions {
    */
   spacing?: number;
   /**
+   * How thematic break (`---`) is rendered.
+   * - `"line"`: a horizontal line.
+   * - `"pagebreak"`: a page break.
+   * @default "pagebreak"
+   */
+  thematicBreak?: ThematicBreakStyle;
+  /**
    * Styles that override the defaults.
    */
   styles?: Partial<StyleOption> & { default?: Partial<TextStyle> };
@@ -272,6 +303,7 @@ export async function mdastToPdf(
     margin,
     orientation,
     spacing,
+    thematicBreak = "pagebreak",
     styles: { default: defaultStyle, ...style } = {},
     loadImage = loadWithFetch,
     textStyle: textStyle = [],
@@ -409,6 +441,7 @@ export async function mdastToPdf(
       },
       style,
     ),
+    thematicBreak,
     definition,
   };
 
@@ -600,6 +633,8 @@ const paintBoxes = (
           paintTextBox(box, doc, pageY0);
         } else if (box.type === "image") {
           paintImageBox(box, doc, pageY0, images);
+        } else if (box.type === "hr") {
+          paintRuleBox(box, doc, pageY0);
         }
       }
     }
@@ -627,6 +662,8 @@ const paintBlockBox = (
       paintTextBox(child, doc, offsetY);
     } else if (child.type === "image") {
       paintImageBox(child, doc, offsetY, images);
+    } else if (child.type === "hr") {
+      paintRuleBox(child, doc, offsetY);
     }
   }
   if (box.border) {
@@ -647,6 +684,23 @@ const paintTextBox = (
     link: box.node.attrs.link ?? null,
     continued: false,
   });
+};
+
+const paintRuleBox = (
+  box: RuleBox,
+  doc: PDFKit.PDFDocument,
+  offsetY: number,
+) => {
+  const { color, thickness } = box.node.style;
+  const y = box.y - offsetY + thickness / 2;
+  doc.save();
+  doc
+    .lineWidth(thickness)
+    .strokeColor(color)
+    .moveTo(box.x, y)
+    .lineTo(box.x + box.width, y)
+    .stroke();
+  doc.restore();
 };
 
 const paintImageBox = (
@@ -701,9 +755,20 @@ const buildHeading: NodeBuilder<"heading"> = ({ children, depth }, ctx) => {
   });
 };
 
-const buildThematicBreak: NodeBuilder<"thematicBreak"> = () => {
+const buildThematicBreak: NodeBuilder<"thematicBreak"> = ({}, ctx) => {
+  if (ctx.thematicBreak === "pagebreak") {
+    return {
+      type: "pagebreak",
+    };
+  }
+  const { color, fontSize } = ctx.style;
   return {
-    type: "pagebreak",
+    type: "hr",
+    style: {
+      color,
+      thickness: 1,
+      margin: fontSize / 2,
+    },
   };
 };
 

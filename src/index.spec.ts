@@ -120,6 +120,16 @@ describe("e2e", () => {
     expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
+  it("break with thematicBreak line", async () => {
+    const md = await fs.readFile(path.join(fixturesDir, "break.md"));
+    const doc = await processor({ thematicBreak: "line" }).process(md);
+    const generated = await doc.result;
+    for await (const page of await pdfToImage(Buffer.from(generated))) {
+      expect(page).toMatchImageSnapshot();
+    }
+    expect(await getPdfText(generated)).toMatchSnapshot();
+  });
+
   it("footnotes", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "footnotes.md"));
     const doc = await processor().process(md);

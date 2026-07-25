@@ -1,7 +1,12 @@
 // @ts-expect-error
 import LineBreaker from "linebreak";
 import type { Writeable } from "./utils";
-import type { BlockNode, VoidNode, TextNode } from "./mdast-util-to-pdf";
+import type {
+  BlockNode,
+  HorizontalRuleNode,
+  VoidNode,
+  TextNode,
+} from "./mdast-util-to-pdf";
 
 const max = Math.max;
 
@@ -29,10 +34,14 @@ export interface ImageBox extends Box {
   readonly type: "image";
   readonly node: VoidNode;
 }
+export interface RuleBox extends Box {
+  readonly type: "hr";
+  readonly node: HorizontalRuleNode;
+}
 
 type InlineBox = TextBox | ImageBox;
 
-export type LayoutBox = InlineBox | BlockBox | { type: "pagebreak" };
+export type LayoutBox = InlineBox | BlockBox | RuleBox | { type: "pagebreak" };
 
 export type TextWidth = (str: string) => number;
 export type TextHeight = (font?: string, fontSize?: number) => number;
@@ -119,6 +128,19 @@ export const layoutBlock = (
           const childBox = layoutBlock(node, startX, y, options);
           boxes.push(childBox);
           y = childBox.y + childBox.height;
+        } else if (node.type === "hr") {
+          flush();
+          const { thickness, margin } = node.style;
+          y += margin;
+          boxes.push({
+            type: "hr",
+            node,
+            x: startX,
+            y,
+            width,
+            height: thickness,
+          });
+          y += thickness + margin;
         } else if (node.type === "text" || node.type === "void") {
           inlines.push(node);
         }

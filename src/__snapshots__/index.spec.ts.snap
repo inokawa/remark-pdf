@@ -73,6 +73,15 @@ thematic break
 c"
 `;
 
+exports[`e2e > break with thematicBreak line 2`] = `
+"a
+hard
+break
+b
+thematic break
+c"
+`;
+
 exports[`e2e > code 2`] = `
 "@font-face {
 font-family: Chunkfive;
