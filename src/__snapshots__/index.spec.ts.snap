@@ -591,6 +591,6 @@ A bold emoji: , an emphatic one: , a deleted one: , in inline code:
 • emphatic emoji:
 • deleted emoji:
 • inline code emoji:
-[ ] not checked:
-[x] checked:"
+[ ] not checked: &
+[x] checked: & Ø=Ý÷Ø=ÝõØ=Ýù"
 `;
