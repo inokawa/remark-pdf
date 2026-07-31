@@ -4,15 +4,15 @@
 
 # Interface: PdfOptions
 
-Defined in: [mdast-util-to-pdf.ts:189](https://github.com/inokawa/remark-pdf/blob/e73b7632f858e9881de3e62c7c6e8051f5a5640b/src/mdast-util-to-pdf.ts#L189)
+Defined in: [mdast-util-to-pdf.ts:213](https://github.com/inokawa/remark-pdf/blob/129c0b5b4e0be73461061d006a93a217c5e246bc/src/mdast-util-to-pdf.ts#L213)
 
 ## Properties
 
 ### fonts?
 
-> `optional` **fonts**: (`StandardFontType` \| `CustomFont`)[]
+> `optional` **fonts?**: (`StandardFontType` \| `CustomFont`)[]
 
-Defined in: [mdast-util-to-pdf.ts:194](https://github.com/inokawa/remark-pdf/blob/e73b7632f858e9881de3e62c7c6e8051f5a5640b/src/mdast-util-to-pdf.ts#L194)
+Defined in: [mdast-util-to-pdf.ts:218](https://github.com/inokawa/remark-pdf/blob/129c0b5b4e0be73461061d006a93a217c5e246bc/src/mdast-util-to-pdf.ts#L218)
 
 Standard fonts or privided custom fonts.
 
@@ -26,9 +26,9 @@ Standard fonts or privided custom fonts.
 
 ### size?
 
-> `optional` **size**: `"A0"` \| `"A1"` \| `"A2"` \| `"A3"` \| `"A4"` \| `"A5"` \| `"A6"` \| `"A7"` \| `"A8"` \| `"A9"` \| `"A10"` \| `"B0"` \| `"B1"` \| `"B2"` \| `"B3"` \| `"B4"` \| `"B5"` \| `"B6"` \| `"B7"` \| `"B8"` \| `"B9"` \| `"B10"` \| `"C0"` \| `"C1"` \| `"C2"` \| `"C3"` \| `"C4"` \| `"C5"` \| `"C6"` \| `"C7"` \| `"C8"` \| `"C9"` \| `"C10"`
+> `optional` **size?**: `"A0"` \| `"A1"` \| `"A2"` \| `"A3"` \| `"A4"` \| `"A5"` \| `"A6"` \| `"A7"` \| `"A8"` \| `"A9"` \| `"A10"` \| `"B0"` \| `"B1"` \| `"B2"` \| `"B3"` \| `"B4"` \| `"B5"` \| `"B6"` \| `"B7"` \| `"B8"` \| `"B9"` \| `"B10"` \| `"C0"` \| `"C1"` \| `"C2"` \| `"C3"` \| `"C4"` \| `"C5"` \| `"C6"` \| `"C7"` \| `"C8"` \| `"C9"` \| `"C10"`
 
-Defined in: [mdast-util-to-pdf.ts:200](https://github.com/inokawa/remark-pdf/blob/e73b7632f858e9881de3e62c7c6e8051f5a5640b/src/mdast-util-to-pdf.ts#L200)
+Defined in: [mdast-util-to-pdf.ts:224](https://github.com/inokawa/remark-pdf/blob/129c0b5b4e0be73461061d006a93a217c5e246bc/src/mdast-util-to-pdf.ts#L224)
 
 Page size.
 https://pdfkit.org/docs/paper_sizes.html
@@ -43,9 +43,9 @@ A4
 
 ### margin?
 
-> `optional` **margin**: `number` \| \{ `top?`: `number`; `left?`: `number`; `bottom?`: `number`; `right?`: `number`; \}
+> `optional` **margin?**: `number` \| \{ `top?`: `number`; `left?`: `number`; `bottom?`: `number`; `right?`: `number`; \}
 
-Defined in: [mdast-util-to-pdf.ts:238](https://github.com/inokawa/remark-pdf/blob/e73b7632f858e9881de3e62c7c6e8051f5a5640b/src/mdast-util-to-pdf.ts#L238)
+Defined in: [mdast-util-to-pdf.ts:262](https://github.com/inokawa/remark-pdf/blob/129c0b5b4e0be73461061d006a93a217c5e246bc/src/mdast-util-to-pdf.ts#L262)
 
 Page margin.
 
@@ -59,9 +59,9 @@ Page margin.
 
 ### orientation?
 
-> `optional` **orientation**: `"portrait"` \| `"landscape"`
+> `optional` **orientation?**: `"portrait"` \| `"landscape"`
 
-Defined in: [mdast-util-to-pdf.ts:245](https://github.com/inokawa/remark-pdf/blob/e73b7632f858e9881de3e62c7c6e8051f5a5640b/src/mdast-util-to-pdf.ts#L245)
+Defined in: [mdast-util-to-pdf.ts:269](https://github.com/inokawa/remark-pdf/blob/129c0b5b4e0be73461061d006a93a217c5e246bc/src/mdast-util-to-pdf.ts#L269)
 
 Page orientation.
 
@@ -75,9 +75,9 @@ Page orientation.
 
 ### spacing?
 
-> `optional` **spacing**: `number`
+> `optional` **spacing?**: `number`
 
-Defined in: [mdast-util-to-pdf.ts:250](https://github.com/inokawa/remark-pdf/blob/e73b7632f858e9881de3e62c7c6e8051f5a5640b/src/mdast-util-to-pdf.ts#L250)
+Defined in: [mdast-util-to-pdf.ts:274](https://github.com/inokawa/remark-pdf/blob/129c0b5b4e0be73461061d006a93a217c5e246bc/src/mdast-util-to-pdf.ts#L274)
 
 Spacing after Paragraphs.
 
@@ -89,11 +89,29 @@ undefined
 
 ***
 
+### thematicBreak?
+
+> `optional` **thematicBreak?**: `ThematicBreakStyle`
+
+Defined in: [mdast-util-to-pdf.ts:281](https://github.com/inokawa/remark-pdf/blob/129c0b5b4e0be73461061d006a93a217c5e246bc/src/mdast-util-to-pdf.ts#L281)
+
+How thematic break (`---`) is rendered.
+- `"line"`: a horizontal line.
+- `"pagebreak"`: a page break.
+
+#### Default
+
+```ts
+"pagebreak"
+```
+
+***
+
 ### styles?
 
-> `optional` **styles**: `Partial`\<`StyleOption`\> & `object`
+> `optional` **styles?**: `Partial`\<`StyleOption`\> & `object`
 
-Defined in: [mdast-util-to-pdf.ts:254](https://github.com/inokawa/remark-pdf/blob/e73b7632f858e9881de3e62c7c6e8051f5a5640b/src/mdast-util-to-pdf.ts#L254)
+Defined in: [mdast-util-to-pdf.ts:285](https://github.com/inokawa/remark-pdf/blob/129c0b5b4e0be73461061d006a93a217c5e246bc/src/mdast-util-to-pdf.ts#L285)
 
 Styles that override the defaults.
 
@@ -101,15 +119,15 @@ Styles that override the defaults.
 
 ##### default?
 
-> `optional` **default**: `Partial`\<`TextStyle`\>
+> `optional` **default?**: `Partial`\<`TextStyle`\>
 
 ***
 
 ### textStyle?
 
-> `optional` **textStyle**: `TextStyleMatcher`[]
+> `optional` **textStyle?**: `TextStyleMatcher`[]
 
-Defined in: [mdast-util-to-pdf.ts:258](https://github.com/inokawa/remark-pdf/blob/e73b7632f858e9881de3e62c7c6e8051f5a5640b/src/mdast-util-to-pdf.ts#L258)
+Defined in: [mdast-util-to-pdf.ts:289](https://github.com/inokawa/remark-pdf/blob/129c0b5b4e0be73461061d006a93a217c5e246bc/src/mdast-util-to-pdf.ts#L289)
 
 An option to find text and apply style (e.g. font to emoji)
 
@@ -117,9 +135,9 @@ An option to find text and apply style (e.g. font to emoji)
 
 ### loadImage?
 
-> `optional` **loadImage**: `LoadImageFn`
+> `optional` **loadImage?**: `LoadImageFn`
 
-Defined in: [mdast-util-to-pdf.ts:263](https://github.com/inokawa/remark-pdf/blob/e73b7632f858e9881de3e62c7c6e8051f5a5640b/src/mdast-util-to-pdf.ts#L263)
+Defined in: [mdast-util-to-pdf.ts:294](https://github.com/inokawa/remark-pdf/blob/129c0b5b4e0be73461061d006a93a217c5e246bc/src/mdast-util-to-pdf.ts#L294)
 
 A function to resolve image data from url.
 
