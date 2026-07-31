@@ -19,10 +19,6 @@
       "node": "./lib/shim/buffer/node.js",
       "default": "./lib/shim/buffer/browser.js"
     },
-    "#events": {
-      "node": "./lib/shim/events/node.js",
-      "default": "./lib/shim/events/browser.js"
-    },
     "#fs": {
       "node": "./lib/shim/fs/node.js",
       "default": "./lib/shim/fs/browser.js"
@@ -54,7 +50,6 @@
     "@noble/hashes": "^1.6.0",
     "buffer": "^6.0.3",
     "deepmerge": "^4.3.1",
-    "events": "^3.3.0",
     "fontkit": "^2.0.4",
     "image-size": "^2.0.2",
     "js-md5": "^0.8.3",
@@ -67,7 +62,6 @@
   },
   "devDependencies": {
     "@rollup/plugin-alias": "^6.0.0",
-    "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-typescript": "^12.0.0",
@@ -88,7 +82,7 @@
     "pdf-to-img": "^6.0.0",
     "pdfjs-dist": "^5.4.296",
     "pdfkit": "0.19.1",
-    "png-js": "^1.0.0",
+    "png-js": "^1.1.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-is": "^19.2.1",

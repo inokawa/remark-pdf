@@ -1,7 +1,6 @@
 import typescript from "@rollup/plugin-typescript";
 import resolve from '@rollup/plugin-node-resolve';
 import alias from '@rollup/plugin-alias';
-import commonjs from '@rollup/plugin-commonjs';
 import replace from '@rollup/plugin-replace';
 import { dirname, extname, relative } from 'node:path'
 import pkg from "./package.json" with { type: "json" };
@@ -23,6 +22,58 @@ const injectString = (fontPath, isBase64) => {
 
 const publishDir = dirname(pkg.module);
 
+const AFM_FONTS = [
+  '/data/Courier.afm',
+  '/data/Courier-Bold.afm',
+  '/data/Courier-Oblique.afm',
+  '/data/Courier-BoldOblique.afm',
+  '/data/Helvetica.afm',
+  '/data/Helvetica-Bold.afm',
+  '/data/Helvetica-Oblique.afm',
+  '/data/Helvetica-BoldOblique.afm',
+  '/data/Times-Roman.afm',
+  '/data/Times-Bold.afm',
+  '/data/Times-Italic.afm',
+  '/data/Times-BoldItalic.afm',
+  '/data/Symbol.afm',
+  '/data/ZapfDingbats.afm',
+];
+
+const inlinedAssets = AFM_FONTS.reduce((acc, k) => {
+  acc[readFontStr(k)] = injectString(k);
+  return acc;
+}, {
+  ["fs.readFileSync(`${__dirname}/data/sRGB_IEC61966_2_1.icc`)"]: injectString("/data/sRGB_IEC61966_2_1.icc", true)
+});
+
+// `replace` is a plain string match that silently no-ops if pdfkit changes how it
+// spells these calls, which would only surface as a browser crash at runtime.
+const pdfkitSource = readFileSync(import.meta.dirname + '/node_modules/pdfkit/' + pdfkitPkg.module, 'utf8');
+for (const key of Object.keys(inlinedAssets)) {
+  if (!pdfkitSource.includes(key)) {
+    throw new Error(
+      `pdfkit@${pdfkitPkg.version}/${pdfkitPkg.module} no longer contains \`${key}\`. ` +
+      `Update the inlining table in rollup.config.js.`
+    )
+  }
+}
+
+const assertInlinedAssets = () => ({
+  name: 'assert-inlined-assets',
+  generateBundle(_options, bundle) {
+    for (const file of Object.values(bundle)) {
+      if (file.type !== 'chunk' || file.name !== 'index') continue;
+      const fonts = file.code.match(/StartFontMetrics/g)?.length ?? 0;
+      if (fonts !== AFM_FONTS.length) {
+        throw new Error(`${file.fileName}: expected ${AFM_FONTS.length} inlined afm fonts, found ${fonts}`)
+      }
+      if (file.code.includes('__dirname')) {
+        throw new Error(`${file.fileName}: still reads pdfkit data from disk via __dirname`)
+      }
+    }
+  },
+});
+
 for (const [k, v] of Object.entries(pdfkitPkg.dependencies).filter(([p]) => p !== 'png-js')) {
   const dep = pkg.dependencies[k];
   if (!dep || dep !== v) {
@@ -30,12 +81,17 @@ for (const [k, v] of Object.entries(pdfkitPkg.dependencies).filter(([p]) => p !=
   }
 }
 
+// Inlined rather than left external, so `replace` and `alias` can reach their source.
+const bundled = ['pdfkit', 'png-js'];
+
 const externals = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.devDependencies),
   ...Object.keys(pkg.imports),
   ...Object.keys(pdfkitPkg.dependencies)
-].filter(d => !d.startsWith('pdfkit') && !d.startsWith('png-js'));
+].filter(d => !bundled.some(b => d.startsWith(b)));
+
+const isExternal = (id) => externals.some((d) => id.startsWith(d));
 
 const hasBuffer = (id) => id === 'index';
 
@@ -63,31 +119,9 @@ export default [
         banner: (c) => hasBuffer(c.name) ? 'import { Buffer } from "#buffer";' : ''
       },
     ],
-    external: (id) => externals.filter(d => d !== 'events').some((d) => id.startsWith(d)),
+    external: isExternal,
     plugins: [
-      replace(
-        [
-          '/data/Courier.afm',
-          '/data/Courier-Bold.afm',
-          '/data/Courier-Oblique.afm',
-          '/data/Courier-BoldOblique.afm',
-          '/data/Helvetica.afm',
-          '/data/Helvetica-Bold.afm',
-          '/data/Helvetica-Oblique.afm',
-          '/data/Helvetica-BoldOblique.afm',
-          '/data/Times-Roman.afm',
-          '/data/Times-Bold.afm',
-          '/data/Times-Italic.afm',
-          '/data/Times-BoldItalic.afm',
-          '/data/Symbol.afm',
-          '/data/ZapfDingbats.afm',
-        ].reduce((acc, k) => {
-          acc[readFontStr(k)] = injectString(k);
-          return acc;
-        }, {
-          ["fs.readFileSync(`${__dirname}/data/sRGB_IEC61966_2_1.icc`)"]: injectString("/data/sRGB_IEC61966_2_1.icc", true)
-        })
-      ),
+      replace(inlinedAssets),
       alias({
         entries: Object.keys(pkg.imports).map(k => ({
           find: k.slice(1), replacement: k,
@@ -101,8 +135,9 @@ export default [
         declarationDir: publishDir,
         exclude: ["src/**/*.spec.*"],
       }),
-      resolve(),
-      commonjs(),
+      // Without `node`, png-js resolves to its browser build, which bundles browserify-zlib.
+      resolve({ exportConditions: ["node"] }),
+      assertInlinedAssets(),
     ],
   }, {
     input: Object.fromEntries(
@@ -126,7 +161,7 @@ export default [
         entryFileNames: '[name].js',
       },
     ],
-    external: (id) => externals.some((d) => id.startsWith(d)),
+    external: isExternal,
     plugins: [
       typescript({
         tsconfig: "./tsconfig.json",
