@@ -190,7 +190,8 @@ export const layoutBlock = (
           width,
           height: rowHeight,
           border: false,
-          children: rowChildren,
+          // Stretch every cell to the row height so their borders form a grid
+          children: rowChildren.map((c) => ({ ...c, height: rowHeight })),
         });
         tableY += rowHeight;
       }
