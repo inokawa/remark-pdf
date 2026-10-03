@@ -80,7 +80,7 @@
     "jest-image-snapshot": "^6.5.1",
     "lodash.debounce": "^4.0.8",
     "pdf-to-img": "^6.0.0",
-    "pdfjs-dist": "^5.4.296",
+    "pdfjs-dist": "^6.0.0",
     "pdfkit": "0.19.1",
     "png-js": "^1.1.0",
     "react": "^19.2.1",
