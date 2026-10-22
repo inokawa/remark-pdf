@@ -52,7 +52,7 @@
     "deepmerge": "^4.3.1",
     "fontkit": "^2.0.4",
     "image-size": "^2.0.2",
-    "js-md5": "^0.8.3",
+    "js-md5": "^0.9.0",
     "linebreak": "^1.1.0",
     "mdast-util-definitions": "^6.0.0",
     "pako": "^2.1.0",
