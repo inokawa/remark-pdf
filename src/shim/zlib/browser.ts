@@ -1,6 +1,5 @@
 import { Buffer } from "buffer";
-// @ts-expect-error
-import { default as pako } from "pako";
+import * as pako from "pako";
 
 export default {
   deflateSync: (input: ArrayBuffer) => {

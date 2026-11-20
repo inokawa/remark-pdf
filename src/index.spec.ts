@@ -8,11 +8,17 @@ import frontmatter from "remark-frontmatter";
 import math from "remark-math";
 import pdf, { type PdfOptions } from "./plugin";
 import { pdf as pdfToImage } from "pdf-to-img";
-import { toMatchImageSnapshot } from "jest-image-snapshot";
+import { toMatchImageSnapshot, type MatchImageSnapshotOptions } from "jest-image-snapshot";
 import * as pdfjsLib from "pdfjs-dist";
 
 const FIXTURE_PATH = "../fixtures";
 const fixturesDir = path.join(__dirname, FIXTURE_PATH);
+
+declare module "vitest" {
+  interface Matchers<R, T> {
+    toMatchImageSnapshot(options?: MatchImageSnapshotOptions): R;
+  }
+}
 
 expect.extend({ toMatchImageSnapshot });
 
