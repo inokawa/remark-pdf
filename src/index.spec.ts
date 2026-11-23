@@ -22,15 +22,9 @@ declare module "vitest" {
 
 expect.extend({ toMatchImageSnapshot });
 
-const copyArrayBuffer = (buffer: ArrayBuffer) => {
-  const newBuffer = new ArrayBuffer(buffer.byteLength);
-  const uint8Array = new Uint8Array(newBuffer);
-  uint8Array.set(new Uint8Array(buffer));
-  return uint8Array;
-};
-
-const getPdfText = async (buffer: ArrayBuffer): Promise<string> => {
-  const pdfData = copyArrayBuffer(buffer);
+const getPdfText = async (buffer: Uint8Array): Promise<string> => {
+  // pdfjs may detach the given buffer, so pass a copy
+  const pdfData = buffer.slice();
 
   const loadingTask = pdfjsLib.getDocument({ data: pdfData });
   const pdf = await loadingTask.promise;
@@ -74,7 +68,7 @@ describe("e2e", () => {
   it("article", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "article.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -84,7 +78,7 @@ describe("e2e", () => {
   it("lorem", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "lorem.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -94,7 +88,7 @@ describe("e2e", () => {
   it("lorem spacing", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "lorem.md"));
     const doc = await processor({ spacing: 1 }).process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -109,7 +103,7 @@ describe("e2e", () => {
     const doc = await processor({
       fonts: [{ name: "ipa", normal: font }],
     }).process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -119,7 +113,7 @@ describe("e2e", () => {
   it("break", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "break.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -129,7 +123,7 @@ describe("e2e", () => {
   it("break with thematicBreak line", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "break.md"));
     const doc = await processor({ thematicBreak: "line" }).process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -139,7 +133,7 @@ describe("e2e", () => {
   it("footnotes", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "footnotes.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -149,7 +143,7 @@ describe("e2e", () => {
   it("heading", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "heading.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -159,7 +153,7 @@ describe("e2e", () => {
   it("paragraph", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "paragraph.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -169,7 +163,7 @@ describe("e2e", () => {
   it("decoration", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "decoration.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -179,7 +173,7 @@ describe("e2e", () => {
   it("link", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "link.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -189,7 +183,7 @@ describe("e2e", () => {
   it("image", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "image.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -205,7 +199,7 @@ describe("e2e", () => {
         return img.buffer;
       },
     }).process(`svg ![tiger](image.svg) test`);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -215,7 +209,7 @@ describe("e2e", () => {
   it("list-bullet", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "list-bullet.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -225,7 +219,7 @@ describe("e2e", () => {
   it("list-ordered", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "list-ordered.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -235,7 +229,7 @@ describe("e2e", () => {
   it("list-task", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "list-task.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -245,7 +239,7 @@ describe("e2e", () => {
   it("code", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "code.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -255,7 +249,7 @@ describe("e2e", () => {
   it("frontmatter", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "frontmatter.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -265,7 +259,7 @@ describe("e2e", () => {
   it("math", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "math.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -275,7 +269,7 @@ describe("e2e", () => {
   it("latex", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "latex.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -285,7 +279,7 @@ describe("e2e", () => {
   it("tag", async () => {
     const md = await fs.readFile(path.join(fixturesDir, "tag.md"));
     const doc = await processor().process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
@@ -297,7 +291,7 @@ describe("e2e", () => {
     const doc = await processor({
       textStyle: [[/\p{Extended_Pictographic}/gu, { fontSize: 0 }]],
     }).process(md);
-    const generated = await doc.result;
+    const generated = doc.value as Uint8Array;
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }

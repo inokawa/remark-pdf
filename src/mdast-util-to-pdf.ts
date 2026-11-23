@@ -344,7 +344,7 @@ export async function mdastToPdf(
     textStyle: textStyle = [],
     // preventOrphans,
   }: PdfOptions = {},
-): Promise<ArrayBuffer> {
+): Promise<Uint8Array> {
   const definition = definitions(node);
 
   const images = new Map<string, PdfImageData | null>();
@@ -603,7 +603,7 @@ export async function mdastToPdf(
   paintBoxes(box, doc, contentHeight, contentTop, images);
 
   doc.end();
-  return (await output).buffer;
+  return output;
 }
 
 const flattenBoxes = (box: LayoutBox): LayoutBox[] => {
