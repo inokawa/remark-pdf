@@ -1,5 +1,5 @@
 // @ts-expect-error
-import LineBreaker from "linebreak";
+import { LineBreaker } from "linebreak";
 import type { Writeable } from "./utils";
 import type {
   BlockNode,

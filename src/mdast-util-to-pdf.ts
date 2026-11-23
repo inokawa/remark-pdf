@@ -1,5 +1,21 @@
 import type * as mdast from "mdast";
-import PDFDocument from "pdfkit";
+// @ts-expect-error @types/pdfkit doesn't know `registerStdFonts`
+import PDFDocument, { registerStdFonts } from "pdfkit";
+import { toBytes } from "pdfkit/output";
+import Courier from "pdfkit/standard-fonts/Courier";
+import CourierBold from "pdfkit/standard-fonts/CourierBold";
+import CourierBoldOblique from "pdfkit/standard-fonts/CourierBoldOblique";
+import CourierOblique from "pdfkit/standard-fonts/CourierOblique";
+import Helvetica from "pdfkit/standard-fonts/Helvetica";
+import HelveticaBold from "pdfkit/standard-fonts/HelveticaBold";
+import HelveticaBoldOblique from "pdfkit/standard-fonts/HelveticaBoldOblique";
+import HelveticaOblique from "pdfkit/standard-fonts/HelveticaOblique";
+import SymbolFont from "pdfkit/standard-fonts/Symbol";
+import TimesBold from "pdfkit/standard-fonts/TimesBold";
+import TimesBoldItalic from "pdfkit/standard-fonts/TimesBoldItalic";
+import TimesItalic from "pdfkit/standard-fonts/TimesItalic";
+import TimesRoman from "pdfkit/standard-fonts/TimesRoman";
+import ZapfDingbats from "pdfkit/standard-fonts/ZapfDingbats";
 // @ts-expect-error
 import SVGtoPDF from "svg-to-pdfkit";
 import Decimal from "@jsamr/counter-style/presets/decimal";
@@ -7,7 +23,7 @@ import Disc from "@jsamr/counter-style/presets/disc";
 import { definitions, type GetDefinition } from "mdast-util-definitions";
 import deepmerge from "deepmerge";
 import { warnOnce } from "./utils";
-import imageSize from "image-size";
+import { imageSize } from "image-size";
 import { visit } from "unist-util-visit";
 import {
   layoutBlock,
@@ -18,6 +34,25 @@ import {
   type RuleBox,
   type TextBox,
 } from "./layout";
+
+// pdfkit's browser build requires standard fonts to be registered. Registering them also keeps
+// the Node build working when it is bundled. https://github.com/foliojs/pdfkit/issues/1801
+registerStdFonts(
+  Courier,
+  CourierBold,
+  CourierBoldOblique,
+  CourierOblique,
+  Helvetica,
+  HelveticaBold,
+  HelveticaBoldOblique,
+  HelveticaOblique,
+  SymbolFont,
+  TimesBold,
+  TimesBoldItalic,
+  TimesItalic,
+  TimesRoman,
+  ZapfDingbats,
+);
 
 type KnownNodeType = mdast.RootContent["type"];
 
@@ -514,10 +549,7 @@ export async function mdastToPdf(
       );
     }
   }
-  const chunks: Buffer[] = [];
-  doc.on("data", (chunk: Buffer) => {
-    chunks.push(chunk);
-  });
+  const output = toBytes(doc);
 
   const contentWidth =
     doc.page.width - doc.page.margins.left - doc.page.margins.right;
@@ -571,11 +603,7 @@ export async function mdastToPdf(
   paintBoxes(box, doc, contentHeight, contentTop, images);
 
   doc.end();
-  return new Promise<ArrayBuffer>((resolve) => {
-    doc.on("end", () => {
-      resolve(Buffer.concat(chunks).buffer);
-    });
-  });
+  return (await output).buffer;
 }
 
 const flattenBoxes = (box: LayoutBox): LayoutBox[] => {

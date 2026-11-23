@@ -14,24 +14,6 @@
       "default": "./lib/index.js"
     }
   },
-  "imports": {
-    "#buffer": {
-      "node": "./lib/shim/buffer/node.js",
-      "default": "./lib/shim/buffer/browser.js"
-    },
-    "#fs": {
-      "node": "./lib/shim/fs/node.js",
-      "default": "./lib/shim/fs/browser.js"
-    },
-    "#stream": {
-      "node": "./lib/shim/stream/node.js",
-      "default": "./lib/shim/stream/browser.js"
-    },
-    "#zlib": {
-      "node": "./lib/shim/zlib/node.js",
-      "default": "./lib/shim/zlib/browser.js"
-    }
-  },
   "files": [
     "lib"
   ],
@@ -45,25 +27,17 @@
     "prepublishOnly": "npm run typedoc && rimraf lib && npm run build"
   },
   "dependencies": {
-    "@jsamr/counter-style": "^2.0.2",
-    "@noble/ciphers": "^1.0.0",
-    "@noble/hashes": "^1.6.0",
-    "buffer": "^6.0.3",
     "deepmerge": "^4.3.1",
-    "fontkit": "^2.0.4",
     "image-size": "^2.1.0",
-    "js-md5": "^0.8.3",
-    "linebreak": "^1.1.0",
+    "linebreak": "^2.0.0",
     "mdast-util-definitions": "^6.0.0",
-    "pako": "^3.0.3",
-    "readable-stream": "^4.8.0",
+    "pdfkit": "^0.21.0",
     "svg-to-pdfkit": "^0.1.8",
     "unist-util-visit": "^5.2.0"
   },
   "devDependencies": {
-    "@rollup/plugin-alias": "^6.0.1",
+    "@jsamr/counter-style": "^2.0.2",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-typescript": "^12.0.0",
     "@storybook/react-vite": "10.6.7",
     "@types/deepmerge": "^2.1.0",
@@ -81,8 +55,6 @@
     "lodash.debounce": "^4.0.8",
     "pdf-to-img": "^7.0.2",
     "pdfjs-dist": "~6.4.299",
-    "pdfkit": "0.19.1",
-    "png-js": "^1.1.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-is": "^19.3.1",
