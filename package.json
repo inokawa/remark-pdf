@@ -52,7 +52,7 @@
     "jest-image-snapshot": "^6.5.2",
     "lodash.debounce": "^4.0.8",
     "pdf-to-img": "^7.0.2",
-    "pdfjs-dist": "~6.4.299",
+    "pdfjs-dist": "~6.5.438",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-is": "^19.3.1",
@@ -89,5 +89,10 @@
   "bugs": {
     "url": "https://github.com/inokawa/remark-pdf/issues"
   },
-  "homepage": "https://github.com/inokawa/remark-pdf#readme"
+  "homepage": "https://github.com/inokawa/remark-pdf#readme",
+  "overrides": {
+    "pdf-to-img": {
+      "pdfjs-dist": "$pdfjs-dist"
+    }
+  }
 }
