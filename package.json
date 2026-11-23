@@ -18,7 +18,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "rollup -c",
+    "build": "vite build",
     "test": "vitest run",
     "tsc": "tsc -p . --noEmit",
     "storybook": "storybook dev -p 6006",
@@ -37,8 +37,6 @@
   },
   "devDependencies": {
     "@jsamr/counter-style": "^2.0.2",
-    "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-typescript": "^12.0.0",
     "@storybook/react-vite": "10.6.7",
     "@types/deepmerge": "^2.1.0",
     "@types/file-saver": "^2.0.7",
@@ -65,13 +63,13 @@
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
     "rimraf": "^6.1.4",
-    "rollup": "^4.68.7",
     "storybook": "10.6.7",
     "typedoc": "^0.28.20",
     "typedoc-plugin-markdown": "^4.12.0",
     "typescript": "^6.0.3",
     "unified": "^11.0.4",
     "vite": "^8.3.8",
+    "vite-plugin-dts": "^5.1.2",
     "vitest": "^5.1.1"
   },
   "repository": {
