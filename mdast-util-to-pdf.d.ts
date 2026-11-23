@@ -141,5 +141,5 @@ export interface PdfOptions {
      */
     loadImage?: LoadImageFn;
 }
-export declare function mdastToPdf(node: mdast.Root, { fonts, size: pageSize, margin, orientation, spacing, thematicBreak, styles: { default: defaultStyle, ...style }, loadImage, textStyle: textStyle, }?: PdfOptions): Promise<ArrayBuffer>;
+export declare function mdastToPdf(node: mdast.Root, { fonts, size: pageSize, margin, orientation, spacing, thematicBreak, styles: { default: defaultStyle, ...style }, loadImage, textStyle: textStyle, }?: PdfOptions): Promise<Uint8Array>;
 export {};
