@@ -5,7 +5,7 @@
 > [remark](https://github.com/remarkjs/remark) plugin to compile markdown to pdf.
 
 - Uses [pdfkit](https://github.com/foliojs/pdfkit) for compilation, to avoid issues with puppeteer or headless chromium.
-- Works in any environment (e.g. browser, Node.js).
+- Works in any environment (e.g. browser, Node.js, CLI).
 - Generates [PDF/A-3A](https://en.wikipedia.org/wiki/PDF/A) compliant document for accessibility.
 - Supports configuration of page layout, fonts and styles.
 
