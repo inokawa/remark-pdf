@@ -26,3 +26,4 @@ jobs:
       - run: npm run test
       - run: npm run build
       - run: npm run test:cli
+      - run: npm run format:ci

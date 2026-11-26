@@ -8,7 +8,10 @@ import frontmatter from "remark-frontmatter";
 import math from "remark-math";
 import pdf, { type PdfOptions } from "./plugin";
 import { pdf as pdfToImage } from "pdf-to-img";
-import { toMatchImageSnapshot, type MatchImageSnapshotOptions } from "jest-image-snapshot";
+import {
+  toMatchImageSnapshot,
+  type MatchImageSnapshotOptions,
+} from "jest-image-snapshot";
 import * as pdfjsLib from "pdfjs-dist";
 
 const FIXTURE_PATH = "../fixtures";

@@ -5,5 +5,7 @@ declare module "pdfkit/standard-fonts/*" {
 }
 
 declare module "pdfkit/output" {
-  export function toBytes(doc: PDFKit.PDFDocument): Promise<Uint8Array<ArrayBuffer>>;
+  export function toBytes(
+    doc: PDFKit.PDFDocument,
+  ): Promise<Uint8Array<ArrayBuffer>>;
 }

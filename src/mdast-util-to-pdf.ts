@@ -70,11 +70,7 @@ type NodeBuilders = {
 };
 
 type StandardFontType =
-  | "Courier"
-  | "Helvetica"
-  | "Symbol"
-  | "Times"
-  | "ZapfDingbats";
+  "Courier" | "Helvetica" | "Symbol" | "Times" | "ZapfDingbats";
 
 type FontBuffer = ArrayBuffer | Uint8Array;
 
@@ -140,11 +136,7 @@ export interface VoidNode {
 }
 
 type PdfLayout =
-  | BlockNode
-  | PageBreakNode
-  | HorizontalRuleNode
-  | TextNode
-  | VoidNode;
+  BlockNode | PageBreakNode | HorizontalRuleNode | TextNode | VoidNode;
 
 type ListContext = Readonly<{
   level: number;
@@ -295,8 +287,7 @@ export interface PdfOptions {
    * @default 40
    */
   margin?:
-    | number
-    | { top?: number; left?: number; bottom?: number; right?: number };
+    number | { top?: number; left?: number; bottom?: number; right?: number };
   /**
    * Page orientation.
    * @default "portrait"

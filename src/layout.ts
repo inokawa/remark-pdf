@@ -362,7 +362,7 @@ const measureInlines = (
           }
           const wordWidth = textWidth(word);
           if (wordWidth > wrapWidth) {
-            for (let i = 0; i < word.length; ) {
+            for (let i = 0; i < word.length;) {
               let chunk = word[i]!;
               for (let l = 1; i + l <= word.length; l++) {
                 const slice = word.slice(i, i + l);

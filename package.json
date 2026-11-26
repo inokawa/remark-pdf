@@ -25,6 +25,8 @@
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build",
     "typedoc": "typedoc",
+    "format": "prettier '**/*.{js,ts,jsx,tsx}' --write --cache",
+    "format:ci": "prettier '**/*.{js,ts,jsx,tsx}' -l",
     "prepublishOnly": "npm run typedoc && npm run build"
   },
   "dependencies": {
@@ -52,6 +54,7 @@
     "lodash.debounce": "^4.0.8",
     "pdf-to-img": "^7.0.2",
     "pdfjs-dist": "~6.5.438",
+    "prettier": "^3.10.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-simple-code-editor": "^0.14.1",
