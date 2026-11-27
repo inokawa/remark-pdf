@@ -101,7 +101,7 @@ To embed local images, use [remark-embed-images](https://github.com/remarkjs/rem
 npx remark input.md --use remark-embed-images --use remark-pdf=image:true --output output.pdf
 ```
 
-#### Example: Custom fonts
+## Custom fonts
 
 Use custom fonts by providing a `fonts` option. Use the fonts by name in your `styles` configurations; the font file will be autoselected based on the chosen `bold` and `italic` style specifications.
 
