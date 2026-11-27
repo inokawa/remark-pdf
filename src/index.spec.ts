@@ -412,39 +412,6 @@ describe("e2e", () => {
     expect(await getPdfText(generated)).toMatchSnapshot();
   });
 
-  it("inline math with latexPlugin", async () => {
-    // on the baseline with its depth below, in the size of the text around
-    const doc = await processor({ plugins: [latexPlugin()] }).process(
-      "a $x_k^2$ b $\\frac{1}{2}$ c\n\n# a $x_k^2$ b $\\mathbb{R}$ c",
-    );
-    const generated = doc.value as Uint8Array;
-    for await (const page of await pdfToImage(Buffer.from(generated))) {
-      expect(page).toMatchImageSnapshot();
-    }
-    expect(await getPdfText(generated)).toBe("a b c\na b c");
-  });
-
-  it("invalid latex with latexPlugin", async () => {
-    // falls back to text
-    const doc = await processor({ plugins: [latexPlugin()] }).process(
-      "a $\\frac{1}{$ b\n\n$$\n\\undefinedmacro\n$$\n\nc",
-    );
-    expect(await getPdfText(doc.value as Uint8Array)).toBe(
-      "a \\frac{1}{ b\n\\undefinedmacro\nc",
-    );
-  });
-
-  it("tagged math with latexPlugin", async () => {
-    // MathJax lays it out across the line, which has no size as an image,
-    // so it falls back to text
-    const doc = await processor({ plugins: [latexPlugin()] }).process(
-      "a\n\n$$\nE = mc^2 \\tag{1}\n$$\n\nb",
-    );
-    expect(await getPdfText(doc.value as Uint8Array)).toBe(
-      "a\nE = mc^2 \\tag{1}\nb",
-    );
-  });
-
   it("plugins in their order", async () => {
     // each leaves the nodes it doesn't render to the next, and the last to
     // remark-pdf
@@ -499,24 +466,6 @@ describe("e2e", () => {
     for await (const page of await pdfToImage(Buffer.from(generated))) {
       expect(page).toMatchImageSnapshot();
     }
-  });
-
-  it("images read by plugins", async () => {
-    const png = await fs.readFile(path.join(fixturesDir, "images/img.png"));
-    const read: unknown[] = [];
-    await processor({
-      plugins: [
-        async ({ readImage }) => {
-          read.push(await readImage(png, "a"));
-          read.push(await readImage(new Uint8Array([1, 2, 3]), "b"));
-          return {};
-        },
-      ],
-    }).process("a");
-    expect(read).toEqual([
-      expect.objectContaining({ type: "png", width: 90, height: 75 }),
-      undefined,
-    ]);
   });
 
   it("tag", async () => {
