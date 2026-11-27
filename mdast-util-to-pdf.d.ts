@@ -56,7 +56,7 @@ export interface TextNode {
     attrs: {
         link?: string;
         goTo?: string;
-        destination?: string;
+        heading?: HeadingAnchor;
     };
 }
 export interface VoidNode {
@@ -64,8 +64,13 @@ export interface VoidNode {
     tag: "image";
     attrs: {
         src: string;
-        destination?: string;
+        heading?: HeadingAnchor;
     };
+}
+interface HeadingAnchor {
+    destination: string;
+    depth: number;
+    title: string;
 }
 export type PdfLayout = BlockNode | PageBreakNode | HorizontalRuleNode | TextNode | VoidNode;
 interface TextStyle {
