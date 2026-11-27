@@ -423,6 +423,10 @@ const loadImages = async (
 
 export interface PdfOptions {
   /**
+   * Title of the document.
+   */
+  title?: string;
+  /**
    * Standard fonts or privided custom fonts.
    * @default "Helvetica"
    */
@@ -512,6 +516,7 @@ export interface PdfOptions {
 export async function mdastToPdf(
   node: mdast.Root,
   {
+    title,
     fonts = ["Helvetica"],
     size: pageSize = "A4",
     margin,
@@ -663,6 +668,8 @@ export async function mdastToPdf(
       right: typeof margin === "number" ? margin : (margin?.right ?? 40),
     },
     layout: orientation,
+    info: title != null ? { Title: title } : undefined,
+    displayTitle: title != null,
     compress: true,
     // https://github.com/foliojs/pdfkit/issues/369#issuecomment-2545904551
     tagged: true,
