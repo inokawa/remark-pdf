@@ -11,7 +11,7 @@ import markdown from "remark-parse";
 import gfm from "remark-gfm";
 import frontmatter from "remark-frontmatter";
 import { saveAs } from "file-saver";
-import pdf from "remark-pdf";
+import pdf from "../src";
 import MarkdownEditor from "./components/editor";
 // @ts-expect-error no type definition
 import readmeMd from "../README.md?raw";
