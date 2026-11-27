@@ -35,3 +35,36 @@ it("cli", async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }
 });
+
+it("cli with remark-embed-images", async () => {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "remark-pdf-"));
+  try {
+    const input = path.join(tmpDir, "input.md");
+    const output = path.join(tmpDir, "output.pdf");
+    await fs.copyFile(
+      path.join(rootDir, "fixtures/images/img.png"),
+      path.join(tmpDir, "img.png"),
+    );
+    await fs.writeFile(input, "![img](./img.png)\n");
+    const { stderr } = await promisify(execFile)(
+      process.execPath,
+      [
+        path.join(rootDir, "node_modules/remark-cli/cli.js"),
+        input,
+        "--use",
+        "remark-embed-images",
+        "--use",
+        "remark-pdf=image:true",
+        "--output",
+        output,
+      ],
+      { cwd: rootDir },
+    );
+    expect(stderr).not.toContain("warning");
+
+    const data = await fs.readFile(output);
+    expect(data.toString("latin1").match(/\/Subtype \/Image/g)).toHaveLength(1);
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  }
+});

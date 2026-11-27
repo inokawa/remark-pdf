@@ -1,4 +1,5 @@
 import type * as mdast from "mdast";
+import type { VFile } from "vfile";
 // @ts-expect-error @types/pdfkit doesn't know `registerStdFonts`
 import PDFDocument, { registerStdFonts } from "pdfkit";
 import { toBytes } from "pdfkit/output";
@@ -22,7 +23,7 @@ import Decimal from "@jsamr/counter-style/presets/decimal";
 import Disc from "@jsamr/counter-style/presets/disc";
 import { definitions, type GetDefinition } from "mdast-util-definitions";
 import deepmerge from "deepmerge";
-import { warnOnce } from "./utils";
+import { toArrayBuffer, warnOnce, type ToPngFn } from "./utils";
 import { imageSize } from "image-size";
 import { visit } from "unist-util-visit";
 import {
@@ -180,6 +181,7 @@ interface StyleOption {
 
 export type PdfImageData = Readonly<
   {
+    // the natural size, as shown, in pt
     width: number;
     height: number;
   } & (
@@ -224,6 +226,10 @@ type Context = Readonly<{
    * @internal
    */
   definition: GetDefinition;
+  /**
+   * @internal
+   */
+  images: ReadonlyMap<string, PdfImageData>;
 }>;
 
 /**
@@ -231,10 +237,145 @@ type Context = Readonly<{
  */
 export type ThematicBreakStyle = "line" | "pagebreak";
 
-type LoadImageFn = (url: string) => Promise<ArrayBuffer>;
-const loadWithFetch: LoadImageFn = async (url) => {
+type LoadFn = (url: string, file: VFile) => Promise<ArrayBuffer | Uint8Array>;
+
+const loadWithFetch: LoadFn = async (url) => {
   const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`${res.status} ${res.statusText}`);
+  }
   return res.arrayBuffer();
+};
+
+export interface ImageOptions {
+  /**
+   * A function to resolve image data from url. `file` is the processed file, which can be used to resolve relative urls.
+   * @default {@link loadWithFetch}
+   */
+  load?: LoadFn;
+  /**
+   * A function to convert images to PNG. Required to embed images other than PNG, JPEG and SVG, such as GIF and WebP.
+   * On browser, you can use {@link browserToPng}.
+   */
+  toPng?: ToPngFn;
+}
+
+/**
+ * @internal
+ */
+export type ImageCache = Map<string, PdfImageData>;
+
+const MAX_CACHE_SIZE = 100;
+
+// the natural size of an image is in CSS px, which is 1/96 in
+const PX_TO_PT = 72 / 96;
+
+const loadImage = async (
+  url: string,
+  file: VFile,
+  load: LoadFn,
+  toPng: ToPngFn | undefined,
+): Promise<PdfImageData | undefined> => {
+  let data: ArrayBuffer;
+  try {
+    data = toArrayBuffer(await load(url, file));
+  } catch (e) {
+    warnOnce(`Failed to load image: ${url} ${e}`);
+    return;
+  }
+
+  let size: ReturnType<typeof imageSize>;
+  try {
+    size = imageSize(new Uint8Array(data));
+  } catch (e) {
+    warnOnce(`Failed to detect image type: ${url} ${e}`);
+    return;
+  }
+  const type = size.type!;
+  let { width, height } = size;
+  if (!width || !height) {
+    // an svg without a size of its own
+    warnOnce(`Failed to load image: ${url} has no size`);
+    return;
+  }
+  if (type === "png" || type === "jpg") {
+    if (size.orientation != null && size.orientation > 4) {
+      // shown rotated by 90 degrees, as pdfkit draws it
+      [width, height] = [height, width];
+    }
+    return {
+      type,
+      width: width * PX_TO_PT,
+      height: height * PX_TO_PT,
+      data,
+    };
+  }
+  if (type === "svg") {
+    return {
+      type,
+      width: width * PX_TO_PT,
+      height: height * PX_TO_PT,
+      data: new TextDecoder().decode(data),
+    };
+  }
+  if (!toPng) {
+    warnOnce(`toPng option is required to embed ${type}: ${url}`);
+    return;
+  }
+  let png: ArrayBuffer;
+  try {
+    png = toArrayBuffer(await toPng({ buffer: data, width, height }));
+  } catch (e) {
+    warnOnce(`Failed to convert image to png: ${url} ${e}`);
+    return;
+  }
+  return {
+    type: "png",
+    width: width * PX_TO_PT,
+    height: height * PX_TO_PT,
+    data: png,
+  };
+};
+
+const loadImages = async (
+  root: mdast.Root,
+  definition: GetDefinition,
+  images: Map<string, PdfImageData>,
+  cache: ImageCache,
+  file: VFile,
+  { load = loadWithFetch, toPng }: ImageOptions,
+): Promise<void> => {
+  const urls = new Set<string>();
+  visit(root, (node) => {
+    if (node.type === "image") {
+      urls.add(node.url);
+    } else if (node.type === "imageReference") {
+      const def = definition(node.identifier);
+      if (def) {
+        urls.add(def.url);
+      }
+    }
+  });
+
+  await Promise.all(
+    Array.from(urls, async (url) => {
+      // Relative urls may point to different images from other files
+      const key = `${file.dirname}\0${url}`;
+      const image = cache.get(key) ?? (await loadImage(url, file, load, toPng));
+      if (!image) {
+        return;
+      }
+      cache.set(key, image);
+      images.set(url, image);
+    }),
+  );
+
+  for (const key of cache.keys()) {
+    if (cache.size <= MAX_CACHE_SIZE) {
+      break;
+    }
+    cache.delete(key);
+  }
 };
 
 export interface PdfOptions {
@@ -314,10 +455,10 @@ export interface PdfOptions {
    */
   textStyle?: TextStyleMatcher[];
   /**
-   * A function to resolve image data from url.
-   * @default {@link loadWithFetch}
+   * Embed images of `image` / `imageReference` nodes. `png`, `jpg` and `svg` are supported.
+   * Images are not embedded if not set.
    */
-  loadImage?: LoadImageFn;
+  image?: boolean | ImageOptions;
   // preventOrphans?: boolean;
 }
 
@@ -331,60 +472,25 @@ export async function mdastToPdf(
     spacing,
     thematicBreak = "pagebreak",
     styles: { default: defaultStyle, ...style } = {},
-    loadImage = loadWithFetch,
+    image,
     textStyle: textStyle = [],
     // preventOrphans,
   }: PdfOptions = {},
+  imageCache: ImageCache,
+  file: VFile,
 ): Promise<Uint8Array> {
   const definition = definitions(node);
 
-  const images = new Map<string, PdfImageData | null>();
-  const imageList: (mdast.Image | mdast.Definition)[] = [];
-  visit(node, "image", (node) => {
-    imageList.push(node);
-  });
-  visit(node, "imageReference", (node) => {
-    const maybeImage = definition(node.identifier)!;
-    if (maybeImage) {
-      imageList.push(maybeImage);
-    }
-  });
-  if (imageList.length !== 0) {
-    const promises = new Map<string, Promise<void>>();
-    imageList.forEach(({ url }) => {
-      if (images.has(url)) {
-        return;
-      }
-      if (!promises.has(url)) {
-        promises.set(
-          url,
-          (async () => {
-            let data: ArrayBuffer;
-            try {
-              data = await loadImage(url);
-            } catch (e) {
-              warnOnce(`Failed to load image: ${url} ${e}`);
-              return;
-            }
-
-            const { type, width, height } = imageSize(new Uint8Array(data));
-            if (type === "png" || type === "jpg") {
-              images.set(url, { type, data, width, height });
-            } else if (type === "svg") {
-              images.set(url, {
-                type,
-                data: new TextDecoder().decode(data),
-                width,
-                height,
-              });
-            } else {
-              warnOnce(`Not supported image type: ${type}`);
-            }
-          })(),
-        );
-      }
-    });
-    await Promise.all(promises.values());
+  const images = new Map<string, PdfImageData>();
+  if (image) {
+    await loadImages(
+      node,
+      definition,
+      images,
+      imageCache,
+      file,
+      image === true ? {} : image,
+    );
   }
 
   const defaultFont = fonts[0]!;
@@ -469,6 +575,7 @@ export async function mdastToPdf(
     ),
     thematicBreak,
     definition,
+    images,
   };
 
   const nodes = context.render(node.children);
@@ -611,7 +718,7 @@ const paintBoxes = (
   doc: PDFKit.PDFDocument,
   contentHeight: number,
   contentTop: number,
-  images: ReadonlyMap<string, PdfImageData | null>,
+  images: ReadonlyMap<string, PdfImageData>,
 ): void => {
   const boxes = flattenBoxes(root);
   let i = 0;
@@ -672,7 +779,7 @@ const paintBlockBox = (
   box: BlockBox,
   doc: PDFKit.PDFDocument,
   offsetY: number,
-  images: ReadonlyMap<string, PdfImageData | null>,
+  images: ReadonlyMap<string, PdfImageData>,
 ) => {
   for (const child of box.children) {
     if (child.type === "block") {
@@ -726,7 +833,7 @@ const paintImageBox = (
   box: ImageBox,
   doc: PDFKit.PDFDocument,
   offsetY: number,
-  images: ReadonlyMap<string, PdfImageData | null>,
+  images: ReadonlyMap<string, PdfImageData>,
 ) => {
   const data = images.get(box.node.attrs.src);
   if (data) {
@@ -960,7 +1067,11 @@ const buildLinkReference: NodeBuilder<"linkReference"> = (
   return buildLink({ type: "link", children, url: def.url }, ctx);
 };
 
-const buildImage: NodeBuilder<"image"> = (node) => {
+const buildImage: NodeBuilder<"image"> = (node, ctx) => {
+  if (!ctx.images.has(node.url)) {
+    // Keep the description of the image if it can't be embedded
+    return node.alt ? buildText({ type: "text", value: node.alt }, ctx) : null;
+  }
   return { type: "void", tag: "image", attrs: { src: node.url } };
 };
 
