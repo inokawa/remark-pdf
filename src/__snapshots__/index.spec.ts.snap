@@ -271,6 +271,49 @@ This is link to header.
 This is link reference."
 `;
 
+exports[`e2e > link heading 2`] = `
+"Link to heading
+• heading
+• duplicated heading
+• percent-encoded
+• reference
+• formatted heading
+• heading with html
+• heading with image
+• heading named top
+• top
+• empty
+• missing
+• malformed
+• external
+Section One
+Section One
+Section One
+Hello, world!
+<b>Foo</b>
+Bar
+Top
+Unreferenced"
+`;
+
+exports[`e2e > link heading 3`] = `
+[
+  [
+    "#section-one -> page 1, top 635",
+    "#section-one-1 -> page 1, top 615",
+    "#section-one-2 -> page 1, top 595",
+    "#section-one-1 -> page 1, top 615",
+    "#hello-world -> page 1, top 574",
+    "#foo -> page 1, top 554",
+    "#-bar -> page 1, top 534",
+    "#top -> page 1, top 459",
+    "##top -> page 1, top 842",
+    "##top -> page 1, top 842",
+    "https://example.com/#section-one",
+  ],
+]
+`;
+
 exports[`e2e > list-bullet 2`] = `
 "Bullet Lists
 This is a test for bullet list.
