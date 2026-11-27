@@ -16,6 +16,7 @@ export interface TextBox extends Box {
     readonly node: TextNode;
     readonly font: string;
     readonly text: string;
+    readonly first: boolean;
 }
 export interface ImageBox extends Box {
     readonly type: "image";
