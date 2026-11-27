@@ -126,6 +126,10 @@ export interface ImageOptions {
 }
 export interface PdfOptions {
     /**
+     * Title of the document.
+     */
+    title?: string;
+    /**
      * Standard fonts or privided custom fonts.
      * @default "Helvetica"
      */
@@ -183,5 +187,5 @@ export interface PdfOptions {
      */
     plugins?: RemarkPdfPlugin[];
 }
-export declare function mdastToPdf(node: mdast.Root, { fonts, size: pageSize, margin, orientation, spacing, thematicBreak, styles: { default: defaultStyle, ...style }, image, plugins, textStyle: textStyle, }: PdfOptions | undefined, imageCache: ImageCache, file: VFile): Promise<Uint8Array>;
+export declare function mdastToPdf(node: mdast.Root, { title, fonts, size: pageSize, margin, orientation, spacing, thematicBreak, styles: { default: defaultStyle, ...style }, image, plugins, textStyle: textStyle, }: PdfOptions | undefined, imageCache: ImageCache, file: VFile): Promise<Uint8Array>;
 export {};
