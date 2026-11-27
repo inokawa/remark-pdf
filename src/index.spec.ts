@@ -78,6 +78,27 @@ const getPdfLinks = async (buffer: Uint8Array): Promise<string[][]> => {
   );
 };
 
+const getPdfOutline = async (buffer: Uint8Array): Promise<string[]> => {
+  const pdf = await pdfjsLib.getDocument({ data: buffer.slice() }).promise;
+  const lines: string[] = [];
+  const walk = async (
+    items: Awaited<ReturnType<typeof pdf.getOutline>>,
+    indent: string,
+  ) => {
+    for (const item of items ?? []) {
+      const dest = item.dest as unknown[];
+      const pageIndex = await pdf.getPageIndex(dest[0] as never);
+      const [left, top] = (dest.slice(2, 4) as number[]).map(Math.round);
+      lines.push(
+        `${indent}${item.title} -> page ${pageIndex + 1}, left ${left}, top ${top}${item.count! > 0 ? ", expanded" : ""}`,
+      );
+      await walk(item.items, indent + "  ");
+    }
+  };
+  await walk(await pdf.getOutline(), "");
+  return lines;
+};
+
 const loaded = new Map<string, ArrayBuffer>();
 const dummyImage = async (url: string): Promise<ArrayBuffer> => {
   if (loaded.has(url)) {
@@ -223,6 +244,13 @@ describe("e2e", () => {
     }
     expect(await getPdfText(generated)).toMatchSnapshot();
     expect(await getPdfLinks(generated)).toMatchSnapshot();
+  });
+
+  it("outline", async () => {
+    const md = await fs.readFile(path.join(fixturesDir, "outline.md"));
+    const doc = await processor().process(md);
+    const generated = doc.value as Uint8Array;
+    expect(await getPdfOutline(generated)).toMatchSnapshot();
   });
 
   it("image", async () => {
