@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{n as t,t as n}from"./mathjax-CGXLlvyv.js";function r(e){return t.asyncLoad?new Promise((n,r)=>{let i=t.asyncLoad(e);i instanceof Promise?i.then(e=>n(e)).catch(e=>r(e)):n(i)}):Promise.reject(`Can't load '${e}': No mathjax.asyncLoad method specified`)}function i(){return(i=e((()=>{n()})))()}export{i as n,r as t};

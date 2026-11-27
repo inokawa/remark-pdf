@@ -2,6 +2,19 @@ import { VFile } from 'vfile';
 import { ToPngFn } from './utils';
 import { Alignment } from './layout';
 import type * as mdast from "mdast";
+type KnownNodeType = mdast.RootContent["type"];
+type MdastNode<T extends string> = T extends KnownNodeType ? Extract<mdast.RootContent, {
+    type: T;
+}> : unknown;
+export type NodeBuilder<T extends string> = (node: MdastNode<T>, ctx: Context) => PdfLayout | PdfLayout[] | null;
+export type NodeBuilders = {
+    [K in KnownNodeType]?: NodeBuilder<K>;
+};
+export type RemarkPdfPlugin = (ctx: Readonly<{
+    root: mdast.Root;
+    images: Map<string, PdfImageData | null>;
+    readImage: (data: ArrayBuffer | Uint8Array, name: string) => Promise<PdfImageData | undefined>;
+}>) => Promise<NodeBuilders>;
 type StandardFontType = "Courier" | "Helvetica" | "Symbol" | "Times" | "ZapfDingbats";
 type FontBuffer = ArrayBuffer | Uint8Array;
 /**
@@ -51,7 +64,7 @@ export interface VoidNode {
         src: string;
     };
 }
-type PdfLayout = BlockNode | PageBreakNode | HorizontalRuleNode | TextNode | VoidNode;
+export type PdfLayout = BlockNode | PageBreakNode | HorizontalRuleNode | TextNode | VoidNode;
 interface TextStyle {
     fontSize: number;
     font: string;
@@ -83,6 +96,9 @@ export type PdfImageData = Readonly<{
     type: "svg";
     data: string;
 })>;
+export type Context = Readonly<{
+    render: (node: readonly mdast.RootContent[], ctx?: Context) => PdfLayout[];
+}>;
 /**
  * How thematic break (`---`) is rendered.
  */
@@ -154,6 +170,10 @@ export interface PdfOptions {
      * Images are not embedded if not set.
      */
     image?: boolean | ImageOptions;
+    /**
+     * Plugins to customize how mdast nodes are compiled.
+     */
+    plugins?: RemarkPdfPlugin[];
 }
-export declare function mdastToPdf(node: mdast.Root, { fonts, size: pageSize, margin, orientation, spacing, thematicBreak, styles: { default: defaultStyle, ...style }, image, textStyle: textStyle, }: PdfOptions | undefined, imageCache: ImageCache, file: VFile): Promise<Uint8Array>;
+export declare function mdastToPdf(node: mdast.Root, { fonts, size: pageSize, margin, orientation, spacing, thematicBreak, styles: { default: defaultStyle, ...style }, image, plugins, textStyle: textStyle, }: PdfOptions | undefined, imageCache: ImageCache, file: VFile): Promise<Uint8Array>;
 export {};
