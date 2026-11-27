@@ -1,3 +1,5 @@
+import { VFile } from 'vfile';
+import { ToPngFn } from './utils';
 import { Alignment } from './layout';
 import type * as mdast from "mdast";
 type StandardFontType = "Courier" | "Helvetica" | "Symbol" | "Times" | "ZapfDingbats";
@@ -85,7 +87,19 @@ export type PdfImageData = Readonly<{
  * How thematic break (`---`) is rendered.
  */
 export type ThematicBreakStyle = "line" | "pagebreak";
-type LoadImageFn = (url: string) => Promise<ArrayBuffer>;
+type LoadFn = (url: string, file: VFile) => Promise<ArrayBuffer | Uint8Array>;
+export interface ImageOptions {
+    /**
+     * A function to resolve image data from url. `file` is the processed file, which can be used to resolve relative urls.
+     * @default {@link loadWithFetch}
+     */
+    load?: LoadFn;
+    /**
+     * A function to convert images to PNG. Required to embed images other than PNG, JPEG and SVG, such as GIF and WebP.
+     * On browser, you can use {@link browserToPng}.
+     */
+    toPng?: ToPngFn;
+}
 export interface PdfOptions {
     /**
      * Standard fonts or privided custom fonts.
@@ -136,10 +150,10 @@ export interface PdfOptions {
      */
     textStyle?: TextStyleMatcher[];
     /**
-     * A function to resolve image data from url.
-     * @default {@link loadWithFetch}
+     * Embed images of `image` / `imageReference` nodes. `png`, `jpg` and `svg` are supported.
+     * Images are not embedded if not set.
      */
-    loadImage?: LoadImageFn;
+    image?: boolean | ImageOptions;
 }
-export declare function mdastToPdf(node: mdast.Root, { fonts, size: pageSize, margin, orientation, spacing, thematicBreak, styles: { default: defaultStyle, ...style }, loadImage, textStyle: textStyle, }?: PdfOptions): Promise<Uint8Array>;
+export declare function mdastToPdf(node: mdast.Root, { fonts, size: pageSize, margin, orientation, spacing, thematicBreak, styles: { default: defaultStyle, ...style }, image, textStyle: textStyle, }: PdfOptions | undefined, imageCache: ImageCache, file: VFile): Promise<Uint8Array>;
 export {};
