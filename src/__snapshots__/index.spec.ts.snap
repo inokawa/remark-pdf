@@ -245,6 +245,24 @@ you see, MathJax equations can be used this way as well, without unduly
 disturbing the spacing between lines."
 `;
 
+exports[`e2e > latex with latexPlugin 2`] = `
+"https://mathjax.github.io/MathJax-demos-web/page/tex-chtml.html
+When , there are two solutions to and they are
+The Lorenz Equations
+The Cauchy-Schwarz Inequality
+A Cross Product Formula
+The probability of getting (k) heads when flipping (n) coins is:
+An Identity of Ramanujan
+A Rogers-Ramanujan Identity
+Maxwell's Equations
+In-line Mathematics
+Finally, while display equations look good for a page of samples, the
+ability to mix math and text in a paragraph is also important. This
+expression is an example of an inline equation. As
+you see, MathJax equations can be used this way as well, without unduly
+disturbing the spacing between lines."
+`;
+
 exports[`e2e > link 2`] = `
 "Header
 link to GitHub.com
@@ -560,6 +578,12 @@ k=\\frac{n(n+1)}{2} \\alpha\\beta\\gamma\\delta\\epsilon\\zeta\\eta\\theta\\iota
 o\\pi\\rho\\sigma\\tau\\upsilon\\phi\\chi\\psi\\omega
 \\varepsilon\\vartheta\\varrho\\varsigma\\varphi
 \\Gamma\\Delta\\Theta\\Lambda\\Xi\\Pi\\Sigma\\Upsilon\\Phi\\Psi\\Omega"
+`;
+
+exports[`e2e > math with latexPlugin 2`] = `
+"Lift( ) can be determined by Lift Coefficient ( ) like the following
+equation.
+\\f\\relax{x} = \\int_{-\\infty}^\\infty\\f\\hat\\xi\\,e^{2 \\pi i \\xi x}\\,d\\xi"
 `;
 
 exports[`e2e > paragraph 2`] = `

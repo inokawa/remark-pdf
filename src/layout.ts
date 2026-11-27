@@ -97,6 +97,7 @@ export const layoutBlock = (
               x: startX + (style.indent ?? 0),
               y: y,
               width,
+              align: style.textAlign,
             },
             textWidth,
             textHeight,

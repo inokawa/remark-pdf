@@ -7,6 +7,7 @@ import gfm from "remark-gfm";
 import frontmatter from "remark-frontmatter";
 import math from "remark-math";
 import pdf, { type PdfOptions } from "./plugin";
+import { latexPlugin } from "./plugins/latex";
 import { pdf as pdfToImage } from "pdf-to-img";
 import {
   toMatchImageSnapshot,
@@ -388,6 +389,134 @@ describe("e2e", () => {
       expect(page).toMatchImageSnapshot();
     }
     expect(await getPdfText(generated)).toMatchSnapshot();
+  });
+
+  it("math with latexPlugin", async () => {
+    const md = await fs.readFile(path.join(fixturesDir, "math.md"));
+    const doc = await processor({ plugins: [latexPlugin()] }).process(md);
+    const generated = doc.value as Uint8Array;
+    for await (const page of await pdfToImage(Buffer.from(generated))) {
+      expect(page).toMatchImageSnapshot();
+    }
+    expect(await getPdfText(generated)).toMatchSnapshot();
+  });
+
+  it("latex with latexPlugin", async () => {
+    const md = await fs.readFile(path.join(fixturesDir, "latex.md"));
+    const doc = await processor({ plugins: [latexPlugin()] }).process(md);
+    const generated = doc.value as Uint8Array;
+    for await (const page of await pdfToImage(Buffer.from(generated))) {
+      expect(page).toMatchImageSnapshot();
+    }
+    // math is drawn as paths, not as text
+    expect(await getPdfText(generated)).toMatchSnapshot();
+  });
+
+  it("inline math with latexPlugin", async () => {
+    // on the baseline with its depth below, in the size of the text around
+    const doc = await processor({ plugins: [latexPlugin()] }).process(
+      "a $x_k^2$ b $\\frac{1}{2}$ c\n\n# a $x_k^2$ b $\\mathbb{R}$ c",
+    );
+    const generated = doc.value as Uint8Array;
+    for await (const page of await pdfToImage(Buffer.from(generated))) {
+      expect(page).toMatchImageSnapshot();
+    }
+    expect(await getPdfText(generated)).toBe("a b c\na b c");
+  });
+
+  it("invalid latex with latexPlugin", async () => {
+    // falls back to text
+    const doc = await processor({ plugins: [latexPlugin()] }).process(
+      "a $\\frac{1}{$ b\n\n$$\n\\undefinedmacro\n$$\n\nc",
+    );
+    expect(await getPdfText(doc.value as Uint8Array)).toBe(
+      "a \\frac{1}{ b\n\\undefinedmacro\nc",
+    );
+  });
+
+  it("tagged math with latexPlugin", async () => {
+    // MathJax lays it out across the line, which has no size as an image,
+    // so it falls back to text
+    const doc = await processor({ plugins: [latexPlugin()] }).process(
+      "a\n\n$$\nE = mc^2 \\tag{1}\n$$\n\nb",
+    );
+    expect(await getPdfText(doc.value as Uint8Array)).toBe(
+      "a\nE = mc^2 \\tag{1}\nb",
+    );
+  });
+
+  it("plugins in their order", async () => {
+    // each leaves the nodes it doesn't render to the next, and the last to
+    // remark-pdf
+    const doc = await processor({
+      plugins: [
+        async () => ({
+          code: (node, ctx) =>
+            node.lang === "a"
+              ? {
+                  type: "block",
+                  style: { display: "block" },
+                  children: ctx.render([{ type: "text", value: "first" }]),
+                }
+              : null,
+        }),
+        async () => ({
+          code: (node, ctx) =>
+            node.lang === "a" || node.lang === "b"
+              ? {
+                  type: "block",
+                  style: { display: "block" },
+                  children: ctx.render([{ type: "text", value: "second" }]),
+                }
+              : null,
+        }),
+      ],
+    }).process("```a\nA\n```\n\n```b\nB\n```\n\n```c\nC\n```");
+    expect(await getPdfText(doc.value as Uint8Array)).toBe("first\nsecond\nC");
+  });
+
+  it("images set by plugins", async () => {
+    // drawn instead of loaded, at their size
+    const doc = await processor({
+      image: {
+        load: async () => {
+          throw new Error("404");
+        },
+      },
+      plugins: [
+        async ({ images }) => {
+          images.set("a.svg", {
+            type: "svg",
+            data: '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="blue"/></svg>',
+            width: 200,
+            height: 50,
+          });
+          return {};
+        },
+      ],
+    }).process("a ![a](a.svg) b");
+    const generated = doc.value as Uint8Array;
+    for await (const page of await pdfToImage(Buffer.from(generated))) {
+      expect(page).toMatchImageSnapshot();
+    }
+  });
+
+  it("images read by plugins", async () => {
+    const png = await fs.readFile(path.join(fixturesDir, "images/img.png"));
+    const read: unknown[] = [];
+    await processor({
+      plugins: [
+        async ({ readImage }) => {
+          read.push(await readImage(png, "a"));
+          read.push(await readImage(new Uint8Array([1, 2, 3]), "b"));
+          return {};
+        },
+      ],
+    }).process("a");
+    expect(read).toEqual([
+      expect.objectContaining({ type: "png", width: 90, height: 75 }),
+      undefined,
+    ]);
   });
 
   it("tag", async () => {

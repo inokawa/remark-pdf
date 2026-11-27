@@ -10,11 +10,15 @@ import { unified } from "unified";
 import markdown from "remark-parse";
 import gfm from "remark-gfm";
 import frontmatter from "remark-frontmatter";
+import math from "remark-math";
 import { saveAs } from "file-saver";
 import pdf from "../src";
+import { latexPlugin } from "../src/plugins/latex";
 import MarkdownEditor from "./components/editor";
 // @ts-expect-error no type definition
 import readmeMd from "../README.md?raw";
+// @ts-expect-error no type definition
+import latexMd from "../fixtures/latex.md?raw";
 import { Preview } from "./components/preview";
 
 export default {
@@ -51,8 +55,10 @@ const toPdfProcessor = unified()
   .use(markdown)
   .use(gfm)
   .use(frontmatter)
+  .use(math)
   .use(pdf, {
     image: true,
+    plugins: [latexPlugin()],
     spacing: 4,
     styles: {
       head1: {
@@ -115,4 +121,8 @@ const Component = ({ text }: { text: string }) => {
 
 export const Readme: StoryObj = {
   render: () => <Component text={readmeMd} />,
+};
+
+export const Latex: StoryObj = {
+  render: () => <Component text={latexMd} />,
 };

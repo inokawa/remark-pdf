@@ -31,7 +31,7 @@ Currently, some of the default styles may not be nice. If you have some feature 
 - [x] image / imageReference (requires [`image` option](#image))
 - [ ] html
 - [x] code
-- [ ] math / inlineMath
+- [x] math / inlineMath ([remark-math](https://github.com/remarkjs/remark-math) and [plugin](#math))
 
 ## Demo
 
@@ -207,6 +207,25 @@ const processor = unified()
 ```
 
 Images that are not embedded are replaced with their alt text.
+
+## Plugins
+
+### Math
+
+Render LaTeX with [MathJax](https://github.com/mathjax/MathJax).
+
+```javascript
+import { unified } from "unified";
+import markdown from "remark-parse";
+import math from "remark-math";
+import pdf from "remark-pdf";
+import { latexPlugin } from "remark-pdf/plugins/latex";
+
+const processor = unified()
+  .use(markdown)
+  .use(math)
+  .use(pdf, { plugins: [latexPlugin()] });
+```
 
 ## Documentation
 
