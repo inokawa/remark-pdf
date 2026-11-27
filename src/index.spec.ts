@@ -48,6 +48,36 @@ const getPdfText = async (buffer: Uint8Array): Promise<string> => {
   ).join("\n");
 };
 
+// Links per page, with internal ones resolved to the page and top of their
+// destinations
+const getPdfLinks = async (buffer: Uint8Array): Promise<string[][]> => {
+  const pdf = await pdfjsLib.getDocument({ data: buffer.slice() }).promise;
+  return Promise.all(
+    Array.from({ length: pdf.numPages }).map(async (_, i) => {
+      const page = await pdf.getPage(i + 1);
+      const annotations = await page.getAnnotations();
+      return Promise.all(
+        annotations
+          .filter((a) => a.subtype === "Link")
+          .map(async (a) => {
+            if (a.url) {
+              return a.url as string;
+            }
+            const dest =
+              typeof a.dest === "string"
+                ? await pdf.getDestination(a.dest)
+                : a.dest;
+            if (!dest) {
+              return `#${a.dest} (missing)`;
+            }
+            const pageIndex = await pdf.getPageIndex(dest[0]);
+            return `#${a.dest} -> page ${pageIndex + 1}, top ${Math.round(dest[3])}`;
+          }),
+      );
+    }),
+  );
+};
+
 const loaded = new Map<string, ArrayBuffer>();
 const dummyImage = async (url: string): Promise<ArrayBuffer> => {
   if (loaded.has(url)) {
@@ -182,6 +212,17 @@ describe("e2e", () => {
       expect(page).toMatchImageSnapshot();
     }
     expect(await getPdfText(generated)).toMatchSnapshot();
+  });
+
+  it("link heading", async () => {
+    const md = await fs.readFile(path.join(fixturesDir, "link-heading.md"));
+    const doc = await processor().process(md);
+    const generated = doc.value as Uint8Array;
+    for await (const page of await pdfToImage(Buffer.from(generated))) {
+      expect(page).toMatchImageSnapshot();
+    }
+    expect(await getPdfText(generated)).toMatchSnapshot();
+    expect(await getPdfLinks(generated)).toMatchSnapshot();
   });
 
   it("image", async () => {

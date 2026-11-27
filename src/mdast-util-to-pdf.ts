@@ -26,6 +26,8 @@ import deepmerge from "deepmerge";
 import { toArrayBuffer, warnOnce, type ToPngFn } from "./utils";
 import { imageSize } from "image-size";
 import { visit } from "unist-util-visit";
+import { toString } from "mdast-util-to-string";
+import GithubSlugger from "github-slugger";
 import {
   layoutBlock,
   type Alignment,
@@ -136,6 +138,8 @@ export interface TextNode {
   style: TextStyle;
   attrs: {
     link?: string;
+    goTo?: string;
+    destination?: string;
   };
 }
 
@@ -144,6 +148,7 @@ export interface VoidNode {
   tag: "image";
   attrs: {
     src: string;
+    destination?: string;
   };
 }
 
@@ -236,7 +241,15 @@ export type Context = Readonly<{
   /**
    * @internal
    */
+  goTo?: string;
+  /**
+   * @internal
+   */
   definition: GetDefinition;
+  /**
+   * @internal
+   */
+  destinations: ReadonlyMap<mdast.Heading | string, string>;
   /**
    * @internal
    */
@@ -509,6 +522,7 @@ export async function mdastToPdf(
   file: VFile,
 ): Promise<Uint8Array> {
   const definition = definitions(node);
+  const destinations = collectDestinations(node, definition);
 
   const images = new Map<string, PdfImageData | null>();
   const [pluginBuilders] = await Promise.all([
@@ -628,6 +642,7 @@ export async function mdastToPdf(
     ),
     thematicBreak,
     definition,
+    destinations,
     images,
   };
 
@@ -701,6 +716,10 @@ export async function mdastToPdf(
     }
   }
   const output = toBytes(doc);
+
+  if ([...destinations.values()].includes(TOP)) {
+    doc.addNamedDestination(TOP, "XYZ", null, 0, null);
+  }
 
   const contentWidth =
     doc.page.width - doc.page.margins.left - doc.page.margins.right;
@@ -857,10 +876,14 @@ const paintTextBox = (
 ) => {
   const style = box.node.style;
   doc.font(box.font).fontSize(style.fontSize).fillColor(style.color);
+  const { link, goTo, destination } = box.node.attrs;
   doc.text(box.text, box.x, box.y - offsetY, {
     strike: style.strike,
     underline: style.underline,
-    link: box.node.attrs.link ?? null,
+    link: link ?? null,
+    goTo,
+    // A text node may be split into several boxes
+    destination: box.first ? destination : undefined,
     continued: false,
   });
 };
@@ -908,6 +931,10 @@ const paintImageBox = (
         height: box.height,
       });
     }
+    const destination = box.node.attrs.destination;
+    if (destination != null) {
+      doc.addNamedDestination(destination, "XYZ", box.x, box.y - offsetY, null);
+    }
   }
 };
 
@@ -934,11 +961,23 @@ const buildParagraph: NodeBuilder<"paragraph"> = ({ children }, ctx) => {
   };
 };
 
-const buildHeading: NodeBuilder<"heading"> = ({ children, depth }, ctx) => {
-  return ctx.render([{ type: "paragraph", children }], {
+const buildHeading: NodeBuilder<"heading"> = (node, ctx) => {
+  const { children, depth } = node;
+  const results = ctx.render([{ type: "paragraph", children }], {
     ...ctx,
     style: { ...ctx.style, ...ctx.config[`head${depth}`] },
   });
+  const destination = ctx.destinations.get(node);
+  if (destination != null) {
+    // Put the destination where the heading starts
+    const first = results
+      .flatMap((r) => (r.type === "block" ? r.children : [r]))
+      .find((r) => r.type === "text" || r.type === "void");
+    if (first) {
+      first.attrs.destination = destination;
+    }
+  }
+  return results;
 };
 
 const buildThematicBreak: NodeBuilder<"thematicBreak"> = ({}, ctx) => {
@@ -1040,7 +1079,7 @@ const buildText: NodeBuilder<"text"> = ({ value: text }, ctx) => {
       type: "text",
       text: text.slice(start, end),
       style: style,
-      attrs: { link: ctx.link },
+      attrs: { link: ctx.link, goTo: ctx.goTo },
     };
   };
 
@@ -1102,13 +1141,21 @@ const buildBreak: NodeBuilder<"break"> = ({}, ctx) => {
 };
 
 const buildLink: NodeBuilder<"link"> = ({ children, url }, ctx) => {
+  let link: string | undefined;
+  let goTo: string | undefined;
   if (url.startsWith("#")) {
-    // TODO support anchor link
-    return ctx.render(children);
+    goTo = ctx.destinations.get(url);
+    if (goTo == null) {
+      // Leave links to missing headings unlinked
+      return ctx.render(children);
+    }
+  } else {
+    link = url;
   }
   return ctx.render(children, {
     ...ctx,
-    link: url,
+    link,
+    goTo,
     style: {
       ...ctx.style,
       ...ctx.config.link,
@@ -1144,6 +1191,63 @@ const buildImageReference: NodeBuilder<"imageReference"> = (node, ctx) => {
     { type: "image", url: def.url, alt: node.alt, title: def.title },
     ctx,
   );
+};
+
+// The destination of the top of the document. Slugs never contain `#`.
+const TOP = "#top";
+
+const collectDestinations = (
+  root: mdast.Root,
+  definition: GetDefinition,
+): Map<mdast.Heading | string, string> => {
+  const slugger = new GithubSlugger();
+  // Slugs are unique, so headings can be keyed by them
+  const headings = new Map<string, mdast.Heading>();
+  const fragments = new Map<string, string>();
+  visit(root, (n) => {
+    switch (n.type) {
+      case "heading": {
+        // Like GitHub, slug the rendered text
+        const text = toString(n, {
+          includeHtml: false,
+          includeImageAlt: false,
+        });
+        headings.set(slugger.slug(text), n);
+        break;
+      }
+      case "link":
+      case "linkReference": {
+        const url = n.type === "link" ? n.url : definition(n.identifier)?.url;
+        if (url?.startsWith("#")) {
+          try {
+            fragments.set(url, decodeURIComponent(url.slice(1)));
+          } catch {
+            // Leave malformed fragments unlinked
+          }
+        }
+        break;
+      }
+    }
+  });
+
+  // PDF has no restriction on names, so every heading is a destination named
+  // by its slug, which also lets other documents link to `file.pdf#slug`.
+  const destinations = new Map<mdast.Heading | string, string>();
+  for (const [slug, heading] of headings) {
+    destinations.set(heading, slug);
+  }
+  for (const [url, fragment] of fragments) {
+    // Like HTML, `#` and `#top` go to the top unless a heading has that slug.
+    const destination = headings.has(fragment)
+      ? fragment
+      : /^(top)?$/i.test(fragment)
+        ? TOP
+        : undefined;
+    if (destination != null) {
+      destinations.set(url, destination);
+    }
+  }
+  return destinations;
 };
 
 const noop = () => {

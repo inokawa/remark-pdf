@@ -29,6 +29,8 @@ export interface TextBox extends Box {
   readonly node: TextNode;
   readonly font: string;
   readonly text: string;
+  // Whether this is the first box of the node
+  readonly first: boolean;
 }
 export interface ImageBox extends Box {
   readonly type: "image";
@@ -333,6 +335,7 @@ const measureInlines = (
         }
         let buffer = "";
         let w = 0;
+        let first = true;
         const pushText = (t: string, w: number) => {
           line.push({
             type: "text",
@@ -343,7 +346,9 @@ const measureInlines = (
             height: lineHeight,
             font,
             text: t,
+            first,
           });
+          first = false;
           x += w;
         };
         const flush = (alsoLine: boolean) => {
