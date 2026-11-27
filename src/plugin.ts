@@ -1,5 +1,9 @@
 import type { Plugin, Transformer } from "unified";
-import { mdastToPdf, type PdfOptions } from "./mdast-util-to-pdf";
+import {
+  mdastToPdf,
+  type ImageCache,
+  type PdfOptions,
+} from "./mdast-util-to-pdf";
 
 import type { Root } from "mdast";
 
@@ -15,6 +19,9 @@ declare module "vfile" {
 }
 
 const plugin: Plugin<[PdfOptions?], Root, Uint8Array> = function (opts) {
+  // Reuse loaded images across runs of the same processor
+  const imageCache: ImageCache = new Map();
+
   this.compiler = (_, file) => {
     // unified compiler must be a synchronous function according to the spec.
     // However generating pdf is asynchronous for a few inevitable reasons.
@@ -29,7 +36,7 @@ const plugin: Plugin<[PdfOptions?], Root, Uint8Array> = function (opts) {
   };
 
   const transformer: Transformer<Root, Root> = async (node, file) => {
-    file.data.pdf = await mdastToPdf(node as Root, opts);
+    file.data.pdf = await mdastToPdf(node as Root, opts, imageCache, file);
     return node;
   };
 

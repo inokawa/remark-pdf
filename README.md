@@ -28,7 +28,7 @@ Currently, some of the default styles may not be nice. If you have some feature 
 - [x] break
 - [x] link / linkReference
 - [ ] footnoteReference / footnoteDefinition
-- [x] image / imageReference
+- [x] image / imageReference (requires [`image` option](#image))
 - [ ] html
 - [x] code
 - [ ] math / inlineMath
@@ -95,6 +95,12 @@ npm install remark-cli
 npx remark input.md --use remark-pdf --output output.pdf
 ```
 
+To embed local images, use [remark-embed-images](https://github.com/remarkjs/remark-embed-images) with `image` option.
+
+```sh
+npx remark input.md --use remark-embed-images --use remark-pdf=image:true --output output.pdf
+```
+
 #### Example: Custom fonts
 
 Use custom fonts by providing a `fonts` option. Use the fonts by name in your `styles` configurations; the font file will be autoselected based on the chosen `bold` and `italic` style specifications.
@@ -152,6 +158,55 @@ Body text in Merriweather Sans Italic
   fs.writeFileSync("example.pdf", uint8Array);
 })();
 ```
+
+## Image
+
+Set `image` option to embed `png`, `jpg` and `svg` images.
+
+```javascript
+const processor = unified().use(markdown).use(pdf, { image: true });
+```
+
+Images are fetched with [fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API) by default. You can customize it with `load` option, which also receives the processed file to resolve relative urls.
+
+```javascript
+import * as fs from "node:fs/promises";
+import { pathToFileURL } from "node:url";
+
+const processor = unified()
+  .use(markdown)
+  .use(pdf, {
+    image: {
+      load: (url, file) => fs.readFile(new URL(url, pathToFileURL(file.path))),
+    },
+  });
+```
+
+To embed other images such as `gif` and `webp`, also set `toPng` option to convert them to `png`. On browser, you can use `browserToPng`, which converts images that the browser can show.
+
+```javascript
+import pdf, { browserToPng } from "remark-pdf";
+
+const processor = unified()
+  .use(markdown)
+  .use(pdf, { image: { toPng: browserToPng } });
+```
+
+On other environments like Node.js, implement it by yourself.
+
+```javascript
+import sharp from "sharp";
+
+const processor = unified()
+  .use(markdown)
+  .use(pdf, {
+    image: {
+      toPng: ({ buffer }) => sharp(buffer).png().toBuffer(),
+    },
+  });
+```
+
+Images that are not embedded are replaced with their alt text.
 
 ## Documentation
 

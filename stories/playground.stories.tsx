@@ -52,6 +52,7 @@ const toPdfProcessor = unified()
   .use(gfm)
   .use(frontmatter)
   .use(pdf, {
+    image: true,
     spacing: 4,
     styles: {
       head1: {
