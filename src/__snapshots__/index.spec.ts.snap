@@ -629,6 +629,21 @@ equation.
 \\f\\relax{x} = \\int_{-\\infty}^\\infty\\f\\hat\\xi\\,e^{2 \\pi i \\xi x}\\,d\\xi"
 `;
 
+exports[`e2e > outline 1`] = `
+[
+  "Title -> page 1, left 40, top 802, expanded",
+  "  Section bold code -> page 1, left 40, top 780, expanded",
+  "    Deep -> page 1, left 40, top 759, expanded",
+  "      Deeper -> page 1, left 40, top 741",
+  "  見出し -> page 2, left 40, top 802",
+  "Second -> page 2, left 40, top 782, expanded",
+  "  Skipped level -> page 2, left 40, top 759",
+  "  Setext with break -> page 2, left 40, top 741",
+  "  alt Image -> page 2, left 40, top 700",
+  "  Last -> page 2, left 40, top 625",
+]
+`;
+
 exports[`e2e > paragraph 2`] = `
 "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
 labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco

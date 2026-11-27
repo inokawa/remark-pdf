@@ -139,7 +139,7 @@ export interface TextNode {
   attrs: {
     link?: string;
     goTo?: string;
-    destination?: string;
+    heading?: HeadingAnchor;
   };
 }
 
@@ -148,8 +148,14 @@ export interface VoidNode {
   tag: "image";
   attrs: {
     src: string;
-    destination?: string;
+    heading?: HeadingAnchor;
   };
+}
+
+interface HeadingAnchor {
+  destination: string;
+  depth: number;
+  title: string;
 }
 
 export type PdfLayout =
@@ -776,6 +782,42 @@ export async function mdastToPdf(
   return output;
 }
 
+type AnchorHeading = (heading: HeadingAnchor, x: number, y: number) => void;
+
+const anchorHeading = (doc: PDFKit.PDFDocument): AnchorHeading => {
+  const parents: { depth: number; item: PDFKit.PDFOutline }[] = [];
+  return ({ destination, depth, title }, x, y) => {
+    doc.addNamedDestination(destination, "XYZ", x, y, null);
+
+    while (parents.length && parents[parents.length - 1]!.depth >= depth) {
+      parents.pop();
+    }
+    const parent = parents[parents.length - 1]?.item ?? doc.outline;
+    const item = parent.addItem(title, {
+      expanded: true,
+      fit: false,
+      top: y,
+      // pdfkit takes left from the right edge of the page
+      left: doc.page.width - x,
+    });
+    parents.push({ depth, item });
+  };
+};
+
+const titleOf = (node: mdast.Heading): string => {
+  const text = (n: mdast.Nodes): string =>
+    "value" in n
+      ? n.value
+      : n.type === "image"
+        ? (n.alt ?? "")
+        : n.type === "break"
+          ? " "
+          : "children" in n
+            ? n.children.map(text).join("")
+            : "";
+  return text(node).replace(/\s+/g, " ").trim();
+};
+
 const flattenBoxes = (box: LayoutBox): LayoutBox[] => {
   if (box.type === "block") {
     if (!box.border) {
@@ -792,6 +834,7 @@ const paintBoxes = (
   contentTop: number,
   images: ReadonlyMap<string, PdfImageData | null>,
 ): void => {
+  const anchor = anchorHeading(doc);
   const boxes = flattenBoxes(root);
   let i = 0;
   while (i < boxes.length) {
@@ -826,11 +869,11 @@ const paintBoxes = (
       const pageY0 = (firstBoxY ?? contentTop) - contentTop;
       for (const box of pageBoxes) {
         if (box.type === "block") {
-          paintBlockBox(box, doc, pageY0, images);
+          paintBlockBox(box, doc, pageY0, images, anchor);
         } else if (box.type === "text") {
-          paintTextBox(box, doc, pageY0);
+          paintTextBox(box, doc, pageY0, anchor);
         } else if (box.type === "image") {
-          paintImageBox(box, doc, pageY0, images);
+          paintImageBox(box, doc, pageY0, images, anchor);
         } else if (box.type === "hr") {
           paintRuleBox(box, doc, pageY0);
         }
@@ -852,14 +895,15 @@ const paintBlockBox = (
   doc: PDFKit.PDFDocument,
   offsetY: number,
   images: ReadonlyMap<string, PdfImageData | null>,
+  anchor: AnchorHeading,
 ) => {
   for (const child of box.children) {
     if (child.type === "block") {
-      paintBlockBox(child, doc, offsetY, images);
+      paintBlockBox(child, doc, offsetY, images, anchor);
     } else if (child.type === "text") {
-      paintTextBox(child, doc, offsetY);
+      paintTextBox(child, doc, offsetY, anchor);
     } else if (child.type === "image") {
-      paintImageBox(child, doc, offsetY, images);
+      paintImageBox(child, doc, offsetY, images, anchor);
     } else if (child.type === "hr") {
       paintRuleBox(child, doc, offsetY);
     }
@@ -873,19 +917,22 @@ const paintTextBox = (
   box: TextBox,
   doc: PDFKit.PDFDocument,
   offsetY: number,
+  anchor: AnchorHeading,
 ) => {
   const style = box.node.style;
   doc.font(box.font).fontSize(style.fontSize).fillColor(style.color);
-  const { link, goTo, destination } = box.node.attrs;
+  const { link, goTo, heading } = box.node.attrs;
   doc.text(box.text, box.x, box.y - offsetY, {
     strike: style.strike,
     underline: style.underline,
     link: link ?? null,
     goTo,
-    // A text node may be split into several boxes
-    destination: box.first ? destination : undefined,
     continued: false,
   });
+  // A text node may be split into several boxes
+  if (heading && box.first) {
+    anchor(heading, box.x, box.y - offsetY);
+  }
 };
 
 const paintRuleBox = (
@@ -910,6 +957,7 @@ const paintImageBox = (
   doc: PDFKit.PDFDocument,
   offsetY: number,
   images: ReadonlyMap<string, PdfImageData | null>,
+  anchor: AnchorHeading,
 ) => {
   const data = images.get(box.node.attrs.src);
   if (data) {
@@ -931,9 +979,9 @@ const paintImageBox = (
         height: box.height,
       });
     }
-    const destination = box.node.attrs.destination;
-    if (destination != null) {
-      doc.addNamedDestination(destination, "XYZ", box.x, box.y - offsetY, null);
+    const heading = box.node.attrs.heading;
+    if (heading) {
+      anchor(heading, box.x, box.y - offsetY);
     }
   }
 };
@@ -974,7 +1022,7 @@ const buildHeading: NodeBuilder<"heading"> = (node, ctx) => {
       .flatMap((r) => (r.type === "block" ? r.children : [r]))
       .find((r) => r.type === "text" || r.type === "void");
     if (first) {
-      first.attrs.destination = destination;
+      first.attrs.heading = { destination, depth, title: titleOf(node) };
     }
   }
   return results;

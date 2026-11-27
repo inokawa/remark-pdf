@@ -9,3 +9,17 @@ declare module "pdfkit/output" {
     doc: PDFKit.PDFDocument,
   ): Promise<Uint8Array<ArrayBuffer>>;
 }
+
+declare namespace PDFKit {
+  interface PDFOutline {
+    addItem(
+      title: string,
+      options?: {
+        expanded?: boolean;
+        fit?: boolean;
+        top?: number;
+        left?: number;
+      },
+    ): PDFOutline;
+  }
+}
