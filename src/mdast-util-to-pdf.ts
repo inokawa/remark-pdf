@@ -61,14 +61,25 @@ type MdastNode<T extends string> = T extends KnownNodeType
   ? Extract<mdast.RootContent, { type: T }>
   : unknown;
 
-type NodeBuilder<T extends string> = (
+export type NodeBuilder<T extends string> = (
   node: MdastNode<T>,
   ctx: Context,
 ) => PdfLayout | PdfLayout[] | null;
 
-type NodeBuilders = {
+export type NodeBuilders = {
   [K in KnownNodeType]?: NodeBuilder<K>;
 };
+
+export type RemarkPdfPlugin = (
+  ctx: Readonly<{
+    root: mdast.Root;
+    images: Map<string, PdfImageData | null>;
+    readImage: (
+      data: ArrayBuffer | Uint8Array,
+      name: string,
+    ) => Promise<PdfImageData | undefined>;
+  }>,
+) => Promise<NodeBuilders>;
 
 type StandardFontType =
   "Courier" | "Helvetica" | "Symbol" | "Times" | "ZapfDingbats";
@@ -136,7 +147,7 @@ export interface VoidNode {
   };
 }
 
-type PdfLayout =
+export type PdfLayout =
   BlockNode | PageBreakNode | HorizontalRuleNode | TextNode | VoidNode;
 
 type ListContext = Readonly<{
@@ -196,7 +207,7 @@ export type PdfImageData = Readonly<
   )
 >;
 
-type Context = Readonly<{
+export type Context = Readonly<{
   render: (node: readonly mdast.RootContent[], ctx?: Context) => PdfLayout[];
   /**
    * @internal
@@ -229,7 +240,7 @@ type Context = Readonly<{
   /**
    * @internal
    */
-  images: ReadonlyMap<string, PdfImageData>;
+  images: ReadonlyMap<string, PdfImageData | null>;
 }>;
 
 /**
@@ -283,19 +294,26 @@ const loadImage = async (
     warnOnce(`Failed to load image: ${url} ${e}`);
     return;
   }
+  return readImage(data, toPng, url);
+};
 
+const readImage = async (
+  data: ArrayBuffer,
+  toPng: ToPngFn | undefined,
+  name: string,
+): Promise<PdfImageData | undefined> => {
   let size: ReturnType<typeof imageSize>;
   try {
     size = imageSize(new Uint8Array(data));
   } catch (e) {
-    warnOnce(`Failed to detect image type: ${url} ${e}`);
+    warnOnce(`Failed to detect image type: ${name} ${e}`);
     return;
   }
   const type = size.type!;
   let { width, height } = size;
   if (!width || !height) {
     // an svg without a size of its own
-    warnOnce(`Failed to load image: ${url} has no size`);
+    warnOnce(`Failed to load image: ${name} has no size`);
     return;
   }
   if (type === "png" || type === "jpg") {
@@ -319,14 +337,14 @@ const loadImage = async (
     };
   }
   if (!toPng) {
-    warnOnce(`toPng option is required to embed ${type}: ${url}`);
+    warnOnce(`toPng option is required to embed ${type}: ${name}`);
     return;
   }
   let png: ArrayBuffer;
   try {
     png = toArrayBuffer(await toPng({ buffer: data, width, height }));
   } catch (e) {
-    warnOnce(`Failed to convert image to png: ${url} ${e}`);
+    warnOnce(`Failed to convert image to png: ${name} ${e}`);
     return;
   }
   return {
@@ -340,7 +358,7 @@ const loadImage = async (
 const loadImages = async (
   root: mdast.Root,
   definition: GetDefinition,
-  images: Map<string, PdfImageData>,
+  images: Map<string, PdfImageData | null>,
   cache: ImageCache,
   file: VFile,
   { load = loadWithFetch, toPng }: ImageOptions,
@@ -359,6 +377,9 @@ const loadImages = async (
 
   await Promise.all(
     Array.from(urls, async (url) => {
+      if (images.has(url)) {
+        return;
+      }
       // Relative urls may point to different images from other files
       const key = `${file.dirname}\0${url}`;
       const image = cache.get(key) ?? (await loadImage(url, file, load, toPng));
@@ -366,7 +387,10 @@ const loadImages = async (
         return;
       }
       cache.set(key, image);
-      images.set(url, image);
+      // Plugins may have set this url while loading.
+      if (!images.has(url)) {
+        images.set(url, image);
+      }
     }),
   );
 
@@ -459,6 +483,10 @@ export interface PdfOptions {
    * Images are not embedded if not set.
    */
   image?: boolean | ImageOptions;
+  /**
+   * Plugins to customize how mdast nodes are compiled.
+   */
+  plugins?: RemarkPdfPlugin[];
   // preventOrphans?: boolean;
 }
 
@@ -473,6 +501,7 @@ export async function mdastToPdf(
     thematicBreak = "pagebreak",
     styles: { default: defaultStyle, ...style } = {},
     image,
+    plugins = [],
     textStyle: textStyle = [],
     // preventOrphans,
   }: PdfOptions = {},
@@ -481,23 +510,39 @@ export async function mdastToPdf(
 ): Promise<Uint8Array> {
   const definition = definitions(node);
 
-  const images = new Map<string, PdfImageData>();
-  if (image) {
-    await loadImages(
-      node,
-      definition,
-      images,
-      imageCache,
-      file,
-      image === true ? {} : image,
-    );
-  }
+  const images = new Map<string, PdfImageData | null>();
+  const [pluginBuilders] = await Promise.all([
+    Promise.all(
+      plugins.map((p) =>
+        p({
+          root: node,
+          images,
+          readImage: (data, name) =>
+            readImage(
+              toArrayBuffer(data),
+              typeof image === "object" ? image.toPng : undefined,
+              name,
+            ),
+        }),
+      ),
+    ),
+    // Images set by plugins take precedence.
+    image &&
+      loadImages(
+        node,
+        definition,
+        images,
+        imageCache,
+        file,
+        image === true ? {} : image,
+      ),
+  ]);
 
   const defaultFont = fonts[0]!;
   const defaultFontName =
     typeof defaultFont === "string" ? defaultFont : defaultFont.name;
 
-  const builders: NodeBuilders = {
+  const defaultBuilders: NodeBuilders = {
     paragraph: buildParagraph,
     heading: buildHeading,
     thematicBreak: buildThematicBreak,
@@ -525,6 +570,7 @@ export async function mdastToPdf(
     math: fallbackText,
     inlineMath: fallbackText,
   };
+  const layers: NodeBuilders[] = [...pluginBuilders, defaultBuilders];
 
   const mergedDefaultStyle: TextStyle = {
     font: defaultFontName,
@@ -541,18 +587,25 @@ export async function mdastToPdf(
     render(nodes, c) {
       const results: PdfLayout[] = [];
       for (const node of nodes) {
-        const builder = builders[node.type];
-        if (!builder) {
-          warnOnce(`${node.type} node is not supported without plugins.`);
-          continue;
-        }
-        const r = builder(node as any, c ?? this);
-        if (r) {
-          if (Array.isArray(r)) {
-            results.push(...r);
-          } else {
-            results.push(r);
+        let supported = false;
+        for (const layer of layers) {
+          const builder = layer[node.type] as
+            NodeBuilder<mdast.RootContent["type"]> | undefined;
+          if (builder) {
+            supported = true;
+            const r = builder(node, c ?? this);
+            if (r) {
+              if (Array.isArray(r)) {
+                results.push(...r);
+              } else {
+                results.push(r);
+              }
+              break;
+            }
           }
+        }
+        if (!supported) {
+          warnOnce(`${node.type} node is not supported without plugins.`);
         }
       }
       return results;
@@ -718,7 +771,7 @@ const paintBoxes = (
   doc: PDFKit.PDFDocument,
   contentHeight: number,
   contentTop: number,
-  images: ReadonlyMap<string, PdfImageData>,
+  images: ReadonlyMap<string, PdfImageData | null>,
 ): void => {
   const boxes = flattenBoxes(root);
   let i = 0;
@@ -779,7 +832,7 @@ const paintBlockBox = (
   box: BlockBox,
   doc: PDFKit.PDFDocument,
   offsetY: number,
-  images: ReadonlyMap<string, PdfImageData>,
+  images: ReadonlyMap<string, PdfImageData | null>,
 ) => {
   for (const child of box.children) {
     if (child.type === "block") {
@@ -833,14 +886,21 @@ const paintImageBox = (
   box: ImageBox,
   doc: PDFKit.PDFDocument,
   offsetY: number,
-  images: ReadonlyMap<string, PdfImageData>,
+  images: ReadonlyMap<string, PdfImageData | null>,
 ) => {
   const data = images.get(box.node.attrs.src);
   if (data) {
     if (data.type === "svg") {
+      // svg-to-pdfkit takes the width and height attributes of the svg,
+      // in px, unless given preserveAspectRatio, which replaces the svg's
+      // own, so that is passed on
+      const root = /<svg\b[^>]*>/.exec(data.data)?.[0] ?? "";
       SVGtoPDF(doc, data.data, box.x, box.y - offsetY, {
         width: box.width,
         height: box.height,
+        preserveAspectRatio:
+          /\spreserveAspectRatio\s*=\s*["']([^"']*)["']/.exec(root)?.[1] ||
+          "xMidYMid meet",
       });
     } else {
       doc.image(data.data, box.x, box.y - offsetY, {
@@ -1068,7 +1128,7 @@ const buildLinkReference: NodeBuilder<"linkReference"> = (
 };
 
 const buildImage: NodeBuilder<"image"> = (node, ctx) => {
-  if (!ctx.images.has(node.url)) {
+  if (!ctx.images.get(node.url)) {
     // Keep the description of the image if it can't be embedded
     return node.alt ? buildText({ type: "text", value: node.alt }, ctx) : null;
   }

@@ -12,6 +12,11 @@
       "types": "./lib/index.d.ts",
       "require": "./lib/index.cjs",
       "default": "./lib/index.js"
+    },
+    "./plugins/*": {
+      "types": "./lib/plugins/*/index.d.ts",
+      "require": "./lib/plugins/*/index.cjs",
+      "default": "./lib/plugins/*/index.js"
     }
   },
   "files": [
@@ -30,6 +35,8 @@
     "prepublishOnly": "npm run typedoc && npm run build"
   },
   "dependencies": {
+    "@mathjax/mathjax-newcm-font": "^4.1.3",
+    "@mathjax/src": "^4.1.3",
     "deepmerge": "^4.3.1",
     "image-size": "^2.1.0",
     "linebreak": "^2.0.0",
@@ -83,7 +90,9 @@
     "mdast",
     "markdown",
     "pdf",
-    "pandoc"
+    "pandoc",
+    "latex",
+    "math"
   ],
   "author": "inokawa <stratoooo-taster@yahoo.co.jp> (https://github.com/inokawa/)",
   "license": "MIT",
