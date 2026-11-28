@@ -26,7 +26,7 @@ Currently, some of the default styles may not be nice. If you have some feature 
 - [x] delete
 - [x] inlineCode
 - [x] break
-- [x] link / linkReference
+- [x] link / linkReference (links to headings like `[text](#heading-text)` are resolved by [github-slugger](https://github.com/Flet/github-slugger))
 - [ ] footnoteReference / footnoteDefinition
 - [x] image / imageReference (requires [`image` option](#image))
 - [ ] html
