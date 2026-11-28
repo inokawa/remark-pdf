@@ -19,23 +19,34 @@ import TimesRoman from "pdfkit/standard-fonts/TimesRoman";
 import ZapfDingbats from "pdfkit/standard-fonts/ZapfDingbats";
 // @ts-expect-error
 import SVGtoPDF from "svg-to-pdfkit";
-import Decimal from "@jsamr/counter-style/presets/decimal";
-import Disc from "@jsamr/counter-style/presets/disc";
-import { definitions, type GetDefinition } from "mdast-util-definitions";
-import deepmerge from "deepmerge";
-import { toArrayBuffer, warnOnce, type ToPngFn } from "./utils";
+import type * as hast from "hast";
+import {
+  defaultHandlers,
+  toHast,
+  type Handler,
+  type State,
+} from "mdast-util-to-hast";
+import {
+  Document,
+  Element,
+  HTMLContentModel,
+  Text,
+  TRenderEngine,
+  type StylesConfig,
+} from "@native-html/transient-render-engine";
 import { imageSize } from "image-size";
-import { visit } from "unist-util-visit";
+import { definitions } from "mdast-util-definitions";
+import { SKIP, visit } from "unist-util-visit";
 import { toString } from "mdast-util-to-string";
+import type { InlineMath, Math } from "mdast-util-math";
 import GithubSlugger from "github-slugger";
+import { toArrayBuffer, warnOnce, type ToPngFn } from "./utils";
 import {
   layoutBlock,
-  type Alignment,
-  type BlockBox,
-  type ImageBox,
-  type LayoutBox,
-  type RuleBox,
-  type TextBox,
+  paginate,
+  type Box,
+  type Page,
+  type Style,
 } from "./layout";
 
 // pdfkit's browser build requires standard fonts to be registered. Registering them also keeps
@@ -56,32 +67,6 @@ registerStdFonts(
   TimesRoman,
   ZapfDingbats,
 );
-
-type KnownNodeType = mdast.RootContent["type"];
-
-type MdastNode<T extends string> = T extends KnownNodeType
-  ? Extract<mdast.RootContent, { type: T }>
-  : unknown;
-
-export type NodeBuilder<T extends string> = (
-  node: MdastNode<T>,
-  ctx: Context,
-) => PdfLayout | PdfLayout[] | null;
-
-export type NodeBuilders = {
-  [K in KnownNodeType]?: NodeBuilder<K>;
-};
-
-export type RemarkPdfPlugin = (
-  ctx: Readonly<{
-    root: mdast.Root;
-    images: Map<string, PdfImageData | null>;
-    readImage: (
-      data: ArrayBuffer | Uint8Array,
-      name: string,
-    ) => Promise<PdfImageData | undefined>;
-  }>,
-) => Promise<NodeBuilders>;
 
 type StandardFontType =
   "Courier" | "Helvetica" | "Symbol" | "Times" | "ZapfDingbats";
@@ -107,76 +92,6 @@ export interface CustomFont {
 }
 
 export type TextStyleMatcher = [pattern: RegExp, style: Partial<TextStyle>];
-
-interface BlockStyle {
-  indent?: number;
-  display: "block" | "table" | "table-row" | "table-cell";
-  textAlign?: Alignment;
-}
-export interface BlockNode {
-  type: "block";
-  style: BlockStyle;
-  children: PdfLayout[];
-}
-
-interface PageBreakNode {
-  type: "pagebreak";
-}
-
-export interface HorizontalRuleNode {
-  type: "hr";
-  style: {
-    color: string;
-    thickness: number;
-    margin: number;
-  };
-}
-
-export interface TextNode {
-  type: "text";
-  text: string;
-  style: TextStyle;
-  attrs: {
-    link?: string;
-    goTo?: string;
-    heading?: HeadingAnchor;
-  };
-}
-
-export interface VoidNode {
-  type: "void";
-  tag: "image";
-  attrs: {
-    src: string;
-    heading?: HeadingAnchor;
-  };
-}
-
-interface HeadingAnchor {
-  destination: string;
-  depth: number;
-  title: string;
-}
-
-export type PdfLayout =
-  BlockNode | PageBreakNode | HorizontalRuleNode | TextNode | VoidNode;
-
-type ListContext = Readonly<{
-  level: number;
-  meta: Readonly<
-    | {
-        type: "bullet";
-      }
-    | {
-        type: "ordered";
-        number: number;
-      }
-    | {
-        type: "task";
-        checked: boolean;
-      }
-  >;
-}>;
 
 interface TextStyle {
   fontSize: number;
@@ -218,49 +133,36 @@ export type PdfImageData = Readonly<
   )
 >;
 
+type KnownNodeType = mdast.RootContent["type"];
+
+type MdastNode<T extends KnownNodeType> = Extract<
+  mdast.RootContent,
+  { type: T }
+>;
+
 export type Context = Readonly<{
-  render: (node: readonly mdast.RootContent[], ctx?: Context) => PdfLayout[];
-  /**
-   * @internal
-   */
-  style: TextStyle;
-  /**
-   * @internal
-   */
-  textStyle: TextStyleMatcher[];
-  /**
-   * @internal
-   */
-  config: StyleOption;
-  /**
-   * @internal
-   */
-  thematicBreak: ThematicBreakStyle;
-  /**
-   * @internal
-   */
-  list?: ListContext;
-  /**
-   * @internal
-   */
-  link?: string;
-  /**
-   * @internal
-   */
-  goTo?: string;
-  /**
-   * @internal
-   */
-  definition: GetDefinition;
-  /**
-   * @internal
-   */
-  destinations: ReadonlyMap<mdast.Heading | string, string>;
-  /**
-   * @internal
-   */
-  images: ReadonlyMap<string, PdfImageData | null>;
+  render: (nodes: readonly mdast.RootContent[]) => hast.ElementContent[];
 }>;
+
+export type NodeBuilder<T extends KnownNodeType> = (
+  node: MdastNode<T>,
+  ctx: Context,
+) => hast.ElementContent | hast.ElementContent[] | null;
+
+export type NodeBuilders = {
+  [K in KnownNodeType]?: NodeBuilder<K>;
+};
+
+export type RemarkPdfPlugin = (
+  ctx: Readonly<{
+    root: mdast.Root;
+    images: Map<string, PdfImageData | null>;
+    readImage: (
+      data: ArrayBuffer | Uint8Array,
+      name: string,
+    ) => Promise<PdfImageData | undefined>;
+  }>,
+) => Promise<NodeBuilders>;
 
 /**
  * How thematic break (`---`) is rendered.
@@ -375,25 +277,12 @@ const readImage = async (
 };
 
 const loadImages = async (
-  root: mdast.Root,
-  definition: GetDefinition,
+  urls: ReadonlySet<string>,
   images: Map<string, PdfImageData | null>,
   cache: ImageCache,
   file: VFile,
   { load = loadWithFetch, toPng }: ImageOptions,
 ): Promise<void> => {
-  const urls = new Set<string>();
-  visit(root, (node) => {
-    if (node.type === "image") {
-      urls.add(node.url);
-    } else if (node.type === "imageReference") {
-      const def = definition(node.identifier);
-      if (def) {
-        urls.add(def.url);
-      }
-    }
-  });
-
   await Promise.all(
     Array.from(urls, async (url) => {
       if (images.has(url)) {
@@ -427,7 +316,7 @@ export interface PdfOptions {
    */
   title?: string;
   /**
-   * Standard fonts or privided custom fonts.
+   * Standard fonts or provided custom fonts.
    * @default "Helvetica"
    */
   fonts?: (StandardFontType | CustomFont)[];
@@ -510,11 +399,10 @@ export interface PdfOptions {
    * Plugins to customize how mdast nodes are compiled.
    */
   plugins?: RemarkPdfPlugin[];
-  // preventOrphans?: boolean;
 }
 
 export async function mdastToPdf(
-  node: mdast.Root,
+  root: mdast.Root,
   {
     title,
     fonts = ["Helvetica"],
@@ -526,138 +414,110 @@ export async function mdastToPdf(
     styles: { default: defaultStyle, ...style } = {},
     image,
     plugins = [],
-    textStyle: textStyle = [],
-    // preventOrphans,
+    textStyle = [],
   }: PdfOptions = {},
   imageCache: ImageCache,
   file: VFile,
 ): Promise<Uint8Array> {
-  const definition = definitions(node);
-  const destinations = collectDestinations(node, definition);
+  // the images to load, and the slugs of the headings in document order
+  const definition = definitions(root);
+  const urls = new Set<string>();
+  const slugger = new GithubSlugger();
+  const slugs = new Map<mdast.Heading, string>();
+  visit(root, (node) => {
+    switch (node.type) {
+      case "heading":
+        // Like GitHub, slug the rendered text
+        slugs.set(
+          node,
+          slugger.slug(
+            toString(node, { includeHtml: false, includeImageAlt: false }),
+          ),
+        );
+        break;
+      case "image":
+        urls.add(node.url);
+        break;
+      case "imageReference":
+        urls.add(definition(node.identifier)!.url);
+        break;
+    }
+  });
 
+  const imageOptions = image === true ? {} : image || undefined;
   const images = new Map<string, PdfImageData | null>();
   const [pluginBuilders] = await Promise.all([
     Promise.all(
       plugins.map((p) =>
         p({
-          root: node,
+          root,
           images,
           readImage: (data, name) =>
-            readImage(
-              toArrayBuffer(data),
-              typeof image === "object" ? image.toPng : undefined,
-              name,
-            ),
+            readImage(toArrayBuffer(data), imageOptions?.toPng, name),
         }),
       ),
     ),
     // Images set by plugins take precedence.
-    image &&
-      loadImages(
-        node,
-        definition,
-        images,
-        imageCache,
-        file,
-        image === true ? {} : image,
-      ),
+    imageOptions && loadImages(urls, images, imageCache, file, imageOptions),
   ]);
-
-  const defaultFont = fonts[0]!;
-  const defaultFontName =
-    typeof defaultFont === "string" ? defaultFont : defaultFont.name;
-
-  const defaultBuilders: NodeBuilders = {
-    paragraph: buildParagraph,
-    heading: buildHeading,
-    thematicBreak: buildThematicBreak,
-    blockquote: buildBlockquote,
-    list: buildList,
-    listItem: noop,
-    table: buildTable,
-    tableRow: noop,
-    tableCell: noop,
-    html: fallbackText,
-    code: buildCode,
-    definition: noop,
-    // footnoteDefinition: buildFootnoteDefinition,
-    text: buildText,
-    emphasis: buildEmphasis,
-    strong: buildStrong,
-    delete: buildDelete,
-    inlineCode: buildInlineCode,
-    break: buildBreak,
-    link: buildLink,
-    linkReference: buildLinkReference,
-    image: buildImage,
-    imageReference: buildImageReference,
-    // footnoteReference: buildFootnoteReference,
-    math: fallbackText,
-    inlineMath: fallbackText,
-  };
-  const layers: NodeBuilders[] = [...pluginBuilders, defaultBuilders];
-
-  const mergedDefaultStyle: TextStyle = {
-    font: defaultFontName,
-    fontSize: 12,
-    color: "black",
-    bold: false,
-    italic: false,
-    underline: false,
-    strike: false,
-    ...defaultStyle,
-  };
-
-  const context: Context = {
-    render(nodes, c) {
-      const results: PdfLayout[] = [];
-      for (const node of nodes) {
-        let supported = false;
-        for (const layer of layers) {
-          const builder = layer[node.type] as
-            NodeBuilder<mdast.RootContent["type"]> | undefined;
-          if (builder) {
-            supported = true;
-            const r = builder(node, c ?? this);
-            if (r) {
-              if (Array.isArray(r)) {
-                results.push(...r);
-              } else {
-                results.push(r);
-              }
-              break;
-            }
-          }
+  const hastRoot = toHast(root, {
+    handlers: composeHandlers(pluginBuilders, {
+      heading: (state, node: mdast.Heading) => {
+        const element = defaultHandlers.heading(state, node);
+        const slug = slugs.get(node);
+        if (slug) {
+          element.properties["id"] = slug;
         }
-        if (!supported) {
-          warnOnce(`${node.type} node is not supported without plugins.`);
-        }
-      }
-      return results;
-    },
-    style: mergedDefaultStyle,
-    textStyle,
-    config: deepmerge<StyleOption>(
-      {
-        head1: { fontSize: 24 },
-        head2: { fontSize: 22 },
-        head3: { fontSize: 20 },
-        head4: { fontSize: 18 },
-        head5: { fontSize: 16 },
-        head6: { fontSize: 14 },
-        link: { color: "#0000FF", underline: true },
-        inlineCode: { color: "#333" },
-        code: { color: "#333" },
+        element.properties["dataTitle"] = titleOf(node);
+        return element;
       },
-      style,
-    ),
-    thematicBreak,
-    definition,
-    destinations,
-    images,
-  };
+      // images are keyed by their urls as written, which mdast-util-to-hast
+      // percent-encodes
+      image: (state, node: mdast.Image) => {
+        if (!images.get(node.url)) {
+          return altText(state, node);
+        }
+        const element = defaultHandlers.image(state, node);
+        element.properties["src"] = node.url;
+        return element;
+      },
+      imageReference: (state, node: mdast.ImageReference) => {
+        const { url } = definition(node.identifier)!;
+        if (!images.get(url)) {
+          return altText(state, node);
+        }
+        const element = defaultHandlers.imageReference(
+          state,
+          node,
+        ) as hast.Element;
+        element.properties["src"] = url;
+        return element;
+      },
+      // code outside a code block, which TRE's selectors can't tell apart
+      inlineCode: (state, node: mdast.InlineCode) => {
+        const element = defaultHandlers.inlineCode(state, node);
+        element.properties["className"] = ["inline"];
+        return element;
+      },
+      html: (_, node: mdast.Html, parent) => {
+        switch (parent?.type) {
+          case "root":
+          case "blockquote":
+          case "listItem":
+          case "footnoteDefinition":
+            return toRawBlock(fallBackToText(node));
+          default:
+            return fallBackToText(node);
+        }
+      },
+      math: (_, node: Math) => toRawBlock(fallBackToText(node)),
+      inlineMath: (_, node: InlineMath) => fallBackToText(node),
+      yaml: dropUnsupported,
+      toml: dropUnsupported,
+    }),
+  }) as hast.Root;
 
-  const nodes = context.render(node.children);
+  const linksToTop = resolveLinks(hastRoot);
 
   const doc = new PDFDocument({
     size: pageSize,
@@ -677,27 +537,31 @@ export async function mdastToPdf(
     subset: "PDF/A-3a",
   });
 
+  const defaultFont = fonts[0]!;
+  const defaultFontName =
+    typeof defaultFont === "string" ? defaultFont : defaultFont.name;
+
   const fontMap = new Map<string, RegisteredFont>();
   for (const font of fonts) {
     if (typeof font !== "string") {
       const fontName = font.name;
-      const defaultFont: RegisteredFont = {
+      const family: RegisteredFont = {
         normal: fontName,
       };
-      doc.registerFont(defaultFont.normal, font.normal);
+      doc.registerFont(family.normal, font.normal);
       if (font.bold) {
-        defaultFont.bold = `${fontName}-Bold`;
-        doc.registerFont(defaultFont.bold, font.bold);
+        family.bold = `${fontName}-Bold`;
+        doc.registerFont(family.bold, font.bold);
       }
       if (font.italic) {
-        defaultFont.italic = `${fontName}-Italic`;
-        doc.registerFont(defaultFont.italic, font.italic);
+        family.italic = `${fontName}-Italic`;
+        doc.registerFont(family.italic, font.italic);
       }
       if (font.bolditalic) {
-        defaultFont.bolditalic = `${fontName}-BoldItalic`;
-        doc.registerFont(defaultFont.bolditalic, font.bolditalic);
+        family.bolditalic = `${fontName}-BoldItalic`;
+        doc.registerFont(family.bolditalic, font.bolditalic);
       }
-      fontMap.set(fontName, defaultFont);
+      fontMap.set(fontName, family);
     } else {
       fontMap.set(
         font,
@@ -728,88 +592,187 @@ export async function mdastToPdf(
       );
     }
   }
-  const output = toBytes(doc);
+  const baseStyle = { fontSize: 12, color: "black", ...defaultStyle };
+  const toStyle = (option: Readonly<Partial<TextStyle>>): Style => {
+    const css: Style = {};
+    // a font not registered is inherited from the parent
+    if (option.font != null && fontMap.has(option.font))
+      css.fontFamily = option.font;
+    if (option.fontSize != null) css.fontSize = option.fontSize;
+    if (option.color != null) css.color = option.color;
+    if (option.bold != null) css.fontWeight = option.bold ? "bold" : "normal";
+    if (option.italic != null)
+      css.fontStyle = option.italic ? "italic" : "normal";
+    if (option.underline != null || option.strike != null) {
+      css.textDecorationLine =
+        option.underline && option.strike
+          ? "underline line-through"
+          : option.underline
+            ? "underline"
+            : option.strike
+              ? "line-through"
+              : "none";
+    }
+    return css;
+  };
 
-  if ([...destinations.values()].includes(TOP)) {
-    doc.addNamedDestination(TOP, "XYZ", null, 0, null);
-  }
+  const cellStyle: Style = {
+    flexGrow: 1,
+    flexBasis: 0,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    paddingTop: 2,
+    paddingRight: 2,
+    paddingBottom: 2,
+    paddingLeft: 2,
+  };
+  const blockSpacing: Style = spacing ? { marginBottom: spacing } : {};
+  const tree = new TRenderEngine({
+    // TRE's types of styles come from a package that package.json overrides
+    // with an empty one: the styles are typed as remark-pdf's own
+    stylesConfig: {
+      enableUserAgentStyles: false,
+      // the first font, unless the default style has one registered
+      baseStyle: { fontFamily: defaultFontName, ...toStyle(baseStyle) },
+      tagsStyles: {
+        p: blockSpacing,
+        em: { fontStyle: "italic" },
+        strong: { fontWeight: "bold" },
+        del: { textDecorationLine: "line-through" },
+        h1: { ...toStyle({ fontSize: 24, ...style.head1 }), ...blockSpacing },
+        h2: { ...toStyle({ fontSize: 22, ...style.head2 }), ...blockSpacing },
+        h3: { ...toStyle({ fontSize: 20, ...style.head3 }), ...blockSpacing },
+        h4: { ...toStyle({ fontSize: 18, ...style.head4 }), ...blockSpacing },
+        h5: { ...toStyle({ fontSize: 16, ...style.head5 }), ...blockSpacing },
+        h6: { ...toStyle({ fontSize: 14, ...style.head6 }), ...blockSpacing },
+        a: toStyle({ color: "#0000FF", underline: true, ...style.link }),
+        pre: {
+          ...toStyle({ color: "#333", ...style.code }),
+          whiteSpace: "pre",
+          ...blockSpacing,
+        },
+        blockquote: toStyle(style.blockquote ?? {}),
+        // the top edge is the header cells', which goes with the header row
+        // to its page: a table continued on a page has none there
+        table: { borderLeftWidth: 1, ...blockSpacing },
+        tr: { flexDirection: "row" },
+        td: cellStyle,
+        th: { ...cellStyle, borderTopWidth: 1 },
+        hr: {
+          borderTopWidth: 1,
+          borderTopColor: "currentcolor",
+          marginTop: baseStyle.fontSize / 2,
+          marginBottom: baseStyle.fontSize / 2,
+        },
+        // a padding the layout widens to fit the markers
+        ul: {
+          listStyleType: "disc",
+          paddingLeft: baseStyle.fontSize * 2,
+          ...blockSpacing,
+        },
+        ol: {
+          listStyleType: "decimal",
+          paddingLeft: baseStyle.fontSize * 2,
+          ...blockSpacing,
+        },
+      } satisfies Record<string, Style>,
+      classesStyles: {
+        raw: { whiteSpace: "pre", ...blockSpacing },
+        center: { textAlign: "center" },
+        math: { textAlign: "center", ...blockSpacing },
+        inline: toStyle({ color: "#333", ...style.inlineCode }),
+        left: { textAlign: "left" },
+        right: { textAlign: "right" },
+        // a task's checkbox is its marker
+        "task-list-item": { listStyleType: "none" },
+        // toDom's class, for what TRE's selectors can't tell apart
+        "last-in-item": { marginBottom: 0 },
+        ...Object.fromEntries(
+          textStyle.map(([, s], i): [string, Style] => [`t${i}`, toStyle(s)]),
+        ),
+      } satisfies Record<string, Style>,
+    } as unknown as StylesConfig,
+    // TRE would split font names on commas and take quotes out of them
+    cssProcessorConfig: { skipFontFamilyValidation: true },
+    removeLineBreaksAroundEastAsianDiscardSet: true,
+    // images in inline flow instead of hoisted out of phrasing
+    // https://github.com/meliorence/react-native-render-html/issues/593, as
+    // text that isn't void: TRE drops the space after a void text, as after <br>
+    customizeHTMLModels: (models) => ({
+      ...models,
+      img: models.img.extend({
+        contentModel: HTMLContentModel.textual,
+        isVoid: false,
+      }),
+    }),
+  }).buildTTreeFromDoc(
+    new Document(
+      toDom(
+        hastRoot.children,
+        textStyle.map(
+          ([p]) =>
+            new RegExp(
+              p.source,
+              p.flags.includes("g") ? p.flags : p.flags + "g",
+            ),
+        ),
+      ),
+    ),
+  );
 
-  const contentWidth =
-    doc.page.width - doc.page.margins.left - doc.page.margins.right;
-  const contentHeight =
-    doc.page.height - doc.page.margins.top - doc.page.margins.bottom;
-  const contentTop = doc.page.margins.top;
-  const contentLeft = doc.page.margins.left;
+  const { width, height, margins } = doc.page;
+  const contentTop = margins.top;
+  const contentHeight = height - margins.top - margins.bottom;
 
-  const box = layoutBlock(
-    { type: "block", style: { display: "block" }, children: nodes },
-    contentLeft,
+  const layout = layoutBlock(
+    tree,
+    margins.left,
     contentTop,
+    width - margins.left - margins.right,
     {
-      top: contentTop,
-      width: contentWidth,
-      spacing,
-      textHeight: (font, fontSize) => {
-        if (font != null && fontSize != null) {
-          doc.font(font).fontSize(fontSize);
-        }
-        return doc.currentLineHeight();
+      isPageBreak: (node) =>
+        thematicBreak === "pagebreak" && node.tagName === "hr",
+      // the closest face, synthesizing what it lacks
+      font: ({ fontFamily, fontWeight, fontStyle }) => {
+        // every node inherits a registered font from the base style
+        const family = fontMap.get(fontFamily!)!;
+        const bold = fontWeight === "bold";
+        const italic = fontStyle === "italic";
+        const face =
+          (bold && italic && family.bolditalic) ||
+          (bold && family.bold) ||
+          (italic && family.italic) ||
+          family.normal;
+        return {
+          name: face,
+          bold: bold && face !== family.bold && face !== family.bolditalic,
+          italic:
+            italic && face !== family.italic && face !== family.bolditalic,
+        };
       },
-      textWidth: (text) => doc.widthOfString(text),
-      resolveFont: (fontName, bold, italic) => {
-        let targetFont = fontMap.get(fontName);
-        if (!targetFont) {
-          targetFont = fontMap.get(defaultFontName)!;
-        }
-
-        let font: string = targetFont.normal;
-        if (bold && italic && targetFont.bolditalic) {
-          font = targetFont.bolditalic;
-        } else if (bold && targetFont.bold) {
-          font = targetFont.bold;
-        } else if (italic && targetFont.italic) {
-          font = targetFont.italic;
-        }
-        return font;
-      },
-      resolveImageSize: (src) => {
-        const data = images.get(src);
-        if (data) {
-          return { width: data.width, height: data.height };
-        } else {
-          return null;
-        }
-      },
+      lineHeight: (font, fontSize) =>
+        doc.font(font.name).fontSize(fontSize).currentLineHeight(true),
+      textHeight: (font, fontSize) =>
+        doc.font(font.name).fontSize(fontSize).currentLineHeight(),
+      textWidth: (text, font, fontSize) =>
+        doc.font(font.name).fontSize(fontSize).widthOfString(text),
+      imageSize: (src) => images.get(src)!,
+      maxImageHeight: contentHeight,
     },
   );
 
-  paintBoxes(box, doc, contentHeight, contentTop, images);
+  paintPages(
+    doc,
+    paginate(layout, contentHeight, contentTop),
+    linksToTop,
+    images,
+  );
 
+  // the bytes the document streams, which it keeps until they are read
+  const bytes = toBytes(doc);
   doc.end();
-  return output;
+  return bytes;
 }
-
-type AnchorHeading = (heading: HeadingAnchor, x: number, y: number) => void;
-
-const anchorHeading = (doc: PDFKit.PDFDocument): AnchorHeading => {
-  const parents: { depth: number; item: PDFKit.PDFOutline }[] = [];
-  return ({ destination, depth, title }, x, y) => {
-    doc.addNamedDestination(destination, "XYZ", x, y, null);
-
-    while (parents.length && parents[parents.length - 1]!.depth >= depth) {
-      parents.pop();
-    }
-    const parent = parents[parents.length - 1]?.item ?? doc.outline;
-    const item = parent.addItem(title, {
-      expanded: true,
-      fit: false,
-      top: y,
-      // pdfkit takes left from the right edge of the page
-      left: doc.page.width - x,
-    });
-    parents.push({ depth, item });
-  };
-};
 
 const titleOf = (node: mdast.Heading): string => {
   const text = (n: mdast.Nodes): string =>
@@ -825,493 +788,475 @@ const titleOf = (node: mdast.Heading): string => {
   return text(node).replace(/\s+/g, " ").trim();
 };
 
-const flattenBoxes = (box: LayoutBox): LayoutBox[] => {
-  if (box.type === "block") {
-    if (!box.border) {
-      return box.children.flatMap(flattenBoxes);
-    }
-  }
-  return [box];
+const dropUnsupported: Handler = (_, node) => {
+  warnOnce(`${node.type} node is not supported without plugins.`);
+  return undefined;
 };
 
-const paintBoxes = (
-  root: BlockBox,
-  doc: PDFKit.PDFDocument,
-  contentHeight: number,
-  contentTop: number,
-  images: ReadonlyMap<string, PdfImageData | null>,
-): void => {
-  const anchor = anchorHeading(doc);
-  const boxes = flattenBoxes(root);
-  let i = 0;
-  while (i < boxes.length) {
-    let pageBoxes: LayoutBox[] = [];
-    let j = i;
-    let pageBreak = false;
-    let firstBoxY: number | null = null;
-    while (j < boxes.length) {
-      const box = boxes[j]!;
-      if (box.type === "pagebreak") {
-        pageBreak = true;
-        break;
-      }
-      if (firstBoxY === null) {
-        firstBoxY = box.y;
-      }
-      if (
-        pageBoxes.length > 0 &&
-        firstBoxY !== null &&
-        box.y + box.height - firstBoxY > contentHeight
-      ) {
-        break;
-      }
-      pageBoxes.push(box);
-      j++;
-    }
+const fallBackToText = (node: mdast.Html | Math | InlineMath): hast.Text => {
+  warnOnce(
+    `${node.type} node is not supported without plugins, falling back to text.`,
+  );
+  return { type: "text", value: node.value };
+};
 
-    const hasContent =
-      pageBoxes.length > 0 &&
-      pageBoxes.some((b) => "height" in b && b.height > 0);
-    if (hasContent) {
-      const pageY0 = (firstBoxY ?? contentTop) - contentTop;
-      for (const box of pageBoxes) {
-        if (box.type === "block") {
-          paintBlockBox(box, doc, pageY0, images, anchor);
-        } else if (box.type === "text") {
-          paintTextBox(box, doc, pageY0, anchor);
-        } else if (box.type === "image") {
-          paintImageBox(box, doc, pageY0, images, anchor);
-        } else if (box.type === "hr") {
-          paintRuleBox(box, doc, pageY0);
+const altText = (
+  state: State,
+  node: mdast.Image | mdast.ImageReference,
+): hast.Text | undefined => {
+  if (!node.alt) {
+    return undefined;
+  }
+  const text: hast.Text = { type: "text", value: node.alt };
+  // text of the markdown, which textStyle applies to
+  state.patch(node, text);
+  return text;
+};
+
+// fallback text that is a block: not a p, which a tight list item unwraps
+const toRawBlock = (text: hast.Text): hast.Element => ({
+  type: "element",
+  tagName: "div",
+  properties: { className: ["raw"] },
+  children: [text],
+});
+
+const composeHandlers = (
+  layers: readonly NodeBuilders[],
+  handlers: Readonly<Record<string, Handler>>,
+): Record<string, Handler> => {
+  const composed = { ...handlers };
+  for (const type of new Set(layers.flatMap((layer) => Object.keys(layer)))) {
+    const builders = layers.flatMap(
+      (layer) => layer[type as KnownNodeType] ?? [],
+    ) as NodeBuilder<KnownNodeType>[];
+    const base =
+      handlers[type] ?? (defaultHandlers as Record<string, Handler>)[type];
+    composed[type] = (state: State, node, parent) => {
+      const ctx: Context = {
+        render: (nodes) =>
+          state.all({ type: "root", children: nodes as mdast.RootContent[] }),
+      };
+      for (const builder of builders) {
+        const result = builder(node as MdastNode<KnownNodeType>, ctx);
+        if (result != null) {
+          return result;
         }
       }
-    }
-
-    i = j;
-    if (pageBreak) {
-      doc.addPage();
-      i++;
-    } else if (hasContent && j < boxes.length) {
-      doc.addPage();
-    }
-  }
-};
-
-const paintBlockBox = (
-  box: BlockBox,
-  doc: PDFKit.PDFDocument,
-  offsetY: number,
-  images: ReadonlyMap<string, PdfImageData | null>,
-  anchor: AnchorHeading,
-) => {
-  for (const child of box.children) {
-    if (child.type === "block") {
-      paintBlockBox(child, doc, offsetY, images, anchor);
-    } else if (child.type === "text") {
-      paintTextBox(child, doc, offsetY, anchor);
-    } else if (child.type === "image") {
-      paintImageBox(child, doc, offsetY, images, anchor);
-    } else if (child.type === "hr") {
-      paintRuleBox(child, doc, offsetY);
-    }
-  }
-  if (box.border) {
-    doc.rect(box.x, box.y - offsetY, box.width, box.height).stroke();
-  }
-};
-
-const paintTextBox = (
-  box: TextBox,
-  doc: PDFKit.PDFDocument,
-  offsetY: number,
-  anchor: AnchorHeading,
-) => {
-  const style = box.node.style;
-  doc.font(box.font).fontSize(style.fontSize).fillColor(style.color);
-  const { link, goTo, heading } = box.node.attrs;
-  doc.text(box.text, box.x, box.y - offsetY, {
-    strike: style.strike,
-    underline: style.underline,
-    link: link ?? null,
-    goTo,
-    continued: false,
-  });
-  // A text node may be split into several boxes
-  if (heading && box.first) {
-    anchor(heading, box.x, box.y - offsetY);
-  }
-};
-
-const paintRuleBox = (
-  box: RuleBox,
-  doc: PDFKit.PDFDocument,
-  offsetY: number,
-) => {
-  const { color, thickness } = box.node.style;
-  const y = box.y - offsetY + thickness / 2;
-  doc.save();
-  doc
-    .lineWidth(thickness)
-    .strokeColor(color)
-    .moveTo(box.x, y)
-    .lineTo(box.x + box.width, y)
-    .stroke();
-  doc.restore();
-};
-
-const paintImageBox = (
-  box: ImageBox,
-  doc: PDFKit.PDFDocument,
-  offsetY: number,
-  images: ReadonlyMap<string, PdfImageData | null>,
-  anchor: AnchorHeading,
-) => {
-  const data = images.get(box.node.attrs.src);
-  if (data) {
-    if (data.type === "svg") {
-      // svg-to-pdfkit takes the width and height attributes of the svg,
-      // in px, unless given preserveAspectRatio, which replaces the svg's
-      // own, so that is passed on
-      const root = /<svg\b[^>]*>/.exec(data.data)?.[0] ?? "";
-      SVGtoPDF(doc, data.data, box.x, box.y - offsetY, {
-        width: box.width,
-        height: box.height,
-        preserveAspectRatio:
-          /\spreserveAspectRatio\s*=\s*["']([^"']*)["']/.exec(root)?.[1] ||
-          "xMidYMid meet",
-      });
-    } else {
-      doc.image(data.data, box.x, box.y - offsetY, {
-        width: box.width,
-        height: box.height,
-      });
-    }
-    const heading = box.node.attrs.heading;
-    if (heading) {
-      anchor(heading, box.x, box.y - offsetY);
-    }
-  }
-};
-
-const buildParagraph: NodeBuilder<"paragraph"> = ({ children }, ctx) => {
-  const style: BlockStyle = { display: "block" };
-  const list = ctx.list;
-  if (list) {
-    const { meta, level } = list;
-    const bulletText =
-      meta.type === "task"
-        ? meta.checked
-          ? "[x] "
-          : "[ ] "
-        : meta.type === "ordered"
-          ? Decimal.renderMarker(meta.number)
-          : Disc.renderMarker(1);
-    style.indent = level * 10;
-    children = [{ type: "text", value: bulletText }, ...children];
-  }
-  return {
-    type: "block",
-    style,
-    children: ctx.render(children),
-  };
-};
-
-const buildHeading: NodeBuilder<"heading"> = (node, ctx) => {
-  const { children, depth } = node;
-  const results = ctx.render([{ type: "paragraph", children }], {
-    ...ctx,
-    style: { ...ctx.style, ...ctx.config[`head${depth}`] },
-  });
-  const destination = ctx.destinations.get(node);
-  if (destination != null) {
-    // Put the destination where the heading starts
-    const first = results
-      .flatMap((r) => (r.type === "block" ? r.children : [r]))
-      .find((r) => r.type === "text" || r.type === "void");
-    if (first) {
-      first.attrs.heading = { destination, depth, title: titleOf(node) };
-    }
-  }
-  return results;
-};
-
-const buildThematicBreak: NodeBuilder<"thematicBreak"> = ({}, ctx) => {
-  if (ctx.thematicBreak === "pagebreak") {
-    return {
-      type: "pagebreak",
+      return base?.(state, node, parent);
     };
   }
-  const { color, fontSize } = ctx.style;
-  return {
-    type: "hr",
-    style: {
-      color,
-      thickness: 1,
-      margin: fontSize / 2,
-    },
-  };
-};
-
-const buildBlockquote: NodeBuilder<"blockquote"> = ({ children }, ctx) => {
-  return ctx.render(children, {
-    ...ctx,
-    style: { ...ctx.style, ...ctx.config.blockquote },
-  });
-};
-
-const buildList: NodeBuilder<"list"> = ({ children, ordered }, ctx) => {
-  const parentList = ctx.list;
-  const nextLevel = !parentList ? 0 : parentList.level + 1;
-
-  return children.flatMap(({ children, checked }, i) => {
-    let meta: ListContext["meta"];
-    if (checked != null) {
-      meta = {
-        type: "task",
-        checked,
-      };
-    } else {
-      if (ordered) {
-        meta = { type: "ordered", number: i + 1 };
-      } else {
-        meta = { type: "bullet" };
-      }
-    }
-
-    return ctx.render(children, {
-      ...ctx,
-      list: {
-        level: nextLevel,
-        meta,
-      },
-    });
-  });
-};
-
-const buildTable: NodeBuilder<"table"> = ({ children, align }, ctx) => {
-  const cellAligns: Alignment[] | undefined = align?.map((a) => a ?? "left");
-  return {
-    type: "block",
-    style: { display: "table" },
-    children: children.map((row) => ({
-      type: "block",
-      style: { display: "table-row" },
-      children: row.children.map((cell, colIdx) => ({
-        type: "block",
-        style: {
-          display: "table-cell",
-          textAlign: cellAligns?.[colIdx],
-        },
-        children: ctx.render(cell.children),
-      })),
-    })),
-  };
-};
-
-const buildText: NodeBuilder<"text"> = ({ value: text }, ctx) => {
-  const segments: TextNode[] = [];
-
-  const matches: Match[] = [];
-  type Match = { start: number; end: number; style: Partial<TextStyle> };
-  for (const [re, style] of ctx.textStyle) {
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(text)) !== null) {
-      matches.push({
-        start: m.index,
-        end: m.index + m[0].length,
-        style,
-      });
-    }
-  }
-  matches.sort((a, b) => a.start - b.start);
-
-  const createText = (
-    style: TextStyle,
-    start: number,
-    end?: number,
-  ): TextNode => {
-    return {
-      type: "text",
-      text: text.slice(start, end),
-      style: style,
-      attrs: { link: ctx.link, goTo: ctx.goTo },
-    };
-  };
-
-  let i = 0;
-  for (const { start, end, style } of matches) {
-    if (i < start) {
-      segments.push(createText(ctx.style, i, start));
-    }
-    segments.push(createText({ ...ctx.style, ...style }, start, end));
-    i = end;
-  }
-  if (i < text.length) {
-    segments.push(createText(ctx.style, i));
-  }
-  return segments;
-};
-
-const buildEmphasis: NodeBuilder<"emphasis"> = (node, ctx) => {
-  return ctx.render(node.children, {
-    ...ctx,
-    style: { ...ctx.style, italic: true },
-  });
-};
-
-const buildStrong: NodeBuilder<"strong"> = (node, ctx) => {
-  return ctx.render(node.children, {
-    ...ctx,
-    style: { ...ctx.style, bold: true },
-  });
-};
-
-const buildDelete: NodeBuilder<"delete"> = (node, ctx) => {
-  return ctx.render(node.children, {
-    ...ctx,
-    style: { ...ctx.style, strike: true },
-  });
-};
-
-const buildInlineCode: NodeBuilder<"inlineCode"> = (node, ctx) => {
-  return ctx.render([{ type: "text", value: node.value }], {
-    ...ctx,
-    style: { ...ctx.style, ...ctx.config.inlineCode },
-  });
-};
-
-const buildCode: NodeBuilder<"code"> = (node, ctx) => {
-  return {
-    type: "block",
-    style: { display: "block" },
-    children: ctx.render([{ type: "text", value: node.value }], {
-      ...ctx,
-      style: { ...ctx.style, ...ctx.config.code },
-    }),
-  };
-};
-
-const buildBreak: NodeBuilder<"break"> = ({}, ctx) => {
-  return buildText({ type: "text", value: "\n" }, ctx);
-};
-
-const buildLink: NodeBuilder<"link"> = ({ children, url }, ctx) => {
-  let link: string | undefined;
-  let goTo: string | undefined;
-  if (url.startsWith("#")) {
-    goTo = ctx.destinations.get(url);
-    if (goTo == null) {
-      // Leave links to missing headings unlinked
-      return ctx.render(children);
-    }
-  } else {
-    link = url;
-  }
-  return ctx.render(children, {
-    ...ctx,
-    link,
-    goTo,
-    style: {
-      ...ctx.style,
-      ...ctx.config.link,
-    },
-  });
-};
-
-const buildLinkReference: NodeBuilder<"linkReference"> = (
-  { children, identifier },
-  ctx,
-) => {
-  const def = ctx.definition(identifier);
-  if (def == null) {
-    return ctx.render(children);
-  }
-  return buildLink({ type: "link", children, url: def.url }, ctx);
-};
-
-const buildImage: NodeBuilder<"image"> = (node, ctx) => {
-  if (!ctx.images.get(node.url)) {
-    // Keep the description of the image if it can't be embedded
-    return node.alt ? buildText({ type: "text", value: node.alt }, ctx) : null;
-  }
-  return { type: "void", tag: "image", attrs: { src: node.url } };
-};
-
-const buildImageReference: NodeBuilder<"imageReference"> = (node, ctx) => {
-  const def = ctx.definition(node.identifier);
-  if (def == null) {
-    return null;
-  }
-  return buildImage(
-    { type: "image", url: def.url, alt: node.alt, title: def.title },
-    ctx,
-  );
+  return composed;
 };
 
 // The destination of the top of the document. Slugs never contain `#`.
 const TOP = "#top";
 
-const collectDestinations = (
-  root: mdast.Root,
-  definition: GetDefinition,
-): Map<mdast.Heading | string, string> => {
-  const slugger = new GithubSlugger();
-  // Slugs are unique, so headings can be keyed by them
-  const headings = new Map<string, mdast.Heading>();
-  const fragments = new Map<string, string>();
-  visit(root, (n) => {
-    switch (n.type) {
-      case "heading": {
-        // Like GitHub, slug the rendered text
-        const text = toString(n, {
-          includeHtml: false,
-          includeImageAlt: false,
-        });
-        headings.set(slugger.slug(text), n);
-        break;
+// Settles the ids and links of the printed tree: drops what footnotes don't
+// print, keeps each id on its first element and unwraps links to no id.
+// Returns whether a link goes to the top.
+const resolveLinks = (root: hast.Root): boolean => {
+  const ids = new Set<string>();
+  const links: [link: hast.Element, href: string, parent: hast.Parents][] = [];
+  visit(root, "element", (element, index, parent) => {
+    const className = element.properties["className"];
+    if (
+      // printed footnotes need no links back, whose "↩" standard fonts lack
+      element.properties["dataFootnoteBackref"] != null ||
+      // the heading mdast-util-to-hast gives footnotes is for screen readers
+      (Array.isArray(className) && className.includes("sr-only"))
+    ) {
+      parent!.children.splice(index!, 1);
+      return [SKIP, index!];
+    }
+    // only the backrefs link to footnote references
+    if (element.properties["dataFootnoteRef"] != null) {
+      delete element.properties["id"];
+    }
+    // the first element of an id is the one it names
+    const id = element.properties["id"];
+    if (id != null) {
+      const key = String(id);
+      if (ids.has(key)) {
+        delete element.properties["id"];
+      } else {
+        ids.add(key);
       }
-      case "link":
-      case "linkReference": {
-        const url = n.type === "link" ? n.url : definition(n.identifier)?.url;
-        if (url?.startsWith("#")) {
-          try {
-            fragments.set(url, decodeURIComponent(url.slice(1)));
-          } catch {
-            // Leave malformed fragments unlinked
-          }
+    }
+    const href = element.properties["href"];
+    if (
+      element.tagName === "a" &&
+      typeof href === "string" &&
+      href[0] === "#"
+    ) {
+      links.push([element, href, parent!]);
+    }
+    return;
+  });
+  let toTop = false;
+  for (const [link, href, parent] of links) {
+    const target = targetOf(href, ids);
+    if (target == null) {
+      parent.children.splice(
+        parent.children.indexOf(link),
+        1,
+        ...link.children,
+      );
+    } else {
+      toTop ||= target === TOP;
+      link.properties["href"] = `#${target}`;
+    }
+  }
+  return toTop;
+};
+
+// HTML's rule: the id as written, then decoded, then `#` and `#top` the top
+const targetOf = (
+  href: string,
+  ids: ReadonlySet<string>,
+): string | undefined => {
+  let fragment: string | undefined;
+  try {
+    fragment = decodeURIComponent(href.slice(1));
+  } catch {
+    // a malformed escape
+  }
+  return (
+    [href.slice(1), fragment].find((id) => id != null && ids.has(id)) ??
+    (fragment != null && /^(top)?$/i.test(fragment) ? TOP : undefined)
+  );
+};
+
+// `patterns`: those of textStyle, global for matchAll
+const toDom = (
+  children: readonly hast.RootContent[],
+  patterns: readonly RegExp[],
+  parent?: hast.Element,
+): (Element | Text)[] => {
+  const results: (Element | Text)[] = [];
+  children.forEach((child) => {
+    if (child.type === "text") {
+      // the line breaks mdast-util-to-hast puts between elements aren't text
+      // of the markdown, which textStyle applies to
+      if (child.position || /\S/.test(child.value)) {
+        results.push(...styleText(child.value, patterns));
+      } else {
+        results.push(new Text(child.value));
+      }
+      return;
+    }
+    if (child.type !== "element") {
+      return;
+    }
+
+    const { tagName, properties } = child;
+    // remark-pdf's classes, before mdast-util-to-hast's, which TRE applies
+    // over them: a task list's over its bullets
+    const classes: string[] = [];
+    const attrs: Record<string, string> = {};
+    for (const [key, value] of Object.entries(properties)) {
+      if (value != null && key !== "className") {
+        attrs[key] = String(value);
+      }
+    }
+    switch (tagName) {
+      // the checkbox of a task list item, which TRE has no model for, as text
+      // https://github.com/meliorence/react-native-render-html/issues/609
+      case "input":
+        results.push(
+          ...styleText(properties["checked"] ? "[x]" : "[ ]", patterns),
+        );
+        return;
+      case "td":
+      case "th": {
+        if (typeof properties["align"] === "string") {
+          classes.push(properties["align"]);
         }
         break;
       }
+      // a list nested last in an item
+      case "ul":
+      case "ol":
+        if (
+          parent?.tagName === "li" &&
+          child === parent.children.findLast((c) => c.type === "element")
+        ) {
+          classes.push("last-in-item");
+        }
+        break;
+    }
+    if (Array.isArray(properties["className"])) {
+      classes.push(...properties["className"].map(String));
+    }
+    if (classes.length) {
+      attrs["class"] = classes.join(" ");
+    }
+    results.push(
+      new Element(tagName, attrs, toDom(child.children, patterns, child)),
+    );
+  });
+  return results;
+};
+
+const styleText = (
+  text: string,
+  patterns: readonly RegExp[],
+): (Element | Text)[] => {
+  const matches: {
+    readonly start: number;
+    readonly end: number;
+    readonly index: number;
+  }[] = [];
+  const bounds = new Set([0, text.length]);
+  patterns.forEach((re, index) => {
+    for (const m of text.matchAll(re)) {
+      if (m[0]) {
+        const start = m.index;
+        const end = start + m[0].length;
+        matches.push({ start, end, index });
+        bounds.add(start);
+        bounds.add(end);
+      }
     }
   });
-
-  // PDF has no restriction on names, so every heading is a destination named
-  // by its slug, which also lets other documents link to `file.pdf#slug`.
-  const destinations = new Map<mdast.Heading | string, string>();
-  for (const [slug, heading] of headings) {
-    destinations.set(heading, slug);
-  }
-  for (const [url, fragment] of fragments) {
-    // Like HTML, `#` and `#top` go to the top unless a heading has that slug.
-    const destination = headings.has(fragment)
-      ? fragment
-      : /^(top)?$/i.test(fragment)
-        ? TOP
-        : undefined;
-    if (destination != null) {
-      destinations.set(url, destination);
+  const cuts = Array.from(bounds).sort((a, b) => a - b);
+  const results: (Element | Text)[] = [];
+  for (let k = 1; k < cuts.length; k++) {
+    const start = cuts[k - 1]!;
+    const end = cuts[k]!;
+    let node: Element | Text = new Text(text.slice(start, end));
+    // in the order of the patterns, later ones inner, overriding earlier ones;
+    // a pattern's matches don't overlap
+    for (let j = matches.length - 1; j >= 0; j--) {
+      const m = matches[j]!;
+      if (m.start <= start && end <= m.end) {
+        node = new Element("span", { class: `t${m.index}` }, [node]);
+      }
     }
+    results.push(node);
   }
-  return destinations;
+  return results;
 };
 
-const noop = () => {
-  return null;
+const paintPages = (
+  doc: PDFKit.PDFDocument,
+  pages: readonly Page[],
+  linksToTop: boolean,
+  images: ReadonlyMap<string, PdfImageData | null>,
+): void => {
+  let fill: string | undefined;
+  const setFill = (color: string): void => {
+    // set only on change, as pdfkit writes it out on every call
+    if (color !== fill) {
+      fill = color;
+      doc.fillColor(...toPdfColor(color));
+    }
+  };
+
+  // pdfkit embeds an image given as a string once, however often it's drawn:
+  // a data URI of each
+  const toDataUri = (data: ArrayBuffer): string => {
+    const bytes = new Uint8Array(data);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    }
+    return "data:image;base64," + btoa(binary);
+  };
+  const outline: {
+    readonly level: number;
+    readonly item: PDFKit.PDFOutline;
+  }[] = [];
+
+  const paintBox = (box: Box, offsetY: number): void => {
+    const y = box.y - offsetY;
+    switch (box.type) {
+      case "text": {
+        const { font, fontSize, color, decorations } = box.format;
+        // not text of the document, so that copying joins a hyphenated word
+        if (box.added) {
+          doc.markContent("Artifact");
+        }
+        setFill(color);
+        if (font.bold) {
+          // synthesized bold, stroking glyph outlines
+          doc.save();
+          doc.strokeColor(...toPdfColor(color)).lineWidth(fontSize / 30);
+        }
+        doc.font(font.name).fontSize(fontSize);
+        // no wrapping nor page breaking by pdfkit; decorations as pdfkit
+        // places them, in the color of the text
+        doc.text(box.text, box.x, y, {
+          lineBreak: false,
+          underline: decorations.includes("underline"),
+          strike: decorations.includes("line-through"),
+          stroke: font.bold,
+          fill: true,
+          oblique: font.italic,
+        });
+        if (font.bold) {
+          doc.restore();
+        }
+        if (box.added) {
+          doc.endMarkedContent();
+        }
+        break;
+      }
+      case "image": {
+        const data = images.get(box.src)!;
+        if (data.type === "svg") {
+          // svg-to-pdfkit takes the width and height attributes of the svg,
+          // in px, unless given preserveAspectRatio, which replaces the svg's
+          // own, so that is passed on
+          const svgTag = /<svg\b[^>]*>/.exec(data.data)?.[0] ?? "";
+          SVGtoPDF(doc, data.data, box.x, y, {
+            width: box.width,
+            height: box.height,
+            preserveAspectRatio:
+              /\spreserveAspectRatio\s*=\s*["']([^"']*)["']/.exec(
+                svgTag,
+              )?.[1] || "xMidYMid meet",
+          });
+        } else {
+          doc.image(toDataUri(data.data), box.x, y, {
+            width: box.width,
+            height: box.height,
+          });
+        }
+        break;
+      }
+      case "anchor": {
+        if (box.id != null) {
+          doc.addNamedDestination(box.id, "XYZ", box.x, y, null);
+        }
+        if (box.outline) {
+          const { level, title } = box.outline;
+          // the nearest heading of a higher level is the parent
+          while ((outline.at(-1)?.level ?? 0) >= level) {
+            outline.pop();
+          }
+          const parent = outline.at(-1)?.item ?? doc.outline;
+          const item = parent.addItem(title, {
+            expanded: true,
+            fit: false,
+            top: y,
+            // pdfkit takes left from the right edge of the page
+            left: doc.page.width - box.x,
+          });
+          outline.push({ level, item });
+        }
+        break;
+      }
+      case "link": {
+        const rect = [box.x, y, box.width, box.height] as const;
+        if (box.link.startsWith("#")) {
+          doc.goTo(...rect, box.link.slice(1));
+        } else {
+          doc.link(...rect, box.link);
+        }
+        break;
+      }
+      case "block":
+      case "line":
+        for (const child of box.children) {
+          paintBox(child, offsetY);
+        }
+        break;
+    }
+  };
+
+  // a side of a frame, a line inside its box
+  const strokeSide = (
+    width: number,
+    color: string,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+  ): void => {
+    if (width > 0) {
+      doc
+        .lineWidth(width)
+        .strokeColor(...toPdfColor(color))
+        .moveTo(x1, y1)
+        .lineTo(x2, y2)
+        .stroke();
+    }
+  };
+
+  if (linksToTop) {
+    doc.addNamedDestination(TOP, "XYZ", null, 0, null);
+  }
+  pages.forEach(({ boxes, offsetY, frames, frameHeight }, i) => {
+    if (i > 0) {
+      doc.addPage();
+      // a new page starts with the default graphics state
+      fill = undefined;
+    }
+    if (frames.length) {
+      doc.save();
+      doc.rect(0, doc.page.margins.top, doc.page.width, frameHeight).clip();
+      for (const { x, y: top, width, height, frame } of frames) {
+        const y = top - offsetY;
+        const {
+          widths: [t, r, b, l],
+          colors: [ct, cr, cb, cl],
+        } = frame;
+        strokeSide(t, ct, x, y + t / 2, x + width, y + t / 2);
+        strokeSide(r, cr, x + width - r / 2, y, x + width - r / 2, y + height);
+        strokeSide(b, cb, x, y + height - b / 2, x + width, y + height - b / 2);
+        strokeSide(l, cl, x + l / 2, y, x + l / 2, y + height);
+      }
+      doc.restore();
+    }
+    for (const box of boxes) {
+      paintBox(box, offsetY);
+    }
+  });
 };
 
-const fallbackText = (node: { type: string; value: string }, ctx: Context) => {
-  warnOnce(
-    `${node.type} node is not supported without plugins, falling back to text.`,
-  );
-  return buildText({ type: "text", value: node.value }, ctx);
+// pdfkit reads only hex colors without alpha and color names
+const toPdfColor = (
+  value: string,
+): [color: PDFKit.Mixins.ColorValue, opacity: number] => {
+  const color = value.trim().toLowerCase();
+  if (color === "transparent") {
+    return [[0, 0, 0], 0];
+  }
+  if (color === "rebeccapurple") {
+    // the CSS color pdfkit's names lack
+    return [[102, 51, 153], 1];
+  }
+  const hex = /^#([\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/.exec(color)?.[1];
+  if (hex) {
+    const digits = hex.length <= 4 ? hex.replace(/./g, "$&$&") : hex;
+    const [r, g, b, a = 255] = digits.match(/../g)!.map((h) => parseInt(h, 16));
+    return [[r!, g!, b!], a / 255];
+  }
+  const fn = /^(rgb|hsl)a?\((.*)\)$/.exec(color);
+  if (fn) {
+    const args = fn[2]!.split(/[\s,/]+/).filter(Boolean);
+    const parseValue = (v: string | undefined, max: number): number =>
+      v == null
+        ? max
+        : v.endsWith("%")
+          ? (parseFloat(v) / 100) * max
+          : parseFloat(v);
+    const alpha = Math.min(1, Math.max(0, parseValue(args[3], 1)));
+    if (fn[1] === "rgb") {
+      const [r, g, b] = args.map((v) => parseValue(v, 255));
+      return [[r!, g!, b!], alpha];
+    }
+    // https://www.w3.org/TR/css-color-4/#hsl-to-rgb
+    const hue = parseFloat(args[0] ?? "0");
+    const saturation = parseValue(args[1], 1);
+    const lightness = parseValue(args[2], 1);
+    const channel = (n: number): number => {
+      const k = (n + hue / 30) % 12;
+      const a = saturation * Math.min(lightness, 1 - lightness);
+      return (lightness - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))) * 255;
+    };
+    return [[channel(0), channel(8), channel(4)], alpha];
+  }
+  return [color, 1];
 };

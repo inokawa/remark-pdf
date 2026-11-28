@@ -1,12 +1,5 @@
 import { imageSize } from "image-size";
 
-/**
- * @internal
- */
-export type Writeable<T> = {
-  -readonly [key in keyof T]: T[key];
-};
-
 const alreadyWarned: { [message: string]: boolean } = {};
 
 /**

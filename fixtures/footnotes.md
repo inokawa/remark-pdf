@@ -27,6 +27,10 @@ Here is a [link[^link]](https://example.com) in the text.
 
 This is a **bold text[^bold]** and _italic[^italic]_.
 
+### Footnotes with Labels of Any Characters
+
+Here is café[^café] and 注[^注1] and html[^html].
+
 [^1]: Footnote definition.
 
 [^note-2]: String identifier with dashes.
@@ -58,3 +62,13 @@ This is a **bold text[^bold]** and _italic[^italic]_.
     ```
 
     Add as many paragraphs as you like.
+
+[^café]: Label with an accent.
+
+[^注1]: Label in Japanese.
+
+[^html]: Html.
+
+    <div>
+    a
+    </div>

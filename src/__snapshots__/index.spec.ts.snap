@@ -29,10 +29,7 @@ aaaaaaaaboldemphasisdeleteinline code
 4. ordered list
 This is link to GitHub.com.
 This is .
-quote
-quote
-quote
-quote
+quote quote quote quote
 quote
 quoted quote
 Left align Right align Center align
@@ -82,7 +79,7 @@ thematic break
 c"
 `;
 
-exports[`e2e > code 2`] = `
+exports[`e2e > code 3`] = `
 "@font-face {
 font-family: Chunkfive;
 src: url("Chunkfive.otf");
@@ -136,9 +133,20 @@ myArray.forEach(() => { }); // fat arrow syntax
 unknown lang"
 `;
 
+exports[`e2e > code styles 2`] = `
+"a b c
+d"
+`;
+
+exports[`e2e > colors 2`] = `
+"a b c d
+link
+xey xyz"
+`;
+
 exports[`e2e > decoration 2`] = `
-"aaa aaaaaaa aaaaaa aaaaaaaa aaaaaaaa aaaaaaa aaaa aaaaaaaa aaa
-aaaaaaaaaa aa a aa aa aaa aaaaa aaaa aaa*aa*aa_aa_a~~aa~~a
+"aaa aaaaaaa aaaaaa aaaaaaaa aaaaaaaa aaaaaaa aaaa aaaaaaaa aaa aaaaaaaaaa aa a aa
+aa aaa aaaaa aaaa aaa*aa*aa_aa_a~~aa~~a
 heading
 • list
 quote
@@ -146,30 +154,90 @@ link to GitHub.com
 link to GitHub.com"
 `;
 
+exports[`e2e > decorations propagated, as CSS does 2`] = `"a b c"`;
+
+exports[`e2e > font faces 2`] = `
+"b
+i bi 太字
+斜体
+日本語 abc def"
+`;
+
+exports[`e2e > fonts not registered 2`] = `
+"a
+b"
+`;
+
 exports[`e2e > footnotes 2`] = `
 "Footnotes
-This is footnote.
-Footnotes
-Here is footnotes.
+This is footnote1.
+Footnotes2
+Here is footnotes345.
 Footnotes in Lists
-• List item
-• Nested item
-1. Ordered list
+• List item6
+• Nested item7
+1. Ordered list8
 Footnotes in Blockquotes
-Blockquote.
+Blockquote9.
 Footnotes in Links
-Here is a link in the text.
+Here is a link10 in the text.
 Complex Nested Footnotes
-This is a bold text and italic."
+This is a bold text11 and italic12.
+Footnotes with Labels of Any Characters
+Here is café13 and lè14 and html15.
+1. Here is the footnote definition.
+2. Heading.
+3. Footnote definition.
+4. String identifier with dashes.
+5. Here’s one with multiple paragraphs and code.
+Indent paragraphs to include them in the footnote.
+function add(a, b) {
+return a + b;
+}
+Add as many paragraphs as you like.
+6. Unordered list.
+7. Nested list item.
+8. Ordered list.
+9. Blockquote.
+10. Link to example.com.
+11. Bold text.
+12. Italic text.
+13. Label with an accent.
+14. Label in Japanese.
+15. Html.
+<div>
+a
+</div>"
+`;
+
+exports[`e2e > footnotes 3`] = `
+[
+  [
+    "#user-content-fn-hi -> page 1, top 508",
+    "#user-content-fn-heading -> page 1, top 494",
+    "#user-content-fn-1 -> page 1, top 480",
+    "#user-content-fn-note-2 -> page 1, top 466",
+    "#user-content-fn-bignote -> page 1, top 452",
+    "#user-content-fn-3 -> page 1, top 369",
+    "#user-content-fn-4 -> page 1, top 355",
+    "#user-content-fn-5 -> page 1, top 341",
+    "#user-content-fn-6 -> page 1, top 328",
+    "https://example.com/",
+    "#user-content-fn-link -> page 1, top 314",
+    "#user-content-fn-bold -> page 1, top 300",
+    "#user-content-fn-italic -> page 1, top 285",
+    "#user-content-fn-caf%C3%A9 -> page 1, top 272",
+    "#user-content-fn-%E6%B3%A81 -> page 1, top 258",
+    "#user-content-fn-html -> page 1, top 244",
+    "https://example.com/",
+  ],
+]
 `;
 
 exports[`e2e > frontmatter 2`] = `
 "Other markdown
 blablabla
-+++
-title = "This is toml"
-date = "2020-04-30 22:34"
-+++
++++ title = "This is toml" date = "2020-04-30 22:34" +++
 Other markdown
 blablabla"
 `;
@@ -191,11 +259,89 @@ H
 quoted heading"
 `;
 
+exports[`e2e > heading pages 4`] = `
+"h0
+h1
+h2
+h3
+h4
+h5
+h6
+h7
+h8
+h9
+h10
+h11
+h12
+h13
+h14
+h15
+h16
+h17
+h18
+h19
+h20
+h21
+h22
+h23
+h24
+h25
+h26
+h27
+h28
+h29
+h30
+h31
+h32
+h33
+h34
+h35
+h36
+h37
+h38
+h39
+h40
+h41
+h42
+h43
+h44
+h45
+h46
+h47
+h48
+h49
+h50
+h51
+h52
+h53
+h54
+h55
+h56
+h57
+h58
+h59"
+`;
+
 exports[`e2e > image 2`] = `"This is ."`;
+
+exports[`e2e > images set by plugins at urls html encodes 2`] = `"a b"`;
+
+exports[`e2e > large font 2`] = `
+"9. a
+10. b
+9. a
+10. b
+• c
+99. d
+100. e
+1. • • a
+• h
+b"
+`;
 
 exports[`e2e > latex 2`] = `
 "https://mathjax.github.io/MathJax-demos-web/page/tex-chtml.html
-When a \\ne 0, there are two solutions to ax^2 + bx + c = 0 and they arex = {-b \\pm \\sqrt{b^2-4ac}
+When a \\ne 0, there are two solutions to ax^2 + bx + c = 0 and they are x = {-b \\pm \\sqrt{b^2-4ac}
 \\over 2a}.
 The Lorenz Equations
 \\begin{align}
@@ -238,11 +384,10 @@ Maxwell's Equations
 \\nabla \\cdot \\vec{\\mathbf{B}} & = 0
 \\end{align}
 In-line Mathematics
-Finally, while display equations look good for a page of samples, the
-ability to mix math and text in a paragraph is also important. This
-expression \\sqrt{3x-1}+(1+x)^2 is an example of an inline equation. As
-you see, MathJax equations can be used this way as well, without unduly
-disturbing the spacing between lines."
+Finally, while display equations look good for a page of samples, the ability to mix math and text
+in a paragraph is also important. This expression \\sqrt{3x-1}+(1+x)^2 is an example of an inline
+equation. As you see, MathJax equations can be used this way as well, without unduly disturbing
+the spacing between lines."
 `;
 
 exports[`e2e > latex with latexPlugin 2`] = `
@@ -256,11 +401,83 @@ An Identity of Ramanujan
 A Rogers-Ramanujan Identity
 Maxwell's Equations
 In-line Mathematics
-Finally, while display equations look good for a page of samples, the
-ability to mix math and text in a paragraph is also important. This
-expression is an example of an inline equation. As
-you see, MathJax equations can be used this way as well, without unduly
-disturbing the spacing between lines."
+Finally, while display equations look good for a page of samples, the ability to mix math and text
+in a paragraph is also important. This expression is an example of an inline
+equation. As you see, MathJax equations can be used this way as well, without unduly disturbing
+the spacing between lines."
+`;
+
+exports[`e2e > line layout 2`] = `
+"a b c d
+b
+c
+a
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx b
+a
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+b
+www www www www www www www www www www www www www www www www www
+text more
+anchor
+a b
+c
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+next line
+• xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+b
+a
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+yyyyyyyyyyyyyyyyyyyyyyyy
+xxxxxxxxyyyyyyyyzzzzzzzz xxxxxxxxyyyyyyyyzzzzzzzz xxxxxxxxyyyyyyyyzzzzzzzz
+xxxxxxxxyyyyyyyyzzzzzzzz xxxxxxxxyyyyyyyyzzzzzzzz xxxxxxxxyyyyyyyyzzzzzzzz
+xyzzzzzzzzzzzzzzzzzzzz xyzzzzzzzzzzzzzzzzzzzz xyzzzzzzzzzzzzzzzzzzzz
+xyzzzzzzzzzzzzzzzzzzzz xyzzzzzzzzzzzzzzzzzzzz
+a b
+a
+xxxxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyy
+yyyyyyyyyyyyy
+b
+one
+two
+a b
+zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+`;
+
+exports[`e2e > line mix 3`] = `
+"abc def link ghi
+jkl
+longwordlongword longword long
+wordlongword longword long-
+wordlongword
+日本語の𠮟
+𠮟と太字、𠮟𠮟𠮟 abc
+日本語の𠮟
+𠮟と太字、𠮟𠮟𠮟 abc
+ああああああああああああああ𠮟
+𠮟
+abc def ghi jkl mno
+pqr
+• abc def ghi
+• xyz
+a b
+abc def longwordlong
+𠮟
+𠮟"
+`;
+
+exports[`e2e > line mix 4`] = `
+[
+  [
+    "https://example.com/",
+    "https://example.com/",
+    "https://example.com/",
+  ],
+  [],
+]
 `;
 
 exports[`e2e > link 2`] = `
@@ -299,19 +516,77 @@ Unreferenced"
 exports[`e2e > link heading 3`] = `
 [
   [
-    "#section-one -> page 1, top 635",
-    "#section-one-1 -> page 1, top 615",
-    "#section-one-2 -> page 1, top 595",
-    "#section-one-1 -> page 1, top 615",
-    "#hello-world -> page 1, top 574",
-    "#foo -> page 1, top 554",
-    "#-bar -> page 1, top 534",
-    "#top -> page 1, top 459",
+    "#section-one -> page 1, top 594",
+    "#section-one-1 -> page 1, top 568",
+    "#section-one-2 -> page 1, top 543",
+    "#section-one-1 -> page 1, top 568",
+    "#hello-world -> page 1, top 518",
+    "#foo -> page 1, top 491",
+    "#-bar -> page 1, top 466",
+    "#top -> page 1, top 391",
     "##top -> page 1, top 842",
     "##top -> page 1, top 842",
     "https://example.com/#section-one",
   ],
 ]
+`;
+
+exports[`e2e > list layout 3`] = `
+"1.
+2. b
+[ ] task
+• nested bullet
+1. nested ordered
+• heading in item
+•
+• quote in item
+1. • • nested at once
+2. three digits
+3. b
+4. c
+• a
+• b
+• c
+• d
+1. a
+1. b
+1. c
+1. d
+a
+[ ] ordered task
+[x] done
+• heading in item at the page top"
+`;
+
+exports[`e2e > list markers in the font of the list 2`] = `
+"9. a
+10. b
+9. a
+10. b
+• c
+99. d
+100. e
+1. • • a
+• h
+b"
+`;
+
+exports[`e2e > list spacing 2`] = `
+"• a
+• b
+• c
+d
+• <div>
+a
+</div>
+• b
+• a
+b
+• c
+<div>
+d
+</div>
+e"
 `;
 
 exports[`e2e > list-bullet 2`] = `
@@ -443,12 +718,12 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
 laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
 voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet,
+consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
+eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia
+deserunt mollit anim id est laborum.
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
 labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
 laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
@@ -546,12 +821,12 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
 laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
 voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet,
+consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
+eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia
+deserunt mollit anim id est laborum.
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
 labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
 laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
@@ -601,46 +876,47 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 
 exports[`e2e > makurano 2`] = `
 "春は、あけぼの。やうやうしろくなりゆく山ぎは、すこし明かりて、紫だちたる雲の、細くた
-なびきたる。
-夏は、夜。月のころはさらなり。闇もなほ、蛍の多く飛びちがひたる。また、ただ一つ二つな
-ど、ほのかにうち光りて行くも、をかし。雨など降るも、をかし。
-秋は、夕暮。夕日のさして、山の端いと近うなりたるに、烏の寝どころへ行くとて、三つ四
-つ、二つ三つなど、飛びいそぐさへあはれなり。まいて、雁などのつらねたるが、いと小さく
-見ゆるは、いとをかし。日入りはてて、風の音、虫の音など、はた、言ふべきにあらず。
-冬は、つとめて。雪の降りたるは、言ふべきにもあらず。霜のいと白きも。またさらでも、い
-と寒きに、火など急ぎおこして、炭持てわたるも、いとつきづきし。昼になりて、ぬるくゆる
-びもていけば、火桶の火も、白き灰がちになりて、わろし。"
+なびきたる。夏は、夜。月のころはさらなり。闇もなほ、蛍の多く飛びちがひたる。また、た
+だ一つ二つなど、ほのかにうち光りて行くも、をかし。雨など降るも、をかし。秋は、夕暮。
+夕日のさして、山の端いと近うなりたるに、烏の寝どころへ行くとて、三つ四つ、二つ三つな
+ど、飛びいそぐさへあはれなり。まいて、雁などのつらねたるが、いと小さく見ゆるは、いと
+をかし。日入りはてて、風の音、虫の音など、はた、言ふべきにあらず。冬は、つとめて。雪
+の降りたるは、言ふべきにもあらず。霜のいと白きも。またさらでも、いと寒きに、火など急
+ぎおこして、炭持てわたるも、いとつきづきし。昼になりて、ぬるくゆるびもていけば、火桶
+の火も、白き灰がちになりて、わろし。"
 `;
 
 exports[`e2e > math 2`] = `
-"Lift(L) can be determined by Lift Coefficient (C_L) like the following
-equation.
-L = \\frac{1}{2} \\rho v^2 S C_Li hbar \\frac{partial psi}{partial t} = H psi(x,t)\\f\\relax{x} = \\int_{-\\infty}
-^\\infty\\f\\hat\\xi\\,e^{2 \\pi i \\xi x}\\,d\\xi\\frac{a+b}{c+d}\\sqrt[30]{a+\\sqrt{b+c}}\\sum_{k=1}^{n}
-k=\\frac{n(n+1)}{2} \\alpha\\beta\\gamma\\delta\\epsilon\\zeta\\eta\\theta\\iota\\kappa\\lambda\\mu\\nu\\xi
+"Lift(L) can be determined by Lift Coefficient (C_L) like the following equation.
+L = \\frac{1}{2} \\rho v^2 S C_L
+i hbar \\frac{partial psi}{partial t} = H psi(x,t)
+\\f\\relax{x} = \\int_{-\\infty}^\\infty\\f\\hat\\xi\\,e^{2 \\pi i \\xi x}\\,d\\xi
+\\frac{a+b}{c+d}
+\\sqrt[30]{a+\\sqrt{b+c}}
+\\sum_{k=1}^{n} k=\\frac{n(n+1)}{2}
+\\alpha\\beta\\gamma\\delta\\epsilon\\zeta\\eta\\theta\\iota\\kappa\\lambda\\mu\\nu\\xi
 o\\pi\\rho\\sigma\\tau\\upsilon\\phi\\chi\\psi\\omega
 \\varepsilon\\vartheta\\varrho\\varsigma\\varphi
 \\Gamma\\Delta\\Theta\\Lambda\\Xi\\Pi\\Sigma\\Upsilon\\Phi\\Psi\\Omega"
 `;
 
 exports[`e2e > math with latexPlugin 2`] = `
-"Lift( ) can be determined by Lift Coefficient ( ) like the following
-equation.
+"Lift( ) can be determined by Lift Coefficient ( ) like the following equation.
 \\f\\relax{x} = \\int_{-\\infty}^\\infty\\f\\hat\\xi\\,e^{2 \\pi i \\xi x}\\,d\\xi"
 `;
 
 exports[`e2e > outline 1`] = `
 [
   "Title -> page 1, left 40, top 802, expanded",
-  "  Section bold code -> page 1, left 40, top 780, expanded",
-  "    Deep -> page 1, left 40, top 759, expanded",
-  "      Deeper -> page 1, left 40, top 741",
+  "  Section bold code -> page 1, left 40, top 774, expanded",
+  "    Deep -> page 1, left 40, top 748, expanded",
+  "      Deeper -> page 1, left 40, top 725",
   "  見出し -> page 2, left 40, top 802",
-  "Second -> page 2, left 40, top 782, expanded",
-  "  Skipped level -> page 2, left 40, top 759",
-  "  Setext with break -> page 2, left 40, top 741",
-  "  alt Image -> page 2, left 40, top 700",
-  "  Last -> page 2, left 40, top 625",
+  "Second -> page 2, left 40, top 776, expanded",
+  "  Skipped level -> page 2, left 40, top 749",
+  "  Setext with break -> page 2, left 40, top 726",
+  "  alt Image -> page 2, left 40, top 675",
+  "  Last -> page 2, left 40, top 600",
 ]
 `;
 
@@ -654,12 +930,45 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
 laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
 voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet,
+consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
+eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia
+deserunt mollit anim id est laborum."
+`;
+
+exports[`e2e > right to left 2`] = `
+"      אבגדהו  
+שלום א
+עולם ב
+ 
+שלום
+שלום
+ "
+`;
+
+exports[`e2e > right to left 3`] = `
+[
+  [
+    "https://e.com/",
+    "https://e.com/",
+  ],
+]
+`;
+
+exports[`e2e > right to left lines that wrap 2`] = `
+"אחאבטאגיאדךאהכאולאזםאחמאטןאינאךסאכעאלףאםפאמץאןאאנבאסגאעדאףהאפואץזא
+אחבבטבגיבדךבהכבולבזםבחמבטןבינבךסבכעבלףבםפבמץבןאבנבבסגב"
+`;
+
+exports[`e2e > soft hyphens 2`] = `
+"wwwwwwwwwwwwwwwwwwwwwww
+wwwww
+a xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+longwordlongwordlongwordlong-
+wordlongwordlongwordlongwordlong-
+wordlongwordlongword"
 `;
 
 exports[`e2e > svg 2`] = `
@@ -667,12 +976,282 @@ exports[`e2e > svg 2`] = `
 test"
 `;
 
+exports[`e2e > svg sizes 4`] = `
+"a b
+
+c d"
+`;
+
+exports[`e2e > table header at a page break 3`] = `
+"p0
+p1
+p2
+p3
+p4
+p5
+p6
+p7
+p8
+p9
+p10
+p11
+p12
+p13
+p14
+p15
+p16
+p17
+p18
+p19
+p20
+p21
+p22
+p23
+p24
+p25
+p26
+p27
+p28
+p29
+p30
+p31
+p32
+p33
+p34
+p35
+p36
+p37
+p38
+p39
+p40
+p41
+p42
+p43
+p44
+p45
+p46
+p47
+p48
+p49
+p50
+p51
+p52
+p53
+h
+b"
+`;
+
+exports[`e2e > table layout 5`] = `
+"a b
+x
+xxxxxxxxxi
+xxxxxxxxxi
+yy
+b c d e f g h
+1 2 3 4 5 6 7 8
+table across pages
+r0 row 0
+r1 row 1
+r2 row 2
+r3 row 3
+r4 row 4
+r5 row 5
+r6 row 6
+r7 row 7
+r8 row 8
+r9 row 9
+r10 row 10
+r11 row 11
+r12 row 12
+r13 row 13
+r14 row 14
+r15 row 15
+r16 row 16
+r17 row 17
+r18 row 18
+r19 row 19
+r20 row 20
+r21 row 21
+r22 row 22
+r23 row 23
+r24 row 24
+r25 row 25
+r26 row 26
+r27 row 27
+r28 row 28
+r29 row 29
+r30 row 30
+r31 row 31
+r32 row 32
+r33 row 33
+r34 row 34
+r35 row 35
+r36 row 36
+r37 row 37
+r38 row 38
+r39 row 39
+r40 row 40
+r41 row 41
+r42 row 42
+r43 row 43
+r44 row 44
+r45 row 45
+r46 row 46
+r47 row 47
+r48 row 48
+r49 row 49
+r50 row 50
+r51 row 51
+r52 row 52
+r53 row 53
+r54 row 54
+r55 row 55
+r56 row 56
+r57 row 57
+r58 row 58
+r59 row 59
+after the table
+
+after a blank page
+1 2"
+`;
+
+exports[`e2e > table row taller than a page 3`] = `
+"a b
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa
+bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb bbb
+bbb bbb bbb bbb bbb bbb"
+`;
+
 exports[`e2e > tag 2`] = `
 "<div>
 <span>This is <b>html</b></span> inside <u>docx</u>.
-</div><table><tr><td>aaaaa</td></tr></table><!--comment-->
+</div>
+<table><tr><td>aaaaa</td></tr></table>
+<!--comment-->
 mailto:foobarbaz
 aaaaaa"
+`;
+
+exports[`e2e > text styles 2`] = `
+"abcb
+abcdef
+a b
+1 2
+1. a
+2. b c"
 `;
 
 exports[`e2e > text-emojis 2`] = `

@@ -1,3 +1,4 @@
+import type * as hast from "hast";
 import type { InlineMath, Math } from "mdast-util-math";
 import { visit } from "unist-util-visit";
 import type { RemarkPdfPlugin } from "../../mdast-util-to-pdf";
@@ -112,27 +113,26 @@ export const latexPlugin = (): RemarkPdfPlugin => {
       }
     }
 
+    const toImage = (node: MathNode): hast.Element | undefined => {
+      const src = keyOf(node);
+      return images.get(src)
+        ? { type: "element", tagName: "img", properties: { src }, children: [] }
+        : undefined;
+    };
+
     return {
-      math: (node, ctx) =>
-        images.get(keyOf(node))
-          ? {
-              type: "block",
-              // centered on its own, as MathJax displays it
-              style: { display: "block", textAlign: "center" },
-              children: [
-                { type: "void", tag: "image", attrs: { src: keyOf(node) } },
-              ],
-            }
-          : // the text as written, which keeps its line breaks
-            {
-              type: "block",
-              style: { display: "block" },
-              children: ctx.render([{ type: "text", value: node.value }]),
-            },
-      inlineMath: (node, ctx) =>
-        images.get(keyOf(node))
-          ? { type: "void", tag: "image", attrs: { src: keyOf(node) } }
-          : ctx.render([{ type: "text", value: node.value }]),
+      // a div, not a p, which a tight list item unwraps
+      math: (node) => {
+        const image = toImage(node);
+        return {
+          type: "element",
+          tagName: "div",
+          properties: { className: [image ? "math" : "raw"] },
+          children: [image ?? { type: "text", value: node.value }],
+        };
+      },
+      inlineMath: (node) =>
+        toImage(node) ?? { type: "text", value: node.value },
     };
   };
 };
